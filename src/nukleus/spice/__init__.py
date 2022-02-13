@@ -1,0 +1,1 @@
+from .ngspice import ngspice
