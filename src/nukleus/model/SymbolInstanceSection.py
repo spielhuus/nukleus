@@ -8,7 +8,7 @@ from .SchemaElement import SchemaElement
 class SymbolInstanceSection(SchemaElement):
     """ The symbol_instance token defines the per symbol information
         for the entire schematic. This section will only exist in
-        schematic files that are the root sheet of a project. 
+        schematic files that are the root sheet of a project.
 
     Parameters:
 	    The INSTANCE_PATH attribute is the path to the sheet instance.

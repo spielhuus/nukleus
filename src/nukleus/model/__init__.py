@@ -5,7 +5,7 @@ from .Junction import Junction
 from .LibrarySymbol import LibrarySymbol
 from .LocalLabel import LocalLabel
 from .NoConnect import NoConnect
-from .Pin import Pin, PinList
+from .Pin import Pin, PinImpl, PinList
 from .PositionalElement import PositionalElement, POS_T
 from .Property import Property
 from .SchemaElement import SchemaElement

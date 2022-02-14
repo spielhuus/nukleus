@@ -1,7 +1,7 @@
 from typing import Optional
 
-from nukleus import Library
-from nukleus.model import Junction, POS_T
+from ..Library import Library
+from ..model import Junction, POS_T
 
 from .DrawElement import DrawElement
 

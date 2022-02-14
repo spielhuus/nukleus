@@ -5,7 +5,7 @@ from typing import List
 
 
 class rgb():
-    def __init__(self, r: int, g: int, b: int, a: int):
+    def __init__(self, r: float, g: float, b: float, a: float):
         self.r = r
         self.g = g
         self.b = b
@@ -25,7 +25,9 @@ class rgb():
 
 @dataclass
 class StrokeDefinition():
-    """Stroke definition of a line"""
+    """
+    The stroke token defines how the outlines of graphical objects are drawn.
+    """
     width: float
     type: str
     color: rgb
@@ -35,6 +37,12 @@ class StrokeDefinition():
         return StrokeDefinition(0, '', rgb(0, 0, 0, 0))
 
     def sexp(self, indent=1):
+        """
+        Output the element as sexp string.
+
+        :param indent [int]: indent count for this element.
+        :rtype str: sexp string.
+        """
         strings: List[str] = []
         strings.append(f'{"  " * indent}(stroke ')
         strings.append(f'(width {self.width:g}) ')

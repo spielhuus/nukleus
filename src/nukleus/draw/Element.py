@@ -1,7 +1,8 @@
 from typing import Optional, Tuple, cast
 
 from nukleus import Library
-from nukleus.model import Symbol, LibrarySymbol, Pin, PositionalElement, Property, POS_T
+from nukleus.model import Symbol, LibrarySymbol, Pin, PinImpl, PositionalElement, \
+                          Property, POS_T
 
 from .DrawElement import DrawElement, PinNotFoundError, totuple
 
@@ -77,8 +78,8 @@ class Element(DrawElement):
             _last_pos = tuple(totuple(_pos))
 
         # recalculate the propery positions
-        #for prop in self.element.properties:
-        #    prop.pos = tuple(totuple(self.element._pos(prop.pos)))
+        for prop in self.element.properties:
+            prop.pos = tuple(totuple(self.element._pos(prop.pos)))
 
         assert isinstance(_last_pos, Tuple), 'last pos is not a Tuple'
         assert isinstance(self.element.pos, Tuple), 'element pos is not a Tuple'
@@ -90,8 +91,10 @@ class Element(DrawElement):
         return self
 
     def at(self, pos: POS_T|DrawElement):
-        if isinstance(pos, Pin):
-            self.pos = tuple(totuple(cast(Pin, pos)._pos()[1]))
+        if isinstance(pos, PinImpl):
+            pin_impl = cast(PinImpl, pos)
+            pos = pin_impl.parent._pos(pin_impl._pos())
+            self.pos = tuple(totuple(pos[0]))
         elif isinstance(pos, DrawElement):
             draw_element = cast(DrawElement, pos)
             assert draw_element.element, 'element is None'

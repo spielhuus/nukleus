@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from typing import List, Tuple
@@ -34,14 +34,13 @@ def get_fill_type(type: str) -> FillType:
 
 
 @dataclass
-class GraphicItem(ABC):
+class GraphicItem():
     """Abstract Class for a GraphicItem."""
     fill: FillType
     """ Fill type of the Graphic"""
 
-    @abstractmethod
     def sexp(self, indent=1) -> str:
-        pass
+        assert False, f'abstract method called with indent: {indent}'
 
 
 @dataclass
@@ -50,6 +49,12 @@ class Polyline(GraphicItem):
     stroke_definition: StrokeDefinition
 
     def sexp(self, indent=1) -> str:
+        """
+        Output the element as sexp string.
+
+        :param indent [int]: indent count for this element.
+        :rtype str: sexp string.
+        """
         strings: List[str] = []
         strings.append(f'{"  " * indent}(polyline')
         strings.append(f'{"  " * (indent + 1)}(pts')
@@ -65,13 +70,19 @@ class Polyline(GraphicItem):
 
 @dataclass
 class Rectangle(GraphicItem):
-    start_x: int
-    start_y: int
-    end_x: int
-    end_y: int
+    start_x: float
+    start_y: float
+    end_x: float
+    end_y: float
     stroke_definition: StrokeDefinition
 
     def sexp(self, indent=1) -> str:
+        """
+        Output the element as sexp string.
+
+        :param indent [int]: indent count for this element.
+        :rtype str: sexp string.
+        """
         strings: List[str] = []
         strings.append(f'{"  " * indent}(rectangle (start '
                        f'{self.start_x:g} {self.start_y:g})'
@@ -91,6 +102,12 @@ class Circle(GraphicItem):
     stroke_definition: StrokeDefinition
 
     def sexp(self, indent=1) -> str:
+        """
+        Output the element as sexp string.
+
+        :param indent [int]: indent count for this element.
+        :rtype str: sexp string.
+        """
         # TODO
         strings: List[str] = []
         return "\r\n".join(strings)
@@ -101,10 +118,16 @@ class Arc(GraphicItem):
     """ The arc token defines a graphical arc in a symbol definition. """
     start: POS_T
     mid: POS_T
-    end: float
+    end: POS_T
     stroke_definition: StrokeDefinition
 
     def sexp(self, indent=1) -> str:
+        """
+        Output the element as sexp string.
+
+        :param indent [int]: indent count for this element.
+        :rtype str: sexp string.
+        """
         # TODO
         strings: List[str] = []
         return "\r\n".join(strings)

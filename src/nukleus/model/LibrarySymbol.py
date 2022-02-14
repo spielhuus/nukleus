@@ -11,6 +11,10 @@ from .Pin import Pin
 
 @dataclass
 class LibrarySymbol(SchemaElement):
+    """
+    The symbol token defines a symbol or sub-unit of a parent symbol.
+    There can be zero or more symbol tokens in a symbol library.
+    """
     extends: str
     pin_numbers_hide: bool
     pin_names_offset: float
@@ -24,9 +28,25 @@ class LibrarySymbol(SchemaElement):
 
     @classmethod
     def new(cls):
+        """
+        [TODO:summary]
+
+        [TODO:description]
+
+        Parameters
+        ----------
+        cls : [TODO:type]
+            [TODO:description]
+        """
         return LibrarySymbol('', '', True, 0, True, False, False, [], [], [], [])
 
     def sexp(self, indent=1, is_subsymbol=False):
+        """
+        Output the element as sexp string.
+
+        :param indent [int]: indent count for this element.
+        :rtype str: sexp string.
+        """
         strings: List[str] = []
         symbol = f'{"  " * indent}(symbol "{self.identifier}"'
         if not is_subsymbol:

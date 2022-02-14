@@ -53,7 +53,7 @@ class ParserV6():
     def _pos(self, token: List):
         _x: float = 0
         _y: float = 0
-        _angle: int = 0
+        _angle: float = 0
         match token:
             case ['at', x, y, angle]:
                 _x = float(x)
@@ -82,7 +82,7 @@ class ParserV6():
                     _style = " ".join(style)
                 case ['font', ['size', width, height]]:
                     _width = float(width)
-                    _height = font(height)
+                    _height = float(height)
 
                 case ['justify', *justify]:
                     _justify = Justify.get_justify(justify)
@@ -97,7 +97,7 @@ class ParserV6():
     def _stroke(self, tokens: List) -> StrokeDefinition:
         _width: float = 0
         _type: str = "default"
-        _colors: List[str] = []
+        _colors: rgb = rgb(0, 0, 0, 0)
         for token in tokens[1:]:
             match token:
                 case ['width', width]:
@@ -115,7 +115,7 @@ class ParserV6():
         _key: str = tokens[1]
         _value: str = tokens[2]
         _id: str = ""
-        _xy: Tuple(float, float) = (0, 0)
+        _xy: Tuple[float, float] = (0, 0)
         _angle: float = 0
         _text_effects: List[TextEffects] = []
         for token in tokens[3:]:
@@ -135,7 +135,7 @@ class ParserV6():
     def _pin(self, tokens: List):
         _type: str = tokens[1]
         _style: str = tokens[2]
-        _xy: Tuple(float, float) = (0, 0)
+        _xy: POS_T = (0, 0)
         _angle: float = 0
         _length: float = 0
         _name: str = ""
@@ -212,7 +212,7 @@ class ParserV6():
         return Rectangle(_fill, _start_x, _start_y, _end_x, _end_y, _stroke[0])
 
     def _circle(self, tokens: List):
-        _center: POS_T = 0
+        _center: POS_T = (0, 0)
         _radius: float = 0
         _stroke: List[StrokeDefinition] = []
         _fill: FillType = FillType.NONE
@@ -257,7 +257,7 @@ class ParserV6():
         return Arc(_fill, _start, _mid, _end, _stroke[0])
 
     def _symbol(self, tokens: List):
-        _xy: Tuple(float, float) = (0, 0)
+        _xy: POS_T = (0, 0)
         _angle: float = 0
         _lib_id: str = ""
         _mirror: str = ""

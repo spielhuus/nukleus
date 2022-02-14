@@ -3,7 +3,7 @@ from typing import Optional, Tuple, cast
 import numpy as np
 
 from nukleus import Library
-from nukleus.model import POS_T, Pin, PositionalElement, Wire
+from nukleus.model import POS_T, PinImpl, PositionalElement, Wire
 
 from .DrawElement import DrawElement, totuple
 
@@ -55,10 +55,11 @@ class Line(DrawElement):
 #            self.pos = tuple(totuple(pos))
 #        return self
 
-    def at(self, pos: POS_T | Pin | DrawElement):
-        if isinstance(pos, Pin):
-            #assert pos.element and isinstance(pos.element, PositionalElement)
-            self.pos = tuple(totuple(cast(Pin, pos)._pos()[1]))
+    def at(self, pos: POS_T | PinImpl | DrawElement):
+        if isinstance(pos, PinImpl):
+            pin_impl = cast(PinImpl, pos)
+            pos = pin_impl.parent._pos(pin_impl._pos())
+            self.pos = tuple(totuple(pos[0]))
         elif isinstance(pos, DrawElement):
             assert pos.element and isinstance(pos.element, PositionalElement)
             self.pos = cast(PositionalElement, pos.element).pos
@@ -67,11 +68,29 @@ class Line(DrawElement):
         return self
 
     def tox(self, pos):
-        self._rel_length_x = pos[0][0]
+        if isinstance(pos, PinImpl):
+            pin_impl = cast(PinImpl, pos)
+            pos = pin_impl.parent._pos(pin_impl._pos())
+            self._rel_length_x = tuple(totuple(pos[0]))[0]
+        elif isinstance(pos, DrawElement):
+            assert pos.element and isinstance(pos.element, PositionalElement)
+            self._rel_length_x = cast(PositionalElement, pos.element).pos[0]
+        else:
+            self._rel_length_x = tuple(totuple(pos))[0]
+        #self._rel_length_x = pos[0][0]
         return self
 
     def toy(self, pos):
-        self._rel_length_y = pos[0][1]
+        if isinstance(pos, PinImpl):
+            pin_impl = cast(PinImpl, pos)
+            pos = pin_impl.parent._pos(pin_impl._pos())
+            self._rel_length_y = tuple(totuple(pos[0]))[1]
+        elif isinstance(pos, DrawElement):
+            assert pos.element and isinstance(pos.element, PositionalElement)
+            self._rel_length_y = cast(PositionalElement, pos.element).pos[1]
+        else:
+            self._rel_length_y = tuple(totuple(pos))[1]
+        #self._rel_length_y = pos[0][1]
         return self
 
     def length(self, len: float):

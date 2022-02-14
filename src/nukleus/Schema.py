@@ -1,6 +1,7 @@
 from typing import List, Type, TypeVar
-from .model import SchemaElement, LibrarySymbol, GlobalLabel, LocalLabel, \
-                   Symbol, Junction, Wire, NoConnect, ElementList
+
+from .model import (ElementList, GlobalLabel, Junction, LibrarySymbol,
+                    LocalLabel, NoConnect, SchemaElement, Symbol, Wire)
 
 
 class Schema():
@@ -58,7 +59,7 @@ class Schema():
 
     def has_symbol(self, id: str) -> bool:
         return len([x for x in self.get_elements(LibrarySymbol)
-                if x.identifier == id]) != 0
+                    if x.identifier == id]) != 0
 
     def references(self) -> List[str]:
         syms: List[str] = []
@@ -69,25 +70,24 @@ class Schema():
                     syms.append(symbol.property("Reference").value)
         return sorted(set(syms))
 
-    def __getattr__(self, name, unit=-1) -> List[SchemaElement]|SchemaElement:
-        print("schema getattr")
+    def __getattr__(self, name, unit=-1) -> List[SchemaElement] | SchemaElement:
         syms: ElementList = ElementList()
         for symbol in object.__getattribute__(self, 'elements'):
             if isinstance(symbol, Symbol) and symbol.has_property("Reference"):
                 if self.getSymbol(
-                        symbol.library_identifier).extends != 'power' and \
-                symbol.property('Reference').value == name:
+                    symbol.library_identifier).extends != 'power' and \
+                        symbol.property('Reference').value == name:
                     syms.append(symbol)
         return syms
 
-        raise Exception("symbol and unit not found", name, unit)  # TODO right Exception
 
     def sexp(self) -> str:
         strings: List[str] = []
-        strings.append(f"(kicad_sch (version {self.version}) (generator {self.generator})")
+        strings.append(
+            f"(kicad_sch (version {self.version}) (generator {self.generator})")
         strings.append(f"(uuid {self.uuid})")
         strings.append(f"(paper \"{self.paper}\")")
-        strings.append(f"  (title_block")
+        strings.append("  (title_block")
         strings.append(f"   (title \"{self.title}\")")
         strings.append(f"   (date \"{self.date}\")")
         strings.append(f"   (rev \"{self.rev}\")")
@@ -99,37 +99,35 @@ class Schema():
             strings.append(f"   (comment 3 \"{self.comment_3}\")")
         if len(self.comment_4) > 0:
             strings.append(f"   (comment 4 \"{self.comment_4}\")")
-        strings.append(f"  )")
-        strings.append(f"")
-        strings.append(f"  (lib_symbols")
-        for symbol in self.get_elements(LibrarySymbol):
-                strings.append(symbol.sexp(indent=2))
+        strings.append("  )")
+        strings.append("")
+        strings.append("  (lib_symbols")
+        for lib_symbol in self.get_elements(LibrarySymbol):
+            strings.append(lib_symbol.sexp(indent=2))
         strings.append('  )')
         strings.append('')
         for junction in self.get_elements(Junction):
-                strings.append(junction.sexp())
+            strings.append(junction.sexp())
         strings.append('')
         for no_connect in self.get_elements(NoConnect):
-                strings.append(no_connect.sexp())
+            strings.append(no_connect.sexp())
         strings.append('')
         for wire in self.get_elements(Wire):
-                strings.append(wire.sexp())
+            strings.append(wire.sexp())
         strings.append('')
         for label in self.get_elements(LocalLabel):
-                strings.append(label.sexp())
+            strings.append(label.sexp())
         strings.append('')
-        for label in self.get_elements(GlobalLabel):
-                strings.append(label.sexp())
+        for g_label in self.get_elements(GlobalLabel):
+            strings.append(g_label.sexp())
         strings.append('')
         for symbol in self.get_elements(Symbol):
-                strings.append(symbol.sexp())
-                strings.append('')
+            strings.append(symbol.sexp())
+            strings.append('')
         strings.append('')
 
-        strings.append(f")")
+        strings.append(")")
         return "\r\n".join(strings)
-
-
 
     def __str__(self) -> str:
         strings: List[str] = []

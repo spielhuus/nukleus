@@ -10,7 +10,9 @@ from .TextEffects import TextEffects
 
 @dataclass
 class LocalLabel(PositionalElement):
-    """ Local label """
+    """
+    The label token defines an wire or bus label name in a schematic.
+    """
     text: str
     text_effects: TextEffects
 
@@ -24,14 +26,11 @@ class LocalLabel(PositionalElement):
         return LocalLabel(str(uuid4()), (0, 0), 0, "", TextEffects.new())
 
     def sexp(self, indent=1) -> str:
-        """ Convert this node to sexp.
+        """
+        Output the element as sexp string.
 
-        Args:
-            indent (): the indent count
-
-        Returns:
-            sexp as str.
-
+        :param indent [int]: indent count for this element.
+        :rtype str: sexp string.
         """
         strings: List[str] = []
         strings.append(

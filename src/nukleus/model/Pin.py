@@ -12,6 +12,9 @@ from .TextEffects import TextEffects
 
 @dataclass
 class Pin():
+    """
+    The pin token defines a pin in a symbol definition.
+    """
     type: str
     style: str
     pos: POS_T
@@ -33,6 +36,12 @@ class Pin():
         return np.array([self.pos, self.pos + rot * self.length])
 
     def sexp(self, indent=1) -> str:
+        """
+        Output the element as sexp string.
+
+        :param indent [int]: indent count for this element.
+        :rtype str: sexp string.
+        """
         strings: List[str] = []
         strings.append(f'{"  " * indent}(pin {self.type} {self.style} (at {self.pos[0]:g} '
                        f'{self.pos[1]:g} {self.angle:g}) (length {self.length:g})'

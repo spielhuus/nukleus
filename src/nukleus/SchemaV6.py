@@ -330,7 +330,6 @@ class SchemaV6(Schema):
                     case ["lib_symbols", *symbols]:
                         for s in symbols:
                             lib_symbol = self._lib_symbol(s)
-                            # TODO print(lib_symbol)
                             self.append(lib_symbol)
                     case ["junction", pos, diameter, *color, uuid]:
                         colors = [str(int) for int in color[0][1:]]

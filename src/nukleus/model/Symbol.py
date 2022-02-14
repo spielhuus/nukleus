@@ -40,10 +40,9 @@ class Symbol(PositionalElement):
     on_board: bool
     properties: List[Property]
     pins: List[PinRef]
-    library_symbol: LibrarySymbol | None = None
+    library_symbol: LibrarySymbol
 
     def _pos(self, path):
-        print(f'_pos : {path}')
         theta = np.deg2rad(self.angle)
         trans = np.reshape(MIRROR[self.mirror], (2, 2)).T
         rot = np.array([[math.cos(theta), -math.sin(theta)],
@@ -92,9 +91,14 @@ class Symbol(PositionalElement):
         return sym
 
     def sexp(self, indent=1):
+        """
+        Output the element as sexp string.
+
+        :param indent [int]: indent count for this element.
+        :rtype str: sexp string.
+        """
         strings: List[str] = []
         symbol = f'{"  " * indent}(symbol (lib_id "{self.library_identifier})"'
-        print(f'---AT: {self.property("Reference").value} {self.pos[0]}, {self.pos[1]}')
         symbol += f' (at {self.pos[0]:g} {self.pos[1]:g} {self.angle:g})'
         symbol += f' (unit {self.unit})'
         strings.append(symbol)

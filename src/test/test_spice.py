@@ -16,12 +16,11 @@ class TestSpice(unittest.TestCase):
         schema = load_schema('samples/files/main/main.kicad_sch')
         nl = spice.netlist(schema)
         cwd = os.getcwd() + '/samples/files/spice'
-        print(f'!!! {cwd}')
         models = spice.load_spice_models([cwd])
         circuit = Circuit()
         circuit.models(models)
         spice.schema_to_spice(schema, circuit, nl)
-        self.assertEqual(6, len(circuit.netlist))
+        self.assertEqual(4, len(circuit.netlist))
         self.assertEqual('R3 INPUT 1 100k', circuit.netlist[0].__str__())
         self.assertEqual('R4 1 IN_1 100k', circuit.netlist[1].__str__())
         self.assertEqual('R5 OUTPUT IN_1 1k', circuit.netlist[2].__str__())

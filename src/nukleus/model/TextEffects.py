@@ -22,8 +22,8 @@ class Justify(Enum):
                    'mirror': Justify.MIRROR,
                    'center': Justify.CENTER}
         type_list: List[Justify] = []
-        for t in types:
-            type_list.append(_lookup[t])
+        for _type in types:
+            type_list.append(_lookup[_type])
         return type_list
 
     @staticmethod
@@ -69,6 +69,12 @@ class TextEffects():
         return TextEffects(0, 0, '', '', [], False)
 
     def sexp(self, indent=1) -> str:
+        """
+        Output the element as sexp string.
+
+        :param indent [int]: indent count for this element.
+        :rtype str: sexp string.
+        """
         string = f'{"  " * indent}(effects (font (size '
         string += f'{self.font_height:g} {self.font_width:g})'
         if self.font_thickness != '':

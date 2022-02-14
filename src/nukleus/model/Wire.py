@@ -18,6 +18,12 @@ class Wire(SchemaElement):
         return Wire('lskdfj', [(0, 0), (0, 0)], StrokeDefinition.new())
 
     def sexp(self, indent=1):
+        """
+        Output the element as sexp string.
+
+        :param indent [int]: indent count for this element.
+        :rtype str: sexp string.
+        """
         strings: List[str] = []
         string = ''
         string += f'{"  " * indent}(wire (pts'

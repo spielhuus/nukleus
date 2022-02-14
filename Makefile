@@ -1,23 +1,57 @@
-# Minimal makefile for Sphinx documentation
-#
+VERSION=$(shell grep -Po 'version = \K(\d\.\d\.\d)' setup.cfg)
+VENV = .venv
+PYTHON = $(VENV)/bin/python3
+PIP = $(VENV)/bin/pip
+MYPY = $(VENV)/bin/mypy
+COVERAGE = $(VENV)/bin/coverage
+SPHINX = $(VENV)/bin/sphinx-build
 
 # You can set these variables from the command line, and also
 # from the environment for the first two.
 SPHINXOPTS    ?=
 SPHINXBUILD   ?= sphinx-build
-SOURCEDIR     = .
-BUILDDIR      = _build
+SOURCEDIR     = src/docs
+BUILDDIR      = dist/doc
 
-# Put it first so that "make" without argument is like "make help".
-help:
-	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+COVARAGE_SOURCES = src
+CMD_COVERAGE_TEST = -m unittest discover -s src/test
+CMD_COVERAGE_RUN = $(COVERAGE) run --append --source $(COVARAGE_SOURCES) $(CMD_COVERAGE_TEST)
+TARGET=dist/nukleus-$(VERSION)-py3-none-any.whl
 
-test:
-	python3 -m unittest discover -s src/test
+.PHONY: help test doc clean pyre Makefile
 
-.PHONY: help test Makefile
+all: $(TARGET)
+
+$(TARGET): $(VENV)/bin/activate
+	$(PYTHON) -m build
+
+$(VENV)/bin/activate: requirements.txt
+	python3 -m venv $(VENV)
+	$(PIP) install -r requirements.txt
+
+test: $(VENV)/bin/activate
+	$(PYTHON) -m unittest discover -s src/test
+
+coverage: $(VENV)/bin/activate
+	$(CMD_COVERAGE_RUN)
+	$(COVERAGE) report -m
+
+mypy: 
+	 $(MYPY) src
+
+
+install: $(TARGET)
+	$(PIP) install $(TARGET)
+
+clean:
+	rm -rf dist
+	rm -rf `find src -name __pycache__`
+	rm -rf src/nukleus.egg-info
+	rm -rf $(VENV)
+
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
-%: Makefile
-	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+#%: Makefile
+doc:
+	$(SPHINX) "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)

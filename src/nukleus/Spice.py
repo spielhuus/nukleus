@@ -1,15 +1,14 @@
-from typing import List, Dict, Set, Tuple
-
 import glob
 import math
-import numpy as np
 import os
 import re
+from typing import Dict, List, Set, Tuple
+
+import numpy as np
 
 from . import Circuit
+from .model import POS_T, GlobalLabel, LocalLabel, Pin, Symbol, Wire
 from .Schema import Schema
-
-from .model import GlobalLabel, LocalLabel, Symbol, Pin, Wire, POS_T
 
 
 class Net(object):
@@ -60,7 +59,6 @@ def netlist(schema: Schema) -> Dict[POS_T, Net]:
                     d[c] = net
 
     for wire in schema.get_elements(Wire):
-        print(wire)
         c0 = (wire.pts[0])
         c1 = (wire.pts[1])
         net0 = d.get(c0)
@@ -90,7 +88,7 @@ def netlist(schema: Schema) -> Dict[POS_T, Net]:
 def _spice_primitive(symbol, name) -> bool:
     return (symbol.has_property('Spice_Primitive') and
             symbol.property('Spice_Primitive').value == name) or \
-            symbol.library_identifier == f"Device:{name}"
+        symbol.library_identifier == f"Device:{name}"
 
 
 def schema_to_spice(schema: Schema, circuit: Circuit,
@@ -122,56 +120,49 @@ def schema_to_spice(schema: Schema, circuit: Circuit,
 
                         nets[pin.number[0]] = net.id
 
-        for comp in getattr(schema, ref):
-            if not comp.has_property("Spice_Netlist_Enabled") or \
-            comp.property("Spice_Netlist_Enabled").value == "Y":
-                if comp.has_property("Spice_Primitive") and \
-                comp.property("Spice_Primitive").value == 'X':
+        comp = getattr(schema, ref)[1]  # get the first unit
+        if not comp.has_property("Spice_Netlist_Enabled") or \
+                comp.property("Spice_Netlist_Enabled").value == "Y":
+            if comp.has_property("Spice_Primitive") and \
+                    comp.property("Spice_Primitive").value == 'X':
 
-                    # get the pin numbers/names
-                    seq = [str(_) for _ in range(1, len(nets)+1)]
-                    print(f"+{seq}")
-                    print(f"-{nets.keys()}")
-                    if comp.has_property('Spice_Node_Sequence'):
-                        print(f'has_spice_node_seqence {comp.property("Spice_Node_Sequence").value}')
-                        seq_field = comp.property('Spice_Node_Sequence').value
-                        seq = seq_field.text.split()
-                    elif not all(name in seq for name in nets.keys()):
-                        # not all parts have numbered pins, get the pin names TODO
-                        print(f"get names: {nets.keys()}")
-                        seq = nets.keys()
+                # get the pin numbers/names
+                seq = [str(_) for _ in range(1, len(nets)+1)]
+                if comp.has_property('Spice_Node_Sequence'):
+                    seq_field = comp.property('Spice_Node_Sequence').value
+                    seq = seq_field.text.split()
+                elif not all(name in seq for name in nets.keys()):
+                    # not all parts have numbered pins, get the pin names TODO
+                    seq = nets.keys()
 
-                    print(f"seq {seq}")
+                nodes = []
+                for arg in seq:
+                    nodes.append(str(nets[str(arg)]))
 
-                    nodes = []
-                    for arg in seq:
-                        nodes.append(str(nets[str(arg)]))
+                model = comp.property("Spice_Model").value
+                circuit.X(comp.property("Reference").value, nodes, model)
 
-                    model = comp.property("Spice_Model").value
-                    circuit.X(comp.property("Reference").value, nodes, model)
+            elif _spice_primitive(comp, 'R'):
+                value = comp.property("Value").value
+                if value.lower().endswith('ohm'):
+                    value = value[:-3]
+                # value = unit.parse_unit(value)
+                circuit.R(comp.property("Reference").value,
+                          nets['1'], nets['2'], value)
 
-                elif _spice_primitive(comp, 'R'):
-                    value = comp.property("Value").value
-                    if value.lower().endswith('ohm'):
-                        value = value[:-3]
-                    # value = unit.parse_unit(value)
-                    print(comp.property("Reference").value)
-                    circuit.R(comp.property("Reference").value,
-                            nets['1'], nets['2'], value)
+            elif _spice_primitive(comp, 'C'):
+                value = comp.property("Value").value
+                # if value.lower().endswith('ohm'):
+                #    value = value[:-3]
+                # value = unit.parse_unit(value)
+                circuit.C(comp.property("Reference").value,
+                          nets['1'], nets['2'], value)
 
-                elif _spice_primitive(comp, 'C'):
-                    value = comp.property("Value").value
-                    # if value.lower().endswith('ohm'):
-                    #    value = value[:-3]
-                    # value = unit.parse_unit(value)
-                    circuit.C(comp.property("Reference").value,
-                            nets['1'], nets['2'], value)
-
-                elif _spice_primitive(comp, 'L'):
-                    if value.endswith('H'):
-                        value = value[:-1]
-                    # value = unit.parse_unit(value)
-                    circuit.L(comp.reference, nets['1'], nets['2'], value)
+            elif _spice_primitive(comp, 'L'):
+                if value.endswith('H'):
+                    value = value[:-1]
+                # value = unit.parse_unit(value)
+                circuit.L(comp.reference, nets['1'], nets['2'], value)
 
 
 class spice_model:
@@ -213,7 +204,6 @@ def __model_by_path__(path, models):
         if path == filename:
             return m
 
-    print(f"Model not found: {path}")
     return None
 
 
