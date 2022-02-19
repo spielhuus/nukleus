@@ -85,20 +85,23 @@ class Schema():
         strings: List[str] = []
         strings.append(
             f"(kicad_sch (version {self.version}) (generator {self.generator})")
-        strings.append(f"(uuid {self.uuid})")
-        strings.append(f"(paper \"{self.paper}\")")
+        strings.append('')
+        strings.append(f"  (uuid {self.uuid})")
+        strings.append('')
+        strings.append(f"  (paper \"{self.paper}\")")
+        strings.append('')
         strings.append("  (title_block")
-        strings.append(f"   (title \"{self.title}\")")
-        strings.append(f"   (date \"{self.date}\")")
-        strings.append(f"   (rev \"{self.rev}\")")
+        strings.append(f"    (title \"{self.title}\")")
+        strings.append(f"    (date \"{self.date}\")")
+        strings.append(f"    (rev \"{self.rev}\")")
         if len(self.comment_1) > 0:
-            strings.append(f"   (comment 1 \"{self.comment_1}\")")
+            strings.append(f"    (comment 1 \"{self.comment_1}\")")
         if len(self.comment_2) > 0:
-            strings.append(f"   (comment 2 \"{self.comment_2}\")")
+            strings.append(f"    (comment 2 \"{self.comment_2}\")")
         if len(self.comment_3) > 0:
-            strings.append(f"   (comment 3 \"{self.comment_3}\")")
+            strings.append(f"    (comment 3 \"{self.comment_3}\")")
         if len(self.comment_4) > 0:
-            strings.append(f"   (comment 4 \"{self.comment_4}\")")
+            strings.append(f"    (comment 4 \"{self.comment_4}\")")
         strings.append("  )")
         strings.append("")
         strings.append("  (lib_symbols")
@@ -127,7 +130,7 @@ class Schema():
         strings.append('')
 
         strings.append(")")
-        return "\r\n".join(strings)
+        return "\n".join(strings)
 
     def __str__(self) -> str:
         strings: List[str] = []

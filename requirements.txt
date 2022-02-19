@@ -3,4 +3,6 @@ numpy
 build
 coverage
 sphinx
-git+git://github.com/python/mypy.git@9b3147701f054bf8ef42bd96e33153b05976a5e1
+pyre-check
+git+git://github.com/python/mypy.git
+#git+git://github.com/python/mypy.git@9b3147701f054bf8ef42bd96e33153b05976a5e1

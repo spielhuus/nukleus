@@ -1,20 +1,20 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import List
 
-from .SchemaElement import SchemaElement
-from .Property import Property
-from .GraphicItem import GraphicItem
+from ..SexpParser import SEXP_T
+from .GraphicItem import GraphicItem, Polyline, Rectangle, Circle, Arc
 from .Pin import Pin
+from .Property import Property
+from .SchemaElement import SchemaElement
 
 
-@dataclass
 class LibrarySymbol(SchemaElement):
     """
     The symbol token defines a symbol or sub-unit of a parent symbol.
     There can be zero or more symbol tokens in a symbol library.
     """
+    identifier: str  # TODO
     extends: str
     pin_numbers_hide: bool
     pin_names_offset: float
@@ -26,19 +26,86 @@ class LibrarySymbol(SchemaElement):
     pins: List[Pin]
     units: List[LibrarySymbol]
 
+    def __init__(self, **kwargs) -> None:
+        self.identifier: str = kwargs.get('identifier', '')
+        self.extends: str = kwargs.get('extends', '')
+        self.pin_numbers_hide: bool = kwargs.get('pin_numbers_hide', True)
+        self.pin_names_offset: float = kwargs.get('pin_names_offset', 0)
+        self.pin_names_hide: bool = kwargs.get('pin_names_hide', True)
+        self.in_bom: bool = kwargs.get('in_bom', True)
+        self.on_board: bool = kwargs.get('on_board', True)
+        self.properties: List[Property] = kwargs.get('properties', [])
+        self.graphics: List[GraphicItem] = kwargs.get('graphics', [])
+        self.pins: List[Pin] = kwargs.get('pins', [])
+        self.units: List[LibrarySymbol] = kwargs.get('units', [])
+        super().__init__(kwargs.get('identifier', None))
+
     @classmethod
-    def new(cls):
-        """
-        [TODO:summary]
+    def parse(cls, sexp: SEXP_T) -> NoConnect:
+        _identifier: str = sexp[1]
+        _extends: str = ''
+        _pin_numbers_hide: bool = True
+        _pin_names_offset: float = 0
+        _pin_names_hide: bool = True
+        _in_bom: bool = True
+        _on_board: bool = True
+        _properties: List[Property] = []
+        _graphics: List[GraphicItem] = []
+        _pins: List[Pin] = []
+        _units: List[LibrarySymbol] = []
 
-        [TODO:description]
+        _index = 2
+        if len(sexp) >= 3 and len(sexp[2]) == 1:
+            _extends = sexp[2][0]
+            _index += 1
 
-        Parameters
-        ----------
-        cls : [TODO:type]
-            [TODO:description]
-        """
-        return LibrarySymbol('', '', True, 0, True, False, False, [], [], [], [])
+        for token in sexp[_index:]:
+            match token:
+#                case ['lib_id', id]:
+#                    _identifier = id
+                case ['extends', id]:
+                    _extends = id
+                case ['pin_numbers', flag]:
+                    _pin_numbers_hide = (flag == 'hide')
+                case ['pin_names', 'hide']:
+                    _pin_names_hide = True
+                case ['pin_names', ['offset', offset]]:
+                    _pin_names_offset = float(offset)
+                    _pin_names_hide = False
+                case ['pin_names', ['offset', offset], 'hide']:
+                    _pin_names_offset = float(offset)
+                    _pin_names_hide = True
+                case ['in_bom', flag]:
+                    _in_bom = flag == "yes"
+                case ['on_board', flag]:
+                    _on_board = flag == "yes"
+                case ['property', *_]:
+                    _properties.append(Property.parse(token))
+                case ['polyline', *_]:
+                    _graphics.append(Polyline.parse(token))
+                case ['rectangle', *_]:
+                    _graphics.append(Rectangle.parse(token))
+                case ['circle', *_]:
+                    _graphics.append(Circle.parse(token))
+                case ['arc', *_]:
+                    _graphics.append(Arc.parse(token))
+                case ['symbol', *_]:
+                    _units.append(LibrarySymbol.parse(token))
+                case ['pin', *_]:
+                    pin = Pin.parse(token)
+                    _pins.append(pin)
+                case ['text', *_]:
+                    pass
+                    # TODO print(token)
+                    # _graphics.append(self._rectangle(token))
+                case _:
+                    raise ValueError(f"unknown lib symbol element {token}")
+
+        return LibrarySymbol(
+            identifier=_identifier, extends=_extends, pin_numbers_hide=_pin_numbers_hide,
+            pin_names_offset=_pin_names_offset, pin_names_hide=_pin_names_hide,
+            in_bom=_in_bom, on_board=_on_board, properties=_properties,
+            graphics=_graphics, pins=_pins, units=_units)
 
     def sexp(self, indent=1, is_subsymbol=False):
         """
@@ -74,4 +141,4 @@ class LibrarySymbol(SchemaElement):
             strings.append(u.sexp(indent=indent+1, is_subsymbol=True))
 
         strings.append(f'{"  " * indent})')
-        return "\r\n".join(strings)
+        return "\n".join(strings)

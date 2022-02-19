@@ -1,5 +1,6 @@
 from __future__ import annotations
-
+from inspect import classify_class_attrs
+from typing import List
 from dataclasses import dataclass
 from .SchemaElement import SchemaElement
 
@@ -19,6 +20,52 @@ class SymbolInstanceSection(SchemaElement):
     """
     path: str
     reference: str
-    unit: str
+    unit: int
     value: str
     footprint: str
+
+
+    def __init__(self, **kwargs) -> None:
+        self.path = "" if 'path' not in kwargs else kwargs['path']
+        self.reference = "" if 'reference' not in kwargs else kwargs['reference']
+        self.unit = 0 if 'unit' not in kwargs else kwargs['unit']
+        self.value = "" if 'value' not in kwargs else kwargs['value']
+        self.footprint = "" if 'footprint' not in kwargs else kwargs['footprint']
+        super().__init__(self.path)
+
+    @classmethod
+    def parse(cls, sexp) -> SymbolInstanceSection:
+        _path: str = ""
+        _reference: str = ""
+        _unit: int = 0
+        _value: str = ""
+        _footprint: str = ""
+
+        match sexp:
+            case ['path', path, *childs]:
+                _path = path
+                for item in childs:
+                    match item:
+                        case ['reference', reference]:
+                            _reference = reference
+                        case ['unit', unit]:
+                            _unit = int(unit)
+                        case ['value', value]:
+                            _value = value
+                        case ['footprint', footprint]:
+                            _footprint = footprint
+                        case _:
+                            raise ValueError(f"unknown path item element {childs}")
+            case _:
+                raise ValueError(f"unknown path element {sexp}")
+
+        return SymbolInstanceSection(path=_path, reference=_reference, unit=_unit,
+                                     value=_value, footprint=_footprint)
+
+    def sexp(self, indent: int=1) -> str:
+        strings: List[str] = []
+        strings.append(f'{"  " * indent}(path "{self.path}"')
+        strings.append(f'{"  " * (indent + 1)}(reference "{self.reference}") (unit {self.unit}) '
+                       f'(value "{self.value}") (footprint "{self.footprint}")')
+        strings.append(f'{"  " * indent})')
+        return "\n".join(strings)

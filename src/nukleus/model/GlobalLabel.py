@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import List
 
+import uuid
+
 from .PositionalElement import PositionalElement
 from .Property import Property
 from .TextEffects import TextEffects
@@ -10,9 +12,10 @@ from .TextEffects import TextEffects
 
 @dataclass
 class GlobalLabel(PositionalElement):
-    """ The global_label token defines a label name that is visible across all
-        schematics in a design. This section will not exist if no global labels
-        are defined in the schematic.
+    """ 
+    The global_label token defines a label name that is visible across all
+    schematics in a design. This section will not exist if no global labels
+    are defined in the schematic.
     """
     text: str
     shape: str
@@ -20,7 +23,14 @@ class GlobalLabel(PositionalElement):
     text_effects: TextEffects
     properties: List[Property]
 
-    def sexp(self, indent=1) -> str:
+    @classmethod
+    def new(cls):
+        """
+        Create a new GlobalLabel object.
+        """
+        return GlobalLabel(str(uuid.uuid4()), (0, 0), 0, '', 'output', '', TextEffects.new(), [])
+
+    def sexp(self, indent: int=1) -> str:
         """
         Output the element as sexp string.
 
@@ -28,13 +38,12 @@ class GlobalLabel(PositionalElement):
         :rtype str: sexp string.
         """
         strings: List[str] = []
-        strings.append(f'{"  " * indent}(global_label "{self.text}" (shape {self.shape})'
+        strings.append(f'{"  " * indent}(global_label "{self.text}" (shape {self.shape}) '
                        f'(at {self.pos[0]:g} {self.pos[1]:g} {self.angle:g})'
-                       f'{"" if self.autoplaced == "" else "(fields_autoplaced)"}')
+                       f'{"" if self.autoplaced == "" else " (fields_autoplaced)"}')
         strings.append(self.text_effects.sexp(indent=indent+1))
         strings.append(f'{"  " * (indent + 1)}(uuid {self.identifier})')
         for prop in self.properties:
             strings.append(prop.sexp(indent=indent+1))
         strings.append(f'{"  " * indent})')
-        print(strings)
-        return "\r\n".join(strings)
+        return "\n".join(strings)

@@ -1,29 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import List
+from typing import Any, List
+
+from ..SexpParser import SEXP_T
+from .rgb import rgb
 
 
-class rgb():
-    def __init__(self, r: float, g: float, b: float, a: float):
-        self.r = r
-        self.g = g
-        self.b = b
-        self.a = a
-
-    def get_hex(self):
-        return "#{int(r, 16)}{int(g, 16)}{int(b, 16)}{int(a*100, 16)}"
-
-    def get(self):
-        return (self.r, self.g, self.b, self.a)
-
-    def __eq__(self, other):
-        return self.r == other.r and \
-            self.g == other.g and \
-            self.b == other.b and \
-            self.a == other.a
-
-@dataclass
 class StrokeDefinition():
     """
     The stroke token defines how the outlines of graphical objects are drawn.
@@ -32,11 +14,31 @@ class StrokeDefinition():
     type: str
     color: rgb
 
-    @classmethod
-    def new(cls) -> StrokeDefinition:
-        return StrokeDefinition(0, '', rgb(0, 0, 0, 0))
+    def __init__(self, **kwargs) -> None:
+        self.width = kwargs.get('width', 0)
+        self.type = kwargs.get('type', '')
+        self.color = kwargs.get('color', rgb(0, 0, 0, 0))
 
-    def sexp(self, indent=1):
+    @classmethod
+    def parse(cls, sexp: SEXP_T) -> StrokeDefinition:
+        _width: float = 0
+        _type: str = ''
+        _color: rgb = rgb(0, 0, 0, 0)
+
+        for token in sexp[1:]:
+            match token:
+                case ['width', width]:
+                    _width = float(width)
+                case ['type', stype]:
+                    _type = stype
+                case ["color", *color]:
+                    _color = rgb(*[int(i) for i in color])
+                case _:
+                    raise ValueError(f"unknown stroke element {token}")
+
+        return StrokeDefinition(width=_width, type=_type, color=_color)
+
+    def sexp(self, indent: int = 1) -> str:
         """
         Output the element as sexp string.
 
@@ -50,3 +52,8 @@ class StrokeDefinition():
         strings.append(f'(color {self.color.r} {self.color.g} '
                        f'{self.color.b} {self.color.a}))')
         return "".join(strings)
+
+    def __eq__(self, other: Any) -> Any:
+        return self.width == other.width and \
+            self.type == other.type and \
+            self.color == other.color

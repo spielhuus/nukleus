@@ -35,7 +35,6 @@ class Library():
 
     def load(self, filename):
         parser = ParserV6()
-        print(f"open symbol library: {filename}")
         symbols = []
         parser.libraries(symbols, filename)
         return symbols

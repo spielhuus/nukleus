@@ -4,28 +4,27 @@ Schema implementation for kicad v6 files.
 
 from typing import List, Tuple
 
-import time
 from .Schema import Schema
 from .model import GraphicItem, LibrarySymbol, LocalLabel, GlobalLabel, \
     Rectangle, \
     StrokeDefinition, Symbol, LibrarySymbol, TextEffects, Wire, Junction, \
     NoConnect, Property, Pin, PinRef, HierarchicalSheetInstance, \
-    SymbolInstanceSection, Polyline, FillType, Justify, get_fill_type, rgb
+    SymbolInstanceSection, Polyline, FillType, Justify, get_fill_type, rgb, POS_T
 
-from .SexpParser import load_tree
+from .SexpParser import load_tree, SEXP_T
 
 
 class SchemaV6(Schema):
-    def __init__(self) -> None:
-        """
-        Create a new SchemaV6 Parser.
+#    def __init__(self) -> None:
+#        """
+#        Create a new SchemaV6 Parser.
+#
+#        :return: initialized parser.
+#        :rtype: SchemaV6
+#        """
+#        super().__init__()
 
-        :return: initialized parser.
-        :rtype: SchemaV6
-        """
-        super().__init__()
-
-    def _title_block(self, list) -> None:
+    def _title_block(self, list: SEXP_T) -> None:
         for token in list[1:]:
             match token:
                 case ['title', title]:
@@ -87,7 +86,7 @@ class SchemaV6(Schema):
                     _style = " ".join(style)
                 case ['font', ['size', width, height]]:
                     _width = float(width)
-                    _height = font(height)
+                    _height = float(height)
 
                 case ['justify', *justify]:
                     _justify = Justify.get_justify(justify)
@@ -120,7 +119,7 @@ class SchemaV6(Schema):
         _key: str = tokens[1]
         _value: str = tokens[2]
         _id: str = ""
-        _xy: Tuple(float, float) = (0, 0)
+        _xy: POS_T = (0, 0)
         _angle: float = 0
         _text_effects: List[TextEffects] = []
         for token in tokens[3:]:
@@ -140,7 +139,7 @@ class SchemaV6(Schema):
     def _pin(self, tokens: List):
         _type: str = tokens[1]
         _style: str = tokens[2]
-        _xy: Tuple(float, float) = (0, 0)
+        _xy: POS_T = (0, 0)
         _angle: float = 0
         _length: float = 0
         _name: str = ""
@@ -217,7 +216,7 @@ class SchemaV6(Schema):
         return Rectangle(_fill, _start_x, _start_y, _end_x, _end_y, _stroke[0])
 
     def _symbol(self, tokens: List):
-        _xy: Tuple(float, float) = (0, 0)
+        _xy: POS_T = (0, 0)
         _angle: float = 0
         _lib_id: str = ""
         _mirror: str = ""

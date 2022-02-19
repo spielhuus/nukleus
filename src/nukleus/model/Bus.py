@@ -1,25 +1,28 @@
 from __future__ import annotations
 
-from nukleus.model.StrokeDefinition import StrokeDefinition
+from typing import List
 
+from .SchemaElement import SchemaElement, POS_T
+from .StrokeDefinition import StrokeDefinition
 from ..SexpParser import SEXP_T
-from .SchemaElement import PTS_T, SchemaElement
 
 
-class Wire(SchemaElement):
+class Bus(SchemaElement):
     """
+    The bus tokens define wires and buses in the schematic.
+    This section will not exist if there are no buses
+    in the schematic.
     """
-    pts: PTS_T
+    pts: List[POS_T]
     stroke_definition: StrokeDefinition
 
     def __init__(self, **kwargs) -> None:
         self.pts = kwargs.get('pts', [(0, 0), (0, 0)])
-        self.stroke_definition = kwargs.get(
-            'stroke_definition', StrokeDefinition())
-        super().__init__(identifier=kwargs.get('identifier', ''))
+        self.stroke_definition = kwargs.get('stroke_definition', StrokeDefinition())
+        super().__init__(identifier=kwargs.get('identifier', None))
 
     @classmethod
-    def parse(cls, sexp: SEXP_T) -> Wire:
+    def parse(cls, sexp: SEXP_T) -> Bus:
         _identifier = None
         _pts: PTS_T = []
         _stroke_definition: StrokeDefinition = StrokeDefinition()
@@ -36,11 +39,11 @@ class Wire(SchemaElement):
                 case ['stroke', *stroke]:
                     _stroke_definition = StrokeDefinition.parse(stroke)
                 case _:
-                    raise ValueError(f"unknown wire element {token}")
+                    raise ValueError(f"unknown bus element {token}")
 
-        return Wire(identifier=_identifier, pts=_pts, stroke_definition=_stroke_definition)
+        return Bus(identifier=_identifier, pts=_pts, stroke_definition=_stroke_definition)
 
-    def sexp(self, indent: int = 1) -> str:
+    def sexp(self, indent: int=1) -> str:
         """
         Output the element as sexp string.
 
@@ -48,9 +51,7 @@ class Wire(SchemaElement):
         :rtype str: sexp string.
         """
         strings: List[str] = []
-        string = ''
-        string += f'{"  " * indent}(wire (pts'
-        print(self.pts)
+        string = f'{"  " * indent}(bus (pts'
         for _pt in self.pts:
             string += f' (xy {_pt[0]:g} {_pt[1]:g})'
         string += ')'

@@ -1,18 +1,17 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, List, Tuple, TypeAlias, cast
 
 import numpy as np
 
+from ..SexpParser import SEXP_T
 from .LibrarySymbol import LibrarySymbol
-from .SchemaElement import SchemaElement
 from .Pin import Pin, PinList
 from .PositionalElement import PositionalElement
 from .Property import Property
-
+from .SchemaElement import POS_T, SchemaElement
 
 MIRROR = {
     '': np.array((1, 0, 0, -1)),
@@ -22,16 +21,18 @@ MIRROR = {
 }
 
 
-@dataclass
 class PinRef():
     number: str
     uuid: str
 
+    def __init__(self, number, identifier) -> None:
+        self.number: str = number
+        self.identifier: str = identifier
+
     def sexp(self, indent=1) -> str:
-        return f'{"  " * indent}(pin "{self.number}" (uuid {self.uuid}))'
+        return f'{"  " * indent}(pin "{self.number}" (uuid {self.identifier}))'
 
 
-@dataclass
 class Symbol(PositionalElement):
     mirror: str
     library_identifier: str
@@ -41,6 +42,66 @@ class Symbol(PositionalElement):
     properties: List[Property]
     pins: List[PinRef]
     library_symbol: LibrarySymbol
+
+    def __init__(self, **kwargs) -> None:
+        self.mirror: str = kwargs.get('mirror', '')
+        self.library_identifier: str = kwargs.get('library_identifier', '')
+        self.unit: int = kwargs.get('unit', 0)
+        self.in_bom: bool = kwargs.get('in_bom', True)
+        self.on_board: bool = kwargs.get('on_board', True)
+        self.properties: List[Property] = kwargs.get('properties', [])
+        self.pins: List[PinRef] = kwargs.get('pins', [])
+        self.library_symbol: LibrarySymbol = kwargs.get('library_symbol', None)
+        super().__init__(kwargs.get('identifier', None),
+                         kwargs.get('pos', ((0, 0), (0, 0))),
+                         kwargs.get('angle', 0))
+
+    @classmethod
+    def parse(cls, sexp: SEXP_T) -> Symbol:
+        _identifier: str = ''
+        _pos: POS_T = (0, 0)
+        _angle: float = 0
+        _mirror: str = ''
+        _library_identifier: str = ''
+        _unit: int = 0
+        _in_bom: bool = True
+        _on_board: bool = True
+        _properties: List[Property] = []
+        _pins: List[PinRef] = []
+        _library_symbol: LibrarySymbol | None = None
+
+        for token in sexp[1:]:
+            match token:
+                case ['lib_id', id]:
+                    _library_identifier = id
+                case ['at', x, y, angle]:
+                    _pos = (float(x), float(y))
+                    _angle = float(angle)
+                case ['at', x, y]:
+                    _pos = (float(x), float(y))
+                case ['mirror', mirror]:
+                    _mirror = mirror
+                case ['unit', id]:
+                    _unit = int(id)
+                case ['in_bom', flag]:
+                    _in_bom = flag == "yes"
+                case ['on_board', flag]:
+                    _on_board = flag == "yes"
+                case ['uuid', uuid]:
+                    _uuid = uuid
+                case ['property', *_]:
+                    _properties.append(Property.parse(token))
+                case ['fields_autoplaced']:
+                    pass  # TODO
+                case ['pin', *items]:
+                    _pins.append(PinRef(items[0], items[1][1]))
+                case _:
+                    raise ValueError(f"unknown symbol element {token}")
+
+        return Symbol(identifier=_identifier, pos=_pos, angle=_angle,
+                      mirror=_mirror, library_identifier=_library_identifier, unit=_unit,
+                      in_bom=_in_bom, on_board=_on_board, properties=_properties,
+                      pins=_pins, library_symbol=_library_symbol)
 
     def _pos(self, path):
         theta = np.deg2rad(self.angle)
@@ -98,8 +159,8 @@ class Symbol(PositionalElement):
         :rtype str: sexp string.
         """
         strings: List[str] = []
-        symbol = f'{"  " * indent}(symbol (lib_id "{self.library_identifier})"'
-        symbol += f' (at {self.pos[0]:g} {self.pos[1]:g} {self.angle:g})'
+        symbol = f'{"  " * indent}(symbol (lib_id "{self.library_identifier}")'
+        symbol += f' (at {self.pos[0]:4g} {self.pos[1]:4g} {self.angle:g})'
         symbol += f' (unit {self.unit})'
         strings.append(symbol)
         symbol = f'{"  " * (indent + 1)}(in_bom {"yes" if self.in_bom else "no"}) '
@@ -113,7 +174,7 @@ class Symbol(PositionalElement):
             strings.append(pin.sexp(indent=indent+1))
 
         strings.append(f'{"  " * indent})')
-        return "\r\n".join(strings)
+        return "\n".join(strings)
 
 
 class ElementList(List[SchemaElement]):

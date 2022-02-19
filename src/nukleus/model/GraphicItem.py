@@ -1,54 +1,58 @@
 from __future__ import annotations
 
-from abc import abstractmethod
-from dataclasses import dataclass
-from enum import Enum
 from typing import List, Tuple
 
+from ..SexpParser import SEXP_T
+from .FillType import FillType, get_fill_str, get_fill_type
 from .PositionalElement import POS_T
 from .StrokeDefinition import StrokeDefinition
 
 
-class FillType(Enum):
-    FOREGROUND = 1
-    BACKGROUND = 2
-    NONE = 3
-
-
-def get_fill_str(type: FillType) -> str:
-    if type == FillType.FOREGROUND:
-        return 'outline'
-    elif type == FillType.BACKGROUND:
-        return 'background'
-    else:
-        return 'none'
-
-
-def get_fill_type(type: str) -> FillType:
-    if type == 'outline':
-        return FillType.FOREGROUND
-    elif type == 'background':
-        return FillType.BACKGROUND
-    else:
-        return FillType.NONE
-
-
-@dataclass
 class GraphicItem():
     """Abstract Class for a GraphicItem."""
     fill: FillType
     """ Fill type of the Graphic"""
 
-    def sexp(self, indent=1) -> str:
+    def __init__(self, fill) -> None:
+        self.fill = fill
+
+    def sexp(self, indent: int = 1) -> str:
         assert False, f'abstract method called with indent: {indent}'
 
 
-@dataclass
 class Polyline(GraphicItem):
     points: List[Tuple[float, float]]
     stroke_definition: StrokeDefinition
 
-    def sexp(self, indent=1) -> str:
+    def __init__(self, **kwargs) -> None:
+        self.points: List[Tuple[float, float]] = kwargs.get('points', [])
+        self.stroke_definition: StrokeDefinition = kwargs.get(
+            'stroke_definition', StrokeDefinition())
+        super().__init__(kwargs.get('fill', FillType.NONE))
+
+    @classmethod
+    def parse(cls, sexp: SEXP_T) -> Polyline:
+        _fill: FillType = FillType.NONE
+        _points: List[Tuple[float, float]] = []
+        _stroke_definition: StrokeDefinition = StrokeDefinition()
+
+        for token in sexp[1:]:
+            match token:
+                case ['pts', *_]:
+                    for _pt in token:
+                        match _pt:
+                            case ['xy', x, y]:
+                                _points.append((float(x), float(y)))
+                case ['stroke', *_]:
+                    _stroke_definition = StrokeDefinition.parse(token)
+                case ['fill', ['type', fill]]:
+                    _fill = get_fill_type(fill)
+                case _:
+                    raise ValueError(f"unknown polyline element {token}")
+
+        return Polyline(fill=_fill, points=_points, stroke_definition=_stroke_definition)
+
+    def sexp(self, indent: int = 1) -> str:
         """
         Output the element as sexp string.
 
@@ -65,10 +69,9 @@ class Polyline(GraphicItem):
         strings.append(
             f'{"  " * (indent + 1)}(fill (type {get_fill_str(self.fill)}))')
         strings.append(f'{"  " * indent})')
-        return "\r\n".join(strings)
+        return "\n".join(strings)
 
 
-@dataclass
 class Rectangle(GraphicItem):
     start_x: float
     start_y: float
@@ -76,7 +79,43 @@ class Rectangle(GraphicItem):
     end_y: float
     stroke_definition: StrokeDefinition
 
-    def sexp(self, indent=1) -> str:
+    def __init__(self, **kwargs) -> None:
+        self.start_x: float = kwargs.get('start_x', 0)
+        self.start_y: float = kwargs.get('start_y', 0)
+        self.end_x: float = kwargs.get('end_x', 0)
+        self.end_y: float = kwargs.get('end_y', 0)
+        self.stroke_definition: StrokeDefinition = kwargs.get(
+            'stroke_definition', StrokeDefinition())
+        super().__init__(kwargs.get('fill', FillType.NONE))
+
+    @classmethod
+    def parse(cls, sexp: SEXP_T) -> Rectangle:
+        _start_x: float = 0
+        _start_y: float = 0
+        _end_x: float = 0
+        _end_y: float = 0
+        _fill: FillType = FillType.NONE
+        _stroke_definition: StrokeDefinition = StrokeDefinition()
+
+        for token in sexp[1:]:
+            match token:
+                case ['start', x, y]:
+                    _start_x = float(x)
+                    _start_y = float(y)
+                case ['end', x, y]:
+                    _end_x = float(x)
+                    _end_y = float(y)
+                case ['stroke', *_]:
+                    _stroke_definition = StrokeDefinition.parse(token)
+                case ['fill', ['type', fill]]:
+                    _fill = get_fill_type(fill)
+                case _:
+                    raise ValueError(f"unknown polyline element {token}")
+
+        return Rectangle(start_x=_start_x, start_y=_start_y, end_x=_end_x, end_y=_end_y,
+                         fill=_fill, stroke_definition=_stroke_definition)
+
+    def sexp(self, indent: int = 1) -> str:
         """
         Output the element as sexp string.
 
@@ -91,17 +130,46 @@ class Rectangle(GraphicItem):
         strings.append(
             f'{"  " * (indent + 1)}(fill (type {get_fill_str(self.fill)}))')
         strings.append(f'{"  " * indent})')
-        return "\r\n".join(strings)
+        return "\n".join(strings)
 
 
-@dataclass
 class Circle(GraphicItem):
     """ The circle token defines a graphical circle in a symbol definition. """
     center: POS_T
     radius: float
     stroke_definition: StrokeDefinition
 
-    def sexp(self, indent=1) -> str:
+    def __init__(self, **kwargs) -> None:
+        self.center: float = kwargs.get('center', 0)
+        self.radius: float = kwargs.get('radius', 0)
+        self.stroke_definition: StrokeDefinition = kwargs.get(
+            'stroke_definition', StrokeDefinition())
+        super().__init__(kwargs.get('fill', FillType.NONE))
+
+    @classmethod
+    def parse(cls, sexp: SEXP_T) -> Circle:
+        _center: POS_T = (0, 0)
+        _radius: float = 0
+        _fill: FillType = FillType.NONE
+        _stroke_definition: StrokeDefinition = StrokeDefinition()
+
+        for token in sexp[1:]:
+            match token:
+                case ['center', x, y]:
+                    _center = (float(x), float(y))
+                case ['radius', r]:
+                    _radius = float(r)
+                case ['stroke', *_]:
+                    _stroke_definition = StrokeDefinition.parse(token)
+                case ['fill', ['type', fill]]:
+                    _fill = get_fill_type(fill)
+                case _:
+                    raise ValueError(f"unknown polyline element {token}")
+
+        return Circle(center=_center, radius=_radius,
+                         fill=_fill, stroke_definition=_stroke_definition)
+
+    def sexp(self, indent: int = 1) -> str:
         """
         Output the element as sexp string.
 
@@ -110,10 +178,9 @@ class Circle(GraphicItem):
         """
         # TODO
         strings: List[str] = []
-        return "\r\n".join(strings)
+        return "\n".join(strings)
 
 
-@dataclass
 class Arc(GraphicItem):
     """ The arc token defines a graphical arc in a symbol definition. """
     start: POS_T
@@ -121,7 +188,41 @@ class Arc(GraphicItem):
     end: POS_T
     stroke_definition: StrokeDefinition
 
-    def sexp(self, indent=1) -> str:
+    def __init__(self, **kwargs) -> None:
+        self.start: float = kwargs.get('start', (0, 0))
+        self.mid: float = kwargs.get('mid', (0, 0))
+        self.end: float = kwargs.get('end', (0, 0))
+        self.stroke_definition: StrokeDefinition = kwargs.get(
+            'stroke_definition', StrokeDefinition())
+        super().__init__(kwargs.get('fill', FillType.NONE))
+
+    @classmethod
+    def parse(cls, sexp: SEXP_T) -> Arc:
+        _start: POS_T = (0, 0)
+        _mid: POS_T = (0, 0)
+        _end: POS_T = (0, 0)
+        _fill: FillType = FillType.NONE
+        _stroke_definition: StrokeDefinition = StrokeDefinition()
+
+        for token in sexp[1:]:
+            match token:
+                case ['start', x, y]:
+                    _start = (float(x), float(y))
+                case ['mid', x, y]:
+                    _mid = (float(x), float(y))
+                case ['end', x, y]:
+                    _end = (float(x), float(y))
+                case ['stroke', *_]:
+                    _stroke_definition = StrokeDefinition.parse(token)
+                case ['fill', ['type', fill]]:
+                    _fill = get_fill_type(fill)
+                case _:
+                    raise ValueError(f"unknown polyline element {token}")
+
+        return Arc(start=_start, mid=_mid, end=_end,
+                         fill=_fill, stroke_definition=_stroke_definition)
+
+    def sexp(self, indent: int = 1) -> str:
         """
         Output the element as sexp string.
 
@@ -130,4 +231,4 @@ class Arc(GraphicItem):
         """
         # TODO
         strings: List[str] = []
-        return "\r\n".join(strings)
+        return "\n".join(strings)

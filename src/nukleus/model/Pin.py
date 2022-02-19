@@ -1,16 +1,15 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 import numpy as np
 
+from ..SexpParser import SEXP_T
 from .PositionalElement import POS_T, PositionalElement
 from .TextEffects import TextEffects
 
 
-@dataclass
 class Pin():
     """
     The pin token defines a pin in a symbol definition.
@@ -20,15 +19,56 @@ class Pin():
     pos: POS_T
     angle: float
     length: float
-    hidden: bool
     name: Tuple[str, TextEffects]
     number: Tuple[str, TextEffects]
 
+    def __init__(self, **kwargs) -> None:
+        self.type = kwargs.get('type', '')
+        self.style = kwargs.get('style', '')
+        self.pos = kwargs.get('pos', (0, 0))
+        self.angle = kwargs.get('angle', 0)
+        self.length = kwargs.get('length', 0)
+        self.name = kwargs.get('name', ('~', TextEffects()))
+        self.number = kwargs.get('number', ('0', TextEffects()))
+
     @classmethod
-    def new(cls, number: str, name: str) -> Pin:
-        return Pin("", "", (0, 0), 0, 0, True,
-                   (name, TextEffects.new()),
-                   (number, TextEffects.new()))
+    def parse(cls, sexp: SEXP_T) -> Pin:
+        _type = ''
+        _style = ''
+        _pos = (0, 0)
+        _angle = 0
+        _length = 0
+        _hidden = True
+        _name = ()
+        _number = ()
+
+        for token in sexp[1:]:
+            match token:
+                case ['at', x, y, angle]:
+                    _pos = (float(x), float(y))
+                    _angle = float(angle)
+                case ['at', x, y]:
+                    _pos = (float(x), float(y))
+                case ['length', length]:
+                    _length = float(length)
+                case ['name', name, *effects]:
+                    _name = (name, TextEffects.parse(effects[0]))
+                case ['number', number, *effects]:
+                    _number = (number, TextEffects.parse(effects[0]))
+                case 'hide':
+                    _hidden = True
+                case 'input'|'output'|'bidirectional'|'tri_state'|'passive'|'free'|'unspecified'| \
+                     'power_in'|'power_out'|'open_collector'|'open_emitter'|'no_connect':
+                    _type = token
+                case 'line'|'inverted'|'clock'|'inverted_clock'|'input_low'|'clock_low'| \
+                     'output_low'|'edge_clock_high'|'non_logic':
+                    _style = token
+                case _:
+                    raise ValueError(f"unknown property element {token}")
+
+
+        return Pin(type=_type, style=_style, pos=_pos, angle=_angle,
+                   length=_length, hidden=_hidden, name=_name, number=_number)
 
     def _pos(self):
         theta = np.deg2rad(self.angle)
@@ -44,18 +84,17 @@ class Pin():
         """
         strings: List[str] = []
         strings.append(f'{"  " * indent}(pin {self.type} {self.style} (at {self.pos[0]:g} '
-                       f'{self.pos[1]:g} {self.angle:g}) (length {self.length:g})'
-                       f'{"" if self.hidden == False else " hide"}')
+                       f'{self.pos[1]:g} {self.angle:g}) (length {self.length:g})')
         strings.append(
             f'{"  " * (indent + 1)}(name "{self.name[0]}" {self.name[1].sexp(indent=0)})')
         strings.append(
             f'{"  " * (indent + 1)}(number "{self.number[0]}" {self.number[1].sexp(indent=0)})')
         strings.append(f'{"  " * indent})')
-        return "\r\n".join(strings)
+        return "\n".join(strings)
 
 
 class PinImpl(Pin):
-    def __init__(self, parent: PositionalElement, pin):
+    def __init__(self, parent: PositionalElement, pin: Pin):
         super().__init__(pin.type, pin.style, pin.pos, pin.angle,
                          pin.length, pin.hidden, pin.name, pin.number)
         self.parent = parent

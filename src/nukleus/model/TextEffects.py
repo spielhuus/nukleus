@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List
 from enum import Enum
+from typing import List
+
+from ..SexpParser import SEXP_T
 
 
 class Justify(Enum):
@@ -64,9 +66,43 @@ class TextEffects():
     justify: List[Justify]
     hidden: bool
 
+    def __init__(self, **kwargs) -> None:
+        self.font_width = kwargs.get('font_width', 0)
+        self.font_height = kwargs.get('font_height', 0)
+        self.font_thickness = kwargs.get('font_thickness', '')
+        self.font_style = kwargs.get('font_style', '')
+        self.justify = kwargs.get('justify', [])
+        self.hidden = kwargs.get('hidden', True)
+
     @classmethod
-    def new(cls) -> TextEffects:
-        return TextEffects(0, 0, '', '', [], False)
+    def parse(cls, sexp: SEXP_T) -> TextEffects:
+        _font_width = 0
+        _font_height = 0
+        _font_thickness = ''
+        _font_style = ''
+        _justify = []
+        _hidden = False
+
+        for token in sexp[1:]:
+            match token:
+                case ['font', ['size', width, height], *style]:
+                    _font_width = float(width)
+                    _font_height = float(height)
+                    _font_style = " ".join(style)
+                case ['font', ['size', width, height]]:
+                    _font_width = float(width)
+                    _font_height = float(height)
+
+                case ['justify', *justify]:
+                    _justify = Justify.get_justify(justify)
+                case 'hide':
+                    _hidden = True
+                case _:
+                    raise ValueError(f"unknown effects element {token}")
+
+        return TextEffects(font_width=_font_width, font_height=_font_height,
+                           font_thickness=_font_thickness, font_style=_font_style,
+                           justify=_justify, hidden=_hidden)
 
     def sexp(self, indent=1) -> str:
         """

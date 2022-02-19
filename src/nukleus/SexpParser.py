@@ -1,15 +1,19 @@
+from typing import List, Union, Tuple, TypeAlias
 
-def load_tree(input: str):
+SEXP_T: TypeAlias = List[str|List[str]]
+
+def load_tree(input: str) -> SEXP_T:
     length = len(input)
 
-    def tr(index: int):
-        res = []
+    def tr(index: int) -> Tuple[SEXP_T, int]:
+        res: SEXP_T = []
         item = input[index]
 
         while item != ")":
             if item in [' ', '\n', '\r']:
                 pass
             elif item == '(':
+                subtree: SEXP_T = []
                 subtree, index = tr(index + 1)
                 res.append(subtree)
             elif item == '"':
@@ -40,13 +44,5 @@ def load_tree(input: str):
             index += 1
             item = input[index]
         return res, index
-
-    return tr(1)[0]
-
-
-#with open("/home/etienne/Documents/elektrophon/content/summe/main/main.kicad_sch", 'r') as file:
-#    content = file.read()
-#
-#    tree = make_tree(content)
-#
-#    #pprint.pprint(tree)
+    
+    return tr(input.find('(')+1)[0]

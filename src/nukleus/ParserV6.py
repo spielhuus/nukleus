@@ -3,9 +3,14 @@ from typing import List, Tuple
 from .Schema import Schema
 from .model import POS_T, GraphicItem, LibrarySymbol, LocalLabel, GlobalLabel, \
     Rectangle, \
-    StrokeDefinition, Symbol, LibrarySymbol, TextEffects, Wire, Junction, \
+    StrokeDefinition, Symbol, TextEffects, Wire, \
     NoConnect, Property, Pin, PinRef, HierarchicalSheetInstance, \
     SymbolInstanceSection, Circle, Arc, Polyline, FillType, Justify, get_fill_type, rgb
+
+from .model.Junction import Junction
+from .model.LibrarySymbol import LibrarySymbol
+from .model.NoConnect import NoConnect
+from .model.Symbol import Symbol
 
 from .SexpParser import load_tree
 
@@ -67,32 +72,32 @@ class ParserV6():
 
         return (_x, _y), _angle
 
-    def _effects(self, tokens: List) -> TextEffects:
-        _width: float = 0
-        _height: float = 0
-        _thickness: str = ""
-        _style: str = ""
-        _justify: List[Justify] = []
-        _hidden: bool = False
-        for token in tokens[1:]:
-            match token:
-                case ['font', ['size', width, height], *style]:
-                    _width = float(width)
-                    _height = float(height)
-                    _style = " ".join(style)
-                case ['font', ['size', width, height]]:
-                    _width = float(width)
-                    _height = float(height)
-
-                case ['justify', *justify]:
-                    _justify = Justify.get_justify(justify)
-                case 'hide':
-                    _hidden = True
-                case _:
-                    raise ValueError(f"unknown effects element {token}")
-
-        return TextEffects(_width, _height, _thickness, _style,
-                           _justify, _hidden)
+#    def _effects(self, tokens: List) -> TextEffects:
+#        _width: float = 0
+#        _height: float = 0
+#        _thickness: str = ""
+#        _style: str = ""
+#        _justify: List[Justify] = []
+#        _hidden: bool = False
+#        for token in tokens[1:]:
+#            match token:
+#                case ['font', ['size', width, height], *style]:
+#                    _width = float(width)
+#                    _height = float(height)
+#                    _style = " ".join(style)
+#                case ['font', ['size', width, height]]:
+#                    _width = float(width)
+#                    _height = float(height)
+#
+#                case ['justify', *justify]:
+#                    _justify = Justify.get_justify(justify)
+#                case 'hide':
+#                    _hidden = True
+#                case _:
+#                    raise ValueError(f"unknown effects element {token}")
+#
+#        return TextEffects(_width, _height, _thickness, _style,
+#                           _justify, _hidden)
 
     def _stroke(self, tokens: List) -> StrokeDefinition:
         _width: float = 0
@@ -109,7 +114,7 @@ class ParserV6():
                 case _:
                     raise ValueError(f"unknown stroke element {token}")
 
-        return StrokeDefinition(_width, _type, _colors)
+        return StrokeDefinition(width=_width, type=_type, color=_colors)
 
     def _property(self, tokens: List):
         _key: str = tokens[1]
@@ -284,7 +289,7 @@ class ParserV6():
                 case ['uuid', uuid]:
                     _uuid = uuid
                 case ['property', *_]:
-                    _properties.append(self._property(token))
+                    _properties.append(Property.parse(token))
                 case ['fields_autoplaced']:
                     pass  # TODO
                 case ['pin', *items]:
@@ -296,73 +301,73 @@ class ParserV6():
         for _ls in self.library_symbols:
             if _ls.identifier == _lib_id:
                 library_symbol = _ls
-        assert library_symbol, f'library symbol {_lib_id} not found.'
+        #assert library_symbol, f'library symbol {_lib_id} not found.'
         return(Symbol(_uuid, _xy, _angle, _mirror, _lib_id,
                       _unit, _in_bom, _on_board, _properties, _pins, library_symbol))
 
-    def _lib_symbol(self, tokens: List) -> LibrarySymbol:
-        _lib_id: str = tokens[1]
-        _inherit: str = ''
-        _in_bom: bool = True
-        _on_board: bool = True
-        _properties: List[Property] = []
-        _pin_numbers: bool = False
-        _offset: float = 0
-        _pin_hidden: bool = False
-        _pins: List[Pin] = []
-        _index = 2
-        _sub_symbols: List[LibrarySymbol] = []
-        _graphics: List[GraphicItem] = []
-        if len(tokens) >= 3 and len(tokens[2]) == 1:
-            _inherit = tokens[2][0]
-            _index += 1
-
-        for token in tokens[_index:]:
-            match token:
-                case ['lib_id', id]:
-                    _lib_id = id
-                case ['extends', id]:
-                    _inherit = id
-                case ['pin_numbers', flag]:
-                    _pin_numbers = (flag == 'hide')
-                case ['pin_names', 'hide']:
-                    _pin_hidden = True
-                case ['pin_names', ['offset', offset]]:
-                    _offset = float(offset)
-                    _pin_hidden = False
-                case ['pin_names', ['offset', offset], 'hide']:
-                    _offset = float(offset)
-                    _pin_hidden = True
-                case ['in_bom', flag]:
-                    _in_bom = flag == "yes"
-                case ['on_board', flag]:
-                    _on_board = flag == "yes"
-                case ['property', *_]:
-                    _properties.append(self._property(token))
-                case ['polyline', *_]:
-                    _graphics.append(self._polyline(token))
-                case ['rectangle', *_]:
-                    _graphics.append(self._rectangle(token))
-                case ['circle', *_]:
-                    _graphics.append(self._circle(token))
-                case ['arc', *_]:
-                    _graphics.append(self._arc(token))
-                case ['symbol', *_]:
-                    _sub_symbols.append(self._lib_symbol(token))
-                case ['pin', *_]:
-                    pin = self._pin(token)
-                    _pins.append(pin)
-                case ['text', *_]:
-                    pass
-                    # TODO print(token)
-                    # _graphics.append(self._rectangle(token))
-                case _:
-                    raise ValueError(f"unknown lib symbol element {token}")
-
-        return(LibrarySymbol(_lib_id, _inherit, _pin_numbers, _offset,
-               _pin_hidden, _in_bom, _on_board, _properties, _graphics,
-               _pins, _sub_symbols))
-
+#    def _lib_symbol(self, tokens: List) -> LibrarySymbol:
+#        _lib_id: str = tokens[1]
+#        _inherit: str = ''
+#        _in_bom: bool = True
+#        _on_board: bool = True
+#        _properties: List[Property] = []
+#        _pin_numbers: bool = False
+#        _offset: float = 0
+#        _pin_hidden: bool = False
+#        _pins: List[Pin] = []
+#        _index = 2
+#        _sub_symbols: List[LibrarySymbol] = []
+#        _graphics: List[GraphicItem] = []
+#        if len(tokens) >= 3 and len(tokens[2]) == 1:
+#            _inherit = tokens[2][0]
+#            _index += 1
+#
+#        for token in tokens[_index:]:
+#            match token:
+#                case ['lib_id', id]:
+#                    _lib_id = id
+#                case ['extends', id]:
+#                    _inherit = id
+#                case ['pin_numbers', flag]:
+#                    _pin_numbers = (flag == 'hide')
+#                case ['pin_names', 'hide']:
+#                    _pin_hidden = True
+#                case ['pin_names', ['offset', offset]]:
+#                    _offset = float(offset)
+#                    _pin_hidden = False
+#                case ['pin_names', ['offset', offset], 'hide']:
+#                    _offset = float(offset)
+#                    _pin_hidden = True
+#                case ['in_bom', flag]:
+#                    _in_bom = flag == "yes"
+#                case ['on_board', flag]:
+#                    _on_board = flag == "yes"
+#                case ['property', *_]:
+#                    _properties.append(Property.parse(token))
+#                case ['polyline', *_]:
+#                    _graphics.append(self._polyline(token))
+#                case ['rectangle', *_]:
+#                    _graphics.append(self._rectangle(token))
+#                case ['circle', *_]:
+#                    _graphics.append(self._circle(token))
+#                case ['arc', *_]:
+#                    _graphics.append(self._arc(token))
+#                case ['symbol', *_]:
+#                    _sub_symbols.append(self._lib_symbol(token))
+#                case ['pin', *_]:
+#                    pin = self._pin(token)
+#                    _pins.append(pin)
+#                case ['text', *_]:
+#                    pass
+#                    # TODO print(token)
+#                    # _graphics.append(self._rectangle(token))
+#                case _:
+#                    raise ValueError(f"unknown lib symbol element {token}")
+#
+#        return(LibrarySymbol(_lib_id, _inherit, _pin_numbers, _offset,
+#               _pin_hidden, _in_bom, _on_board, _properties, _graphics,
+#               _pins, _sub_symbols))
+#
     def schema(self, schema: Schema, file: str) -> None:
         """
         Open a schema from the filesystem.
@@ -385,33 +390,38 @@ class ParserV6():
                     case ["title_block", *_]:
                         self._title_block(schema, item)
                     case ["lib_symbols", *symbols]:
-                        for s in symbols:
-                            lib_symbol = self._lib_symbol(s)
-                            self.library_symbols.append(lib_symbol)
-                            schema.append(lib_symbol)
+                        for symbol in symbols:
+                            schema.append(LibrarySymbol.parse(symbol))
+#                            lib_symbol = self._lib_symbol(s)
+#                            self.library_symbols.append(lib_symbol)
+#                            schema.append(lib_symbol)
                     case ["junction", pos, diameter, *color, uuid]:
-                        colors = [str(int) for int in color[0][1:]]
-                        _xy, _angle = self._pos(pos)
-                        schema.append(Junction(
-                            uuid[1],
-                            _xy, _angle,
-                            float(diameter[1]),
-                            " ".join(colors)
-                        ))
+                        schema.append(Junction.parse(item))
+#                        colors = [str(int) for int in color[0][1:]]
+#                        _xy, _angle = self._pos(pos)
+#                        schema.append(Junction(
+#                            uuid[1],
+#                            _xy, _angle,
+#                            float(diameter[1]),
+#                            " ".join(colors)
+#                        ))
                     case ["no_connect", pos, uuid]:
-                        _xy, _angle = self._pos(pos)
-                        schema.append(NoConnect(
-                            uuid[1],
-                            _xy, _angle
-                        ))
+                        schema.append(NoConnect.parse(item))
+#                        _xy, _angle = self._pos(pos)
+#                        schema.append(NoConnect(
+#                            uuid[1],
+#                            _xy, _angle
+#                        ))
                     case ["bus_entry", pts, size, stroke, uuid]:
                         print(f"bus_entry: {uuid}")
                     case ["wire", pts, stroke, uuid]:
-                        schema.append(Wire(
-                            uuid[1],
-                            self._pts(pts),
-                            self._stroke(stroke)
-                        ))
+                        schema.append(Wire.parse(item))
+                        #schema.append(Wire(identifier=uuid, pts=pts, stroke_definition=stroke))
+#                        schema.append(Wire(
+#                            uuid[1],
+#                            self._pts(pts),
+#                            self._stroke(stroke)
+#                        ))
                     case ["bus", pts, stroke, uuid]:
                         print(f"bus: {uuid}")
                     case ["image", pos, scale, uuid, data]:
@@ -424,80 +434,66 @@ class ParserV6():
                         print(f"text: {uuid}")
                         _xy, _angle = self._pos(pos)
                     case ["label", text, pos, effects, uuid]:
-                        _xy, _angle = self._pos(pos)
-                        schema.append(LocalLabel(
-                            uuid[1],
-                            _xy, _angle,
-                            text,
-                            self._effects(effects),  # text effects
-                        ))
+                        schema.append(LocalLabel.parse(item))
+#                        _xy, _angle = self._pos(pos)
+#                        schema.append(LocalLabel(
+#                            uuid[1],
+#                            _xy, _angle,
+#                            text,
+#                            self._effects(effects),  # text effects
+#                        ))
                     case ["global_label", text, shape, pos, autoplaced,
                           effects, uuid, *properties]:
-                        _xy, _angle = self._pos(pos)
-                        schema.append(GlobalLabel(
-                            uuid[1],  # UUID
-                            _xy, _angle,  # position
-                            text,  # text
-                            shape[1],  # shape
-                            autoplaced,  # autoplaced
-                            self._effects(effects),  # text effects
-                            [self._property(x) for x in properties] # properties
-                        ))
+                        print("global_label")
+#                        _xy, _angle = self._pos(pos)
+#                        schema.append(GlobalLabel(
+#                            uuid[1],  # UUID
+#                            _xy, _angle,  # position
+#                            text,  # text
+#                            shape[1],  # shape
+#                            autoplaced,  # autoplaced
+#                            self._effects(effects),  # text effects
+#                            [Property.parse(x) for x in properties] # properties
+#                        ))
                     case ["global_label", text, shape, pos, effects,
                           uuid, *properties]:
-                        _xy, _angle = self._pos(pos)
-                        schema.append(GlobalLabel(
-                            uuid[1],  # UUID
-                            _xy, _angle,  # position
-                            text,  # text
-                            shape[1],  # shape
-                            "No",  # autoplaced
-                            self._effects(effects),  # text effects
-                            [self._property(x) for x in properties] # properties
-                        ))
+                        print("global_label")
+#                        _xy, _angle = self._pos(pos)
+#                        schema.append(GlobalLabel(
+#                            uuid[1],  # UUID
+#                            _xy, _angle,  # position
+#                            text,  # text
+#                            shape[1],  # shape
+#                            "No",  # autoplaced
+#                            self._effects(effects),  # text effects
+#                            [Property.parse(x) for x in properties] # properties
+#                        ))
                     case ["hierarchical_label", text, shape, pos, effects, uuid]:
                         print(f"hierarchical_label: {uuid}")
                     case ["symbol", *items]:
-                        schema.append(self._symbol(items))
+                        schema.append(Symbol.parse(items))
                     case ["sheet", pos, size, autoplaced, stroke, fill, uuid, sheet_name, file_name, *pins]:
                         print(f"sheet: {uuid}")
                         _xy, _angle = self._pos(pos)
                     case ["sheet", pos, size, stroke, fill, uuid, sheet_name, file_name, *pins]:
                         print(f"sheet: {uuid}")
                     case ["sheet_instances", info, *paths]:
-                        print(f"sheet_instances: {info}")
-                        # HierarchicalSheetInstance(
-                        #     "", item[1][1][0], int(item[1][2][1][0]))
-                        # )
-                    case ["symbol_instances", info, *paths]:
-                        print(f"symbol_instances: {len(paths)}")
-            #                 self.append(SymbolInstanceSection(
-            #                     instance[1][0],
-            #                     instance[1][0],
-            #                     instance[2][1][0],
-            #                     instance[3][1],
-            #                     instance[4][1][0],
-            #                     instance[5][1][0]
-
-            #                 ))
+                        for path in paths:
+                            schema.append(HierarchicalSheetInstance.parse(path))
+                    case ["symbol_instances", *paths]:
+                        for path in paths:
+                            schema.append(SymbolInstanceSection.parse(path))
                     case _:
                         print(f"!!! {item}")
 
 
     def libraries(self, target, file: str) -> None:
 
-        print(f"parse library {file}")
         with open(file, 'r') as f:
             parsed = load_tree(f.read())
             for item in parsed[1:]:
                 match item:
                     case ["symbol", *_]:
-                        #print(f"found symbols: {len(symbols)}")
-                        #pprint(symbols)
-                        #for s in symbols:
-                        #    pprint(s)
                         target.append(self._lib_symbol(item))
                     case _:
                         print(f"!!! {item}")
-
-

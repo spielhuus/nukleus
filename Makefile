@@ -2,7 +2,7 @@ VERSION=$(shell grep -Po 'version = \K(\d\.\d\.\d)' setup.cfg)
 VENV = .venv
 PYTHON = $(VENV)/bin/python3
 PIP = $(VENV)/bin/pip
-MYPY = $(VENV)/bin/mypy
+MYPY = $(VENV)/bin/mypy --exclude docs
 COVERAGE = $(VENV)/bin/coverage
 SPHINX = $(VENV)/bin/sphinx-build
 
