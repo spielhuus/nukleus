@@ -88,7 +88,7 @@ class Symbol(PositionalElement):
                 case ['on_board', flag]:
                     _on_board = flag == "yes"
                 case ['uuid', uuid]:
-                    _uuid = uuid
+                    _identifier = uuid
                 case ['property', *_]:
                     _properties.append(Property.parse(token))
                 case ['fields_autoplaced']:
@@ -161,7 +161,8 @@ class Symbol(PositionalElement):
         strings: List[str] = []
         symbol = f'{"  " * indent}(symbol (lib_id "{self.library_identifier}")'
         symbol += f' (at {self.pos[0]:4g} {self.pos[1]:4g} {self.angle:g})'
-        symbol += f' (unit {self.unit})'
+        symbol += '' if self.mirror == '' else f' (mirror {self.mirror})'
+        symbol += '' if self.unit == 0 else f' (unit {self.unit})'
         strings.append(symbol)
         symbol = f'{"  " * (indent + 1)}(in_bom {"yes" if self.in_bom else "no"}) '
         symbol += f'(on_board {"yes" if self.on_board else "no"})'

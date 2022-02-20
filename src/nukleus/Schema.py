@@ -1,7 +1,8 @@
 from typing import List, Type, TypeVar
 
 from .model import (ElementList, GlobalLabel, Junction, LibrarySymbol,
-                    LocalLabel, NoConnect, SchemaElement, Symbol, Wire)
+                    LocalLabel, NoConnect, SchemaElement, Symbol, Wire, 
+                    SymbolInstance, HierarchicalSheetInstance)
 
 
 class Schema():
@@ -127,9 +128,18 @@ class Schema():
         for symbol in self.get_elements(Symbol):
             strings.append(symbol.sexp())
             strings.append('')
+        strings.append('  (sheet_instances')
+        for sheet in self.get_elements(HierarchicalSheetInstance):
+            strings.append(sheet.sexp(indent=2))
+        strings.append("  )")
         strings.append('')
+        strings.append('  (symbol_instances')
+        for symbol_instance in self.get_elements(SymbolInstance):
+            strings.append(symbol_instance.sexp(indent=2))
+        strings.append("  )")
 
         strings.append(")")
+        strings.append('')
         return "\n".join(strings)
 
     def __str__(self) -> str:

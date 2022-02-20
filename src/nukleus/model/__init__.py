@@ -18,6 +18,6 @@ from .Property import Property
 from .SchemaElement import SchemaElement
 from .StrokeDefinition import StrokeDefinition, rgb
 from .Symbol import ElementList, Symbol, PinRef
-from .SymbolInstanceSection import SymbolInstanceSection
+from .SymbolInstance import SymbolInstance
 from .TextEffects import Justify, TextEffects
 from .Wire import Wire

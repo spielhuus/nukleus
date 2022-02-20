@@ -27,6 +27,7 @@ class Pin():
         self.style = kwargs.get('style', '')
         self.pos = kwargs.get('pos', (0, 0))
         self.angle = kwargs.get('angle', 0)
+        self.hidden = kwargs.get('hidden', False)
         self.length = kwargs.get('length', 0)
         self.name = kwargs.get('name', ('~', TextEffects()))
         self.number = kwargs.get('number', ('0', TextEffects()))
@@ -38,7 +39,7 @@ class Pin():
         _pos = (0, 0)
         _angle = 0
         _length = 0
-        _hidden = True
+        _hidden = False
         _name = ()
         _number = ()
 
@@ -83,8 +84,11 @@ class Pin():
         :rtype str: sexp string.
         """
         strings: List[str] = []
-        strings.append(f'{"  " * indent}(pin {self.type} {self.style} (at {self.pos[0]:g} '
-                       f'{self.pos[1]:g} {self.angle:g}) (length {self.length:g})')
+        string = f'{"  " * indent}(pin {self.type} {self.style} (at {self.pos[0]:g} '
+        string += f'{self.pos[1]:g} {self.angle:g}) (length {self.length:g})'
+        if self.hidden:
+            string += ' hide'
+        strings.append(string)
         strings.append(
             f'{"  " * (indent + 1)}(name "{self.name[0]}" {self.name[1].sexp(indent=0)})')
         strings.append(

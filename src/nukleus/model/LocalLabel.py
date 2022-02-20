@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import List
 
-import uuid
-
 from .PositionalElement import PositionalElement, POS_T
 from .TextEffects import TextEffects
 from ..SexpParser import SEXP_T

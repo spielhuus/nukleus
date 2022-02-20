@@ -22,11 +22,11 @@ class TestParserV6(unittest.TestCase):
         parser = ParserV6()
         parser.schema(schema, "samples/files/summe_v6/main.kicad_sch")
         self.maxDiff = None
-        with open('new_main.kicad_sch', 'w') as file:
-            file.write(schema.sexp())
+        #with open('new_main.kicad_sch', 'w') as file:
+        #    file.write(schema.sexp())
         with open('samples/files/summe_v6/main.kicad_sch', 'r') as file:
-            orig = file.read().splitlines()
-            #self.assertEqual(orig, schema.sexp().splitlines())
+            orig = file.read()
+            self.assertEqual(orig, schema.sexp())
 
 
 

@@ -14,7 +14,7 @@ class LibrarySymbol(SchemaElement):
     The symbol token defines a symbol or sub-unit of a parent symbol.
     There can be zero or more symbol tokens in a symbol library.
     """
-    identifier: str  # TODO
+    identifier: str
     extends: str
     pin_numbers_hide: bool
     pin_names_offset: float
@@ -41,10 +41,10 @@ class LibrarySymbol(SchemaElement):
         super().__init__(kwargs.get('identifier', None))
 
     @classmethod
-    def parse(cls, sexp: SEXP_T) -> NoConnect:
+    def parse(cls, sexp: SEXP_T) -> LibrarySymbol:
         _identifier: str = sexp[1]
         _extends: str = ''
-        _pin_numbers_hide: bool = True
+        _pin_numbers_hide: bool = False
         _pin_names_offset: float = 0
         _pin_names_hide: bool = True
         _in_bom: bool = True
@@ -63,8 +63,8 @@ class LibrarySymbol(SchemaElement):
             match token:
 #                case ['lib_id', id]:
 #                    _identifier = id
-                case ['extends', id]:
-                    _extends = id
+                case ['extends', _id]:
+                    _extends = _id
                 case ['pin_numbers', flag]:
                     _pin_numbers_hide = (flag == 'hide')
                 case ['pin_names', 'hide']:
@@ -137,8 +137,8 @@ class LibrarySymbol(SchemaElement):
         for pin in self.pins:
             strings.append(pin.sexp(indent=indent+1))
 
-        for u in self.units:
-            strings.append(u.sexp(indent=indent+1, is_subsymbol=True))
+        for uit in self.units:
+            strings.append(uit.sexp(indent=indent+1, is_subsymbol=True))
 
         strings.append(f'{"  " * indent})')
         return "\n".join(strings)
