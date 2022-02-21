@@ -39,9 +39,7 @@ class Line(DrawElement):
         assert isinstance(_pos, Tuple), f'_pos is not a tuble : {type(_pos)}'
         assert isinstance(
             _end_pos, Tuple), f'_pos is not a tuble : {type(_end_pos)}'
-        self.element = Wire.new()
-        self.element.pts[0] = _pos
-        self.element.pts[1] = _end_pos
+        self.element = Wire(pts=(_pos, _end_pos))
         return (self, self.element, self.element.pts[1])
 
 #    def at(self, pos: POS|DrawElement):

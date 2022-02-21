@@ -3,7 +3,7 @@ from nukleus.Spice import schema_to_spice
 from nukleus.draw import Draw, Dot, Label, Line, Element
 from nukleus import netlist, Circuit, schema_to_spice
 
-draw = Draw(library_path=['/home/etienne/Documents/symbols'])
+draw = Draw(library_path=['/usr/share/kicad/symbols'])
 draw.add(Label("INPUT"))
 draw.add(Line())
 draw.add(Element("R1", "Device:R", vnalue="100k").rotate(90))

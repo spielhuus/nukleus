@@ -99,8 +99,8 @@ class Pin():
 
 class PinImpl(Pin):
     def __init__(self, parent: PositionalElement, pin: Pin):
-        super().__init__(pin.type, pin.style, pin.pos, pin.angle,
-                         pin.length, pin.hidden, pin.name, pin.number)
+        super().__init__(type=pin.type, style=pin.style, pos=pin.pos, angle=pin.angle,
+                         length=pin.length, hidden=pin.hidden, name=pin.name, number=pin.number)
         self.parent = parent
 
 

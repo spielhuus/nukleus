@@ -120,7 +120,7 @@ def schema_to_spice(schema: Schema, circuit: Circuit,
 
                         nets[pin.number[0]] = net.id
 
-        comp = getattr(schema, ref)[1]  # get the first unit
+        comp = getattr(schema, ref)[0]  # get the first unit
         if not comp.has_property("Spice_Netlist_Enabled") or \
                 comp.property("Spice_Netlist_Enabled").value == "Y":
             if comp.has_property("Spice_Primitive") and \

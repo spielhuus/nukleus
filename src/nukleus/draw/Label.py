@@ -13,7 +13,5 @@ class Label(DrawElement):
         self.element: Optional[LocalLabel] = None
 
     def _get(self, library: Library, last_pos: POS_T, _: float):
-        self.element = LocalLabel.new()
-        self.element.text = self.text
-        self.element.pos = last_pos
+        self.element = LocalLabel(text=self.text, pos=last_pos)
         return (self, self.element, last_pos)

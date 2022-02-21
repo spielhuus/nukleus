@@ -12,6 +12,7 @@ from .Pin import Pin, PinList
 from .PositionalElement import PositionalElement
 from .Property import Property
 from .SchemaElement import POS_T, SchemaElement
+from .Utils import ffmt
 
 MIRROR = {
     '': np.array((1, 0, 0, -1)),
@@ -142,13 +143,24 @@ class Symbol(PositionalElement):
     @classmethod
     def new(cls, ref, lib_name, library_symbol, unit: int = 0) -> Symbol:  # TODO ref must be id
         assert library_symbol, "library symbol not set"
-        pins = []  # TODO
+        pins = []
+        properties = []
+        for prop in library_symbol.properties:
+            if not prop.key.startswith('ki_'):
+                if prop.key == 'Reference':
+                    prop.value = ref
+                #TODO place properties, relative coordinates in library
+                properties.append(prop)
+
         for sub in library_symbol.units:
-            for pin in sub.pins:
-                pins.append(pin)
-        sym = Symbol(ref, (0, 0), 0, '', lib_name, unit,
-                     True, True, library_symbol.properties,
-                     pins, library_symbol)
+            _, lib_unit, _ = sub.identifier.split('_')
+            if lib_unit == '0' or lib_unit == str(unit):
+                for pin in sub.pins:
+                    pins.append(PinRef(pin.number[0], "uuid"))
+
+        sym = Symbol(library_identifier=lib_name, unit=unit,
+                properties=properties,
+                pins=pins, library_symbol=library_symbol)
         return sym
 
     def sexp(self, indent=1):
@@ -160,7 +172,7 @@ class Symbol(PositionalElement):
         """
         strings: List[str] = []
         symbol = f'{"  " * indent}(symbol (lib_id "{self.library_identifier}")'
-        symbol += f' (at {self.pos[0]:4g} {self.pos[1]:4g} {self.angle:g})'
+        symbol += f' (at {self.pos[0]} {self.pos[1]} {ffmt(self.angle)})'
         symbol += '' if self.mirror == '' else f' (mirror {self.mirror})'
         symbol += '' if self.unit == 0 else f' (unit {self.unit})'
         strings.append(symbol)
@@ -187,4 +199,10 @@ class ElementList(List[SchemaElement]):
             if cast(Symbol, item).unit == key:
                 return item
 
+        # when the key is zero we want the first elemement
+        # for elements with more then one units, get the first
+        if key == 0:
+            for item in self:
+                if cast(Symbol, item).unit == 1:
+                    return item
         raise Exception("key not found", key)

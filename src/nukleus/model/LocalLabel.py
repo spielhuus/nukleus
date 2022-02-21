@@ -17,7 +17,7 @@ class LocalLabel(PositionalElement):
 
     def __init__(self, **kwargs) -> None:
         self.text = kwargs.get('text', '')
-        self.text_effects = kwargs.get('text_effects', ('', TextEffects()))
+        self.text_effects = kwargs.get('text_effects', TextEffects())
         super().__init__(kwargs.get('identifier', None),
                          kwargs.get('pos', ((0, 0), (0, 0))),
                          kwargs.get('angle', 0))

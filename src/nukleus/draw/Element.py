@@ -50,15 +50,15 @@ class Element(DrawElement):
             if self.element.has_property(name):
                 self.element.property(name).value = value
             else:
-                new_property = Property.new(name, value)
+                new_property = Property(key=name, value=value)
                 # TODO new_property.pos = tuple(totuple(self.element._pos(new.pos)))
                 self.element.properties.append(new_property)
 
         if self.lib_name == "Device:R":
             if not self.element.has_property('Spice_Netlist_Enabled'):
-                self.element.properties.append(Property.new('Spice_Netlist_Enabled', 'Y'))
+                self.element.properties.append(Property(key='Spice_Netlist_Enabled', value='Y'))
             if not self.element.has_property('Spice_Primitive'):
-                self.element.properties.append(Property.new('Spice_Primitive', 'R'))
+                self.element.properties.append(Property(key='Spice_Primitive', value='R'))
 
         # get the anchor pins
         pins = self.element.getPins()

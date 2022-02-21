@@ -20,9 +20,11 @@ TARGET=dist/nukleus-$(VERSION)-py3-none-any.whl
 
 .PHONY: help test doc clean pyre Makefile
 
+SOURCES = $(wildcard src/nukleus/*.py) $(wildcard src/nukleus/**/*.py)
+
 all: $(TARGET)
 
-$(TARGET): $(VENV)/bin/activate
+$(TARGET): $(VENV)/bin/activate $(SOURCES)
 	$(PYTHON) -m build
 
 $(VENV)/bin/activate: requirements.txt
@@ -41,7 +43,7 @@ mypy:
 
 
 install: $(TARGET)
-	$(PIP) install $(TARGET)
+	$(PIP) install --force $(TARGET)
 
 clean:
 	rm -rf dist

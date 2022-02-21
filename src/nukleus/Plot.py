@@ -1,30 +1,30 @@
 from typing import List, Tuple
-
 import math
-import numpy as np
 from io import BytesIO
-import cairo
 
+import cairo
+import numpy as np
+
+from .model import (FillType, GlobalLabel, Junction, Justify, LibrarySymbol,
+                    LocalLabel, NoConnect, Pin, Polyline, Rectangle,
+                    StrokeDefinition, Symbol, TextEffects, Wire, rgb)
 from .Schema import Schema
-from .model import Wire, Junction, NoConnect, Symbol, \
-    LibrarySymbol, GlobalLabel, LocalLabel, FillType, \
-    Pin, Polyline, Rectangle, Justify, \
-    StrokeDefinition, TextEffects, rgb
 from .Theme import themes
+
 # TODO from ._utils import _pin_pos, _pos
 
 FONT_SCALE = 3
 Y_TRANS = np.array([1, -1])
 
 
-class PlotContext():
+class PlotContext:
     def __init__(self, buffer, width, height):
-        self.sfc = cairo.SVGSurface(buffer, width*2.54, height*2.54)  # TODO
+        self.sfc = cairo.SVGSurface(buffer, width * 2.54, height * 2.54)  # TODO
         self.ctx = cairo.Context(self.sfc)
-        self.ctx.scale(72/25.4, 72/25.4)  # TODO
-        self.ctx.select_font_face("Sans",
-                                  cairo.FONT_SLANT_NORMAL,
-                                  cairo.FONT_WEIGHT_NORMAL)
+        self.ctx.scale(72 / 25.4, 72 / 25.4)  # TODO
+        self.ctx.select_font_face(
+            "Sans", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL
+        )
 
     def __enter__(self):
         return self
@@ -34,11 +34,16 @@ class PlotContext():
         self.sfc.finish()
         self.sfc.flush()
 
-    def line(self, pts: List[Tuple[float, float]],
-             width: float = 1, color: rgb = rgb(1, 0, 0, 1),
-             fill: rgb | None = None, type: str = ""):
-    
-        print(f'Line {pts} {width} {color} {fill}')
+    def line(
+        self,
+        pts: List[Tuple[float, float]],
+        width: float = 1,
+        color: rgb = rgb(1, 0, 0, 1),
+        fill: rgb | None = None,
+        type: str = "",
+    ):
+
+        print(f"Line {pts} {width} {color} {fill}")
         self.ctx.set_source_rgba(*color.get())
         self.ctx.set_line_width(width)
         self.ctx.move_to(pts[0][0], pts[0][1])
@@ -51,8 +56,13 @@ class PlotContext():
 
         self.ctx.stroke()
 
-    def arc(self, pts: Tuple[float, float], radius: float,
-            width: float = 1, color: rgb = rgb(0, 0, 0, 0)):
+    def arc(
+        self,
+        pts: Tuple[float, float],
+        radius: float,
+        width: float = 1,
+        color: rgb = rgb(0, 0, 0, 0),
+    ):
 
         self.ctx.set_line_width(width)
         self.ctx.set_source_rgba(*color.get())
@@ -61,53 +71,76 @@ class PlotContext():
         self.ctx.fill()
         self.ctx.stroke()
 
-    def rectangle(self, pts: Tuple[Tuple[float, float], Tuple[float, float]],
-                  line_width: float = 1, color: rgb = rgb(0, 0, 0, 0),
-                  fill: rgb | None = None, type: str = ""):
+    def rectangle(
+        self,
+        pts: Tuple[Tuple[float, float], Tuple[float, float]],
+        line_width: float = 1,
+        color: rgb = rgb(0, 0, 0, 0),
+        fill: rgb | None = None,
+        type: str = "",
+    ):
 
         self.ctx.set_line_width(line_width)
         self.ctx.set_source_rgba(*color.get())
-        self.ctx.rectangle(pts[0][0], pts[0][1],
-                           pts[1][0]-pts[0][0], pts[1][1]-pts[0][1])
+        self.ctx.rectangle(
+            pts[0][0], pts[0][1], pts[1][0] - pts[0][0], pts[1][1] - pts[0][1]
+        )
         self.ctx.stroke_preserve()
         if fill:
             self.ctx.set_source_rgba(*fill.get())
             self.ctx.fill_preserve()
         self.ctx.stroke()
 
-    def text(self, pos: Tuple[float, float], string: str,
-             text_effects: TextEffects, rotation: float = 0):
+    def text(
+        self,
+        pos: Tuple[float, float],
+        string: str,
+        text_effects: TextEffects,
+        rotation: float = 0,
+    ):
 
         if not text_effects:
-            text_effects = TextEffects(1.25, 1.25, 'bold',
-                                       'normal', [Justify.CENTER], False)
+            text_effects = TextEffects(
+                font_width=1.25,
+                font_height=1.25,
+                font_weight="bold",
+                font_thickness="normal",
+                justify=[Justify.CENTER],
+                hidden=False,
+            )
 
-        print(f"text: {string} {rotation} {math.radians(rotation)} {self.ctx.get_matrix()}")
+        print(
+            f"text: {string} {rotation} {math.radians(rotation)} {self.ctx.get_matrix()}"
+        )
 
         x, y = (pos[0], pos[1])
-#        if Justify.CENTER in text_effects.justify:
-#            x_bearing, y_bearing, width, height, x_advance, y_advance = \
-#                self.ctx.text_extents(string)
-#            x = x - (width / 2 + x_bearing)
-#            #y = y - (height / 2 + y_bearing)
-#        elif Justify.RIGHT in text_effects.justify:
-#            x_bearing, y_bearing, width, height, x_advance, y_advance = \
-#                self.ctx.text_extents(string)
-#            x = x - (width + x_bearing)
-#            #y = y - (height + y_bearing)
-#        if Justify.TOP in text_effects.justify:
-#            x_bearing, y_bearing, width, height, x_advance, y_advance = \
-#                self.ctx.text_extents(string)
-#            #x = x - (width / 2 + x_bearing)
-#            y = y - (height + y_bearing)
+        #        if Justify.CENTER in text_effects.justify:
+        #            x_bearing, y_bearing, width, height, x_advance, y_advance = \
+        #                self.ctx.text_extents(string)
+        #            x = x - (width / 2 + x_bearing)
+        #            #y = y - (height / 2 + y_bearing)
+        #        elif Justify.RIGHT in text_effects.justify:
+        #            x_bearing, y_bearing, width, height, x_advance, y_advance = \
+        #                self.ctx.text_extents(string)
+        #            x = x - (width + x_bearing)
+        #            #y = y - (height + y_bearing)
+        #        if Justify.TOP in text_effects.justify:
+        #            x_bearing, y_bearing, width, height, x_advance, y_advance = \
+        #                self.ctx.text_extents(string)
+        #            #x = x - (width / 2 + x_bearing)
+        #            y = y - (height + y_bearing)
 
         self.ctx.save()
         self.ctx.translate(x, y)
-        print(f"text: {string} {rotation} {math.radians(rotation)} {self.ctx.get_matrix()}")
+        print(
+            f"text: {string} {rotation} {math.radians(rotation)} {self.ctx.get_matrix()}"
+        )
         self.ctx.rotate(math.radians(rotation))
         self.ctx.set_font_size(2)
         self.ctx.translate(-x, -y)
-        print(f"text: {string} {rotation} {math.radians(rotation)} {self.ctx.get_matrix()}")
+        print(
+            f"text: {string} {rotation} {math.radians(rotation)} {self.ctx.get_matrix()}"
+        )
         self.ctx.move_to(x, y)
         self.ctx.show_text(string)
         self.ctx.stroke()
@@ -121,170 +154,195 @@ class PlotContext():
 def _get_default_stroke(element: StrokeDefinition, theme: StrokeDefinition):
     if element.width == 0:
         element.width = theme.width
-    if element.type == '':
+    if element.type == "":
         element.type == theme.type
     if element.color == rgb(0, 0, 0, 0):
         element.color = theme.color
     return element
 
 
-class Plot():
-
+class Plot:
     def plot(self, schema: Schema) -> BytesIO:
-        theme = themes['kicad2000']
-        fig_width_mm = 297                                # A4 page
+        theme = themes["kicad2000"]
+        fig_width_mm = 297  # A4 page
         fig_height_mm = 210
-        inches_per_mm = 1 / 25.4                         # Convert cm to inches
-        fig_width = fig_width_mm * inches_per_mm         # width in inches
-        fig_height = fig_height_mm * inches_per_mm       # height in inches
+        inches_per_mm = 1 / 25.4  # Convert cm to inches
+        fig_width = fig_width_mm * inches_per_mm  # width in inches
+        fig_height = fig_height_mm * inches_per_mm  # height in inches
         svgio = BytesIO()
 
         with PlotContext(svgio, fig_width_mm, fig_height_mm) as plot:
             plot.rectangle([(0, 0), (fig_width_mm, fig_height_mm)])
             for element in schema.elements:
                 if isinstance(element, Wire):
-                    sd = _get_default_stroke(
-                        element.stroke_definition, theme['wire'])
-                    plot.line(element.pts, width=sd.width,
-                              color=sd.color, type=sd.type)
+                    sd = _get_default_stroke(element.stroke_definition, theme["wire"])
+                    plot.line(element.pts, width=sd.width, color=sd.color, type=sd.type)
 
                 elif isinstance(element, NoConnect):
                     o = 0.5
-                    sd = theme['no_connect']
-                    plot.line([element.pos + np.array([-o, -o]),
-                               element.pos + np.array([o, o])],
-                              width=sd.width, color=sd.color, type=sd.type)
-                    plot.line([element.pos + np.array([o, -o]),
-                               element.pos + np.array([-o, o])],
-                              width=sd.width, color=sd.color, type=sd.type)
+                    sd = theme["no_connect"]
+                    plot.line(
+                        [
+                            element.pos + np.array([-o, -o]),
+                            element.pos + np.array([o, o]),
+                        ],
+                        width=sd.width,
+                        color=sd.color,
+                        type=sd.type,
+                    )
+                    plot.line(
+                        [
+                            element.pos + np.array([o, -o]),
+                            element.pos + np.array([-o, o]),
+                        ],
+                        width=sd.width,
+                        color=sd.color,
+                        type=sd.type,
+                    )
 
                 elif isinstance(element, Junction):
-                    sd = theme['wire']
+                    sd = theme["wire"]
                     plot.arc(element.pos, 0.5, width=sd.width, color=sd.color)
 
-                elif isinstance(element, LocalLabel) or \
-                        isinstance(element, GlobalLabel):
-                    plot.text(element.pos,  # element.mirror,
-                              element.text,
-                              element.text_effects,
-                              element.angle)
+                elif isinstance(element, LocalLabel) or isinstance(
+                    element, GlobalLabel
+                ):
+                    plot.text(
+                        element.pos,  # element.mirror,
+                        element.text,
+                        element.text_effects,
+                        element.angle,
+                    )
 
                 elif isinstance(element, Symbol):
                     theta = np.deg2rad(element.angle)
                     sym = schema.getSymbol(element.library_identifier)
                     single_unit = False
                     for subsym in sym.units:
-                        unit = int(subsym.identifier.split('_')[-2])
+                        unit = int(subsym.identifier.split("_")[-2])
                         # Why does this work here, see Spice.py
                         single_unit = False if unit != 0 else True
                         if unit == 0 or unit == element.unit or single_unit:
                             for draw in subsym.graphics:
-                                #linewidth = base_width
+                                # linewidth = base_width
                                 # if draw.thickness:
                                 #    linewidth *= draw.thickness / 10
 
-                                edgecolor = 'brown'
+                                edgecolor = "brown"
                                 if draw.fill == FillType.BACKGROUND:
-                                    facecolor = 'yellow'
+                                    facecolor = "yellow"
                                 elif draw.fill == FillType.FOREGROUND:
-                                    facecolor = 'brown'
+                                    facecolor = "brown"
                                 else:
-                                    facecolor = 'none'
+                                    facecolor = "none"
 
                                 if isinstance(draw, Polyline):
                                     sd = _get_default_stroke(
                                         draw.stroke_definition,
-                                        theme['component_outline'])
+                                        theme["component_outline"],
+                                    )
                                     fill = None
                                     if draw.fill == FillType.BACKGROUND:
-                                        fill = theme['component_body']
+                                        fill = theme["component_body"]
                                     elif draw.fill == FillType.FOREGROUND:
-                                        fill = theme['component_outline'].color
+                                        fill = theme["component_outline"].color
 
-                                    plot.line(element._pos(draw.points),
-                                              width=sd.width, color=sd.color,
-                                              type=sd.type, fill=fill)
+                                    plot.line(
+                                        element._pos(draw.points),
+                                        width=sd.width,
+                                        color=sd.color,
+                                        type=sd.type,
+                                        fill=fill,
+                                    )
 
                                 elif isinstance(draw, Rectangle):
                                     sd = _get_default_stroke(
                                         draw.stroke_definition,
-                                        theme['component_outline'])
+                                        theme["component_outline"],
+                                    )
                                     fill = None
                                     if draw.fill == FillType.BACKGROUND:
-                                        fill = theme['component_body']
+                                        fill = theme["component_body"]
                                     elif draw.fill == FillType.FOREGROUND:
-                                        fill = theme['component_outline'].color
+                                        fill = theme["component_outline"].color
                                     verts = [
                                         (draw.start_x, draw.start_y),
                                         (draw.start_x, draw.end_y),
                                         (draw.end_x, draw.end_y),
                                         (draw.end_x, draw.start_y),
-                                        (draw.start_x, draw.start_y)]
-                                    plot.line(element._pos(verts),
-                                              width=sd.width, color=sd.color,
-                                              type=sd.type, fill=fill)
+                                        (draw.start_x, draw.start_y),
+                                    ]
+                                    plot.line(
+                                        element._pos(verts),
+                                        width=sd.width,
+                                        color=sd.color,
+                                        type=sd.type,
+                                        fill=fill,
+                                    )
 
-#            #             if isinstance(draw, DrawArc):
-#            #                 print("draw arc")
-#            #                 dp = np.array([draw.x, draw.y])
-#            #                 pl.arc(dp, draw.r, draw.start * 0.1, draw.end * 0.1,
-#            #                        linewidth, edgecolor, facecolor)
-#
-#            #             elif isinstance(draw, DrawCircle):
-#            #                 dp = np.array([draw.x, draw.y])
-#            #                 pl.circle(dp, draw.r, linewidth, edgecolor, facecolor)
-#
-#                                else:
-#                                    print(f"unknown graph type: {draw}")
-#
+                            #            #             if isinstance(draw, DrawArc):
+                            #            #                 print("draw arc")
+                            #            #                 dp = np.array([draw.x, draw.y])
+                            #            #                 pl.arc(dp, draw.r, draw.start * 0.1, draw.end * 0.1,
+                            #            #                        linewidth, edgecolor, facecolor)
+                            #
+                            #            #             elif isinstance(draw, DrawCircle):
+                            #            #                 dp = np.array([draw.x, draw.y])
+                            #            #                 pl.circle(dp, draw.r, linewidth, edgecolor, facecolor)
+                            #
+                            #                                else:
+                            #                                    print(f"unknown graph type: {draw}")
+                            #
                             for pin in subsym.pins:
                                 if pin.length:
-                                    sd = theme['pin']
+                                    sd = theme["pin"]
                                     pp = pin._pos()
-                                    plot.line(element._pos(pp),
-                                              width=sd.width, color=sd.color,
-                                              type=sd.type)
+                                    plot.line(
+                                        element._pos(pp),
+                                        width=sd.width,
+                                        color=sd.color,
+                                        type=sd.type,
+                                    )
 
-                                if not sym.pin_numbers_hide \
-                                   and not sym.extends == 'power':
+                                if (
+                                    not sym.pin_numbers_hide
+                                    and not sym.extends == "power"
+                                ):
 
-                                    o = np.array(((0, .1), (.1, 0)))
+                                    o = np.array(((0, 0.1), (0.1, 0)))
                                     o[0] = -abs(o[0])
                                     o[1] = abs(o[1])
 
                                     pp = element._pos(pin._pos())
 
-                                    plot.text((pp + o)[0],
-                                                pin.number[0],
-                                                pin.number[1])
+                                    plot.text((pp + o)[0], pin.number[0], pin.number[1])
 
-                                if pin.name[0] != '~' \
-                                and not pin.hidden \
-                                and not sym.extends == 'power':
+                                if (
+                                    pin.name[0] != "~"
+                                    and not pin.hidden
+                                    and not sym.extends == "power"
+                                ):
 
                                     pp = element._pos(pin._pos())
-                                    name_position = \
-                                        (pp[1] + sym.pin_names_offset)
-                                    plot.text(name_position,
-                                            pin.name[0],
-                                            pin.name[1])
+                                    name_position = pp[1] + sym.pin_names_offset
+                                    plot.text(name_position, pin.name[0], pin.name[1])
 
                     # Add the visible text properties
                     for field in element.properties:
                         if field.text_effects and field.text_effects.hidden:
                             continue
-                        if field.value == '~':
+                        if field.value == "~":
                             continue
 
-                        angle = element.angle - field.angle 
-                        print(f'FIELD ANGLE: {field.value} {field.angle} {element.angle} {angle}')
+                        angle = element.angle - field.angle
+                        print(
+                            f"FIELD ANGLE: {field.value} {field.angle} {element.angle} {angle}"
+                        )
                         if angle >= 180:
                             angle -= 180
                         elif angle == 90:
                             angle = 270
-                        plot.text(field.pos, field.value,
-                                  field.text_effects,
-                                  angle)
+                        plot.text(field.pos, field.value, field.text_effects, angle)
 
                 elif not isinstance(element, LibrarySymbol):
                     print(f"unknown element {type(element)}")
@@ -292,7 +350,7 @@ class Plot():
         return svgio
 
 
-class PathList():
+class PathList:
     def __init__(self):
         self.paths = []
         self.texts = []
@@ -319,8 +377,7 @@ class PathList():
         print("YY", start, end, a)
 
         while 1:
-            verts.append((math.cos(a * math.pi / 180),
-                          math.sin(a * math.pi / 180)))
+            verts.append((math.cos(a * math.pi / 180), math.sin(a * math.pi / 180)))
             if abs(a - end) < abs(d / 2):
                 break
             a += d
@@ -342,67 +399,63 @@ class PathList():
 
     def text(self, offset, mirror, angle, text, effects: TextEffects):
         if not effects:
-            effects = TextEffects(1.25, 1.25, '', '', [Justify.CENTER], False)
+            effects = TextEffects(1.25, 1.25, "", "", [Justify.CENTER], False)
         if not effects.hidden:
-            self.texts.append(
-                (offset,
-                 mirror,
-                 angle,
-                 text,
-                 effects))
+            self.texts.append((offset, mirror, angle, text, effects))
 
     def on_ax(self, ax, pos, angle, mirror):
         for offset, text_mirror, text_angle, text, effects in self.texts:
-            x, y = (offset * Y_TRANS)
+            x, y = offset * Y_TRANS
             _angle = text_angle if text_angle <= 180 else text_angle - 180
-#            if angle >= 180 or angle < 0:
-#                if halign == 'right':
-#                    halign = 'left'
-#                elif halign == 'left':
-#                    halign = 'right'
-#                if valign == 'top':
-#                    valign = 'bottom'
-#                elif valign == 'bottom':
-#                    valign = 'top'
-#                angle -= 180
+            #            if angle >= 180 or angle < 0:
+            #                if halign == 'right':
+            #                    halign = 'left'
+            #                elif halign == 'left':
+            #                    halign = 'right'
+            #                if valign == 'top':
+            #                    valign = 'bottom'
+            #                elif valign == 'bottom':
+            #                    valign = 'top'
+            #                angle -= 180
 
             kw = {
-                'x': x,
-                'y': y,
-                'color': 'black',  # color,
+                "x": x,
+                "y": y,
+                "color": "black",  # color,
                 # TODO 'font': 'sans-serif',
-                'fontsize': (1.25 if effects.font_height == 0 else effects.font_height) * FONT_SCALE,
-                's': text,
-                'rotation': _angle,
-                'rotation_mode': 'anchor',
-                'horizontalalignment': Justify.halign(effects.justify),
-                'verticalalignment': Justify.valign(effects.justify),
-                'clip_on': True,
+                "fontsize": (1.25 if effects.font_height == 0 else effects.font_height)
+                * FONT_SCALE,
+                "s": text,
+                "rotation": _angle,
+                "rotation_mode": "anchor",
+                "horizontalalignment": Justify.halign(effects.justify),
+                "verticalalignment": Justify.valign(effects.justify),
+                "clip_on": True,
             }
 
             ax.text(**kw)
 
         if self.paths:
             d = {}
-            d['paths'] = []
-            d['linewidths'] = []
-            d['edgecolors'] = []
-            d['facecolors'] = []
+            d["paths"] = []
+            d["linewidths"] = []
+            d["edgecolors"] = []
+            d["facecolors"] = []
 
             for path, linewidth, edgecolor, facecolor in self.paths:
                 verts = _pos(pos, path.vertices, angle, mirror)
                 verts = np.array(verts * Y_TRANS)
                 path.vertices = verts
-                d['paths'].append(path)
-                d['linewidths'].append(linewidth)
-                d['edgecolors'].append(edgecolor)
-                d['facecolors'].append(facecolor)
+                d["paths"].append(path)
+                d["linewidths"].append(linewidth)
+                d["edgecolors"].append(edgecolor)
+                d["facecolors"].append(facecolor)
 
             pc = PathCollection(**d)
             ax.add_collection(pc)
 
 
-def plot(fig, ax, sch: Schema, base_width: float = 0.1, edge_color='brown'):
+def plot(fig, ax, sch: Schema, base_width: float = 0.1, edge_color="brown"):
 
     WIDTH, HEIGHT = 256, 256
 
@@ -434,6 +487,7 @@ def plot(fig, ax, sch: Schema, base_width: float = 0.1, edge_color='brown'):
     ctx.stroke()
 
     surface.write_to_png("example.png")  # Output to png
+
 
 #    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, WIDTH, HEIGHT)
 #    ctx = cairo.Context(surface)
