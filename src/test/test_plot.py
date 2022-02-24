@@ -1,17 +1,59 @@
 #!/usr/bin/env python3
 
-import numpy as np
 import math
-
-import unittest
-from unittest.mock import patch, mock_open
 import sys
-sys.path.append('src')
+import unittest
+from unittest.mock import mock_open, patch
 
-#from elektron._utils import _pos
+import numpy as np
+
+sys.path.append("src")
+
+from nukleus.model import Wire
+from nukleus.ParserV6 import ParserV6
+from nukleus.Plot import ElementFactory, NodeWire, plot
+# from elektron._utils import _pos
+from nukleus.Schema import Schema
 
 
-#class TestParserPlot(unittest.TestCase):
+class TestParserPlot(unittest.TestCase):
+    def test_factory(self):
+        schema = Schema()
+        schema.append(Wire())
+        factory = ElementFactory(schema)
+        self.assertEqual(NodeWire, type(factory.nodes[0]))
+        self.assertEqual(1, len(factory.nodes))
+
+    def test_plot(self):
+        schema = Schema()
+        parser = ParserV6()
+        parser.schema(schema, "samples/files/summe_v6/main.kicad_sch")
+
+        factory = ElementFactory(schema)
+        self.assertEqual(69, len(factory.nodes))
+        self.assertEqual(14, len([x for x in factory.nodes if isinstance(x, NodeWire)]))
+
+
+    def test_coord(self):
+        schema = Schema()
+        parser = ParserV6()
+        parser.schema(schema, "samples/files/summe_v6/main.kicad_sch")
+
+        factory = ElementFactory(schema)
+        coords = factory.dimension()
+
+        self.assertEqual(53.34, coords[0])
+        self.assertEqual(33.02, coords[1])
+        self.assertEqual(115.57, coords[2])
+        self.assertEqual(163.83, coords[3])
+    
+    def test_draw(self):
+        schema = Schema()
+        parser = ParserV6()
+        parser.schema(schema, "samples/files/summe_v6/main.kicad_sch")
+
+        plot(schema)
+
 #    def test_pts(self):
 #
 #        path = [[-2.54, -7.62], [-2.54, -3.81]]

@@ -5,7 +5,7 @@ from . import draw, model, spice
 from .Circuit import Circuit
 from .Library import Library
 from .ParserV6 import ParserV6
-from .Plot import Plot
+#from .Plot import Plot
 from .Schema import Schema
 from .Spice import netlist, schema_to_spice
 

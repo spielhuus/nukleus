@@ -1,10 +1,11 @@
-pycairo
+#pycairo
+pangocairocffi
+cairocffi
+cairocffi
 matplotlib
 ipython
 numpy
 build
 coverage
 sphinx
-#pyre-check
-#git+git://github.com/python/mypy.git
-#git+git://github.com/python/mypy.git@9b3147701f054bf8ef42bd96e33153b05976a5e1
+pyright

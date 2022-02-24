@@ -2,7 +2,7 @@ VERSION=$(shell grep -Po 'version = \K(\d\.\d\.\d)' setup.cfg)
 VENV = .venv
 PYTHON = $(VENV)/bin/python3
 PIP = $(VENV)/bin/pip
-MYPY = $(VENV)/bin/mypy --exclude docs
+PYRIGHT = $(VENV)/bin/pyright
 COVERAGE = $(VENV)/bin/coverage
 SPHINX = $(VENV)/bin/sphinx-build
 
@@ -38,8 +38,8 @@ coverage: $(VENV)/bin/activate
 	$(CMD_COVERAGE_RUN)
 	$(COVERAGE) report -m
 
-mypy: 
-	 $(MYPY) src
+type: 
+	 $(PYRIGHT) $(SOURCES)
 
 
 install: $(TARGET)

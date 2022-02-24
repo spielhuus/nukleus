@@ -40,7 +40,6 @@ class TestSymbol(unittest.TestCase):
         self.assertEqual(2, len(lib_sym.units))
 
         symbol = Symbol.new('R1', 'Device:R', lib_sym, unit=1)
-        print(symbol.sexp())
         #TODO write test TestCase
 
     def test_new_opamp(self):
@@ -50,19 +49,15 @@ class TestSymbol(unittest.TestCase):
         self.assertEqual(3, len(lib_sym.units))
         
         symbol = Symbol.new('U1', 'Amplifier_Operational:TL072', lib_sym, unit=1)
-        print(symbol.sexp())
         #TODO write test TestCase
 
     def test_new_opamp_power(self):
-        print('- - - - - - - - - - -get opamp power')
         lib = Library(["samples/files/symbols"])
         lib_sym = lib.get("Amplifier_Operational:TL072")
         self.assertEqual("TL072", lib_sym.identifier)
         self.assertEqual(3, len(lib_sym.units))
         
         symbol = Symbol.new('U1', 'Amplifier_Operational:TL072', lib_sym, unit=3)
-        print(symbol.sexp())
-        print('- - - - - - - - - - -get opamp power')
         #TODO write test TestCase
     def test_sexp_symbol(self):
         sexp_str = load_tree(INPUT_STRINGG)

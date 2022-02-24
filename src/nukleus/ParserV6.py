@@ -420,8 +420,10 @@ class ParserV6():
                         schema.append(GlobalLabel.parse(item))
                     case ["hierarchical_label", text, shape, pos, effects, uuid]:
                         print(f"hierarchical_label: {uuid}")
-                    case ["symbol", *items]:
-                        schema.append(Symbol.parse(item))
+                    case ["symbol", *_]:
+                        _symbol = Symbol.parse(item)
+                        _symbol.library_symbol = schema.getSymbol(_symbol.library_identifier)
+                        schema.append(_symbol)
                     case ["sheet", pos, size, autoplaced, stroke, fill, uuid, sheet_name, file_name, *pins]:
                         print(f"sheet: {uuid}")
                         _xy, _angle = self._pos(pos)
