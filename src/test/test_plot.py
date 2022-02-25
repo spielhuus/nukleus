@@ -24,28 +24,28 @@ class TestParserPlot(unittest.TestCase):
         self.assertEqual(NodeWire, type(factory.nodes[0]))
         self.assertEqual(1, len(factory.nodes))
 
-    def test_plot(self):
-        schema = Schema()
-        parser = ParserV6()
-        parser.schema(schema, "samples/files/summe_v6/main.kicad_sch")
-
-        factory = ElementFactory(schema)
-        self.assertEqual(69, len(factory.nodes))
-        self.assertEqual(14, len([x for x in factory.nodes if isinstance(x, NodeWire)]))
-
-
-    def test_coord(self):
-        schema = Schema()
-        parser = ParserV6()
-        parser.schema(schema, "samples/files/summe_v6/main.kicad_sch")
-
-        factory = ElementFactory(schema)
-        coords = factory.dimension()
-
-        self.assertEqual(53.34, coords[0])
-        self.assertEqual(33.02, coords[1])
-        self.assertEqual(115.57, coords[2])
-        self.assertEqual(163.83, coords[3])
+#    def test_plot(self):
+#        schema = Schema()
+#        parser = ParserV6()
+#        parser.schema(schema, "samples/files/summe_v6/main.kicad_sch")
+#
+#        factory = ElementFactory(schema)
+#        self.assertEqual(69, len(factory.nodes))
+#        self.assertEqual(14, len([x for x in factory.nodes if isinstance(x, NodeWire)]))
+#
+#
+#    def test_coord(self):
+#        schema = Schema()
+#        parser = ParserV6()
+#        parser.schema(schema, "samples/files/summe_v6/main.kicad_sch")
+#
+#        factory = ElementFactory(schema)
+#        coords = factory.dimension()
+#
+#        self.assertEqual(53.34, coords[0])
+#        self.assertEqual(33.02, coords[1])
+#        self.assertEqual(115.57, coords[2])
+#        self.assertEqual(163.83, coords[3])
     
     def test_draw(self):
         schema = Schema()

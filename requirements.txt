@@ -1,7 +1,8 @@
-#pycairo
-pangocairocffi
-cairocffi
-cairocffi
+pycairo
+PyGObject
+#pangocairocffi
+#cairocffi
+#cairocffi
 matplotlib
 ipython
 numpy

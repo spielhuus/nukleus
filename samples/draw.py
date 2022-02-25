@@ -1,7 +1,12 @@
+import sys
+sys.path.append('src')
+sys.path.append('../src')
+
 import nukleus
 from nukleus.Spice import schema_to_spice
 from nukleus.draw import Draw, Dot, Label, Line, Element
 from nukleus import netlist, Circuit, schema_to_spice
+from nukleus.Plot import plot
 
 draw = Draw(library_path=['/usr/share/kicad/symbols'])
 draw.add(Label("INPUT"))
@@ -32,8 +37,8 @@ circuit = Circuit()
 schema_to_spice(draw, circuit, nl)
 print(circuit)
 
-p = nukleus.Plot()
-svg = p.plot(draw)
+#p = nukleus.draw.plot()
+svg = plot(draw, image_type='pdf')
 
-with open('schema.svg', "wb") as file:
+with open('schema.pdf', "wb") as file:
     file.write(svg.getbuffer())
