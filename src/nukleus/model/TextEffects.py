@@ -68,7 +68,7 @@ class TextEffects():
     hidden: bool
 
     def __init__(self, **kwargs) -> None:
-        self.face = kwargs.get('face', 0)
+        self.face = kwargs.get('face', '')
         self.font_width = kwargs.get('font_width', 0)
         self.font_height = kwargs.get('font_height', 0)
         self.font_thickness = kwargs.get('font_thickness', '')
