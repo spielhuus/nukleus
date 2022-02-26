@@ -37,18 +37,6 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Run test suite
-        run: |
-          python3 -m unittest discover -s src/test
-
-#      - name: Run linter
-#        run: |
-#          pipenv run lint
-
-#      - name: Run formatting check
-#        run: |
-#          pipenv run format --check
-
       - name: Setup node.js (for pyright)
         uses: actions/setup-node@v1
         with:
