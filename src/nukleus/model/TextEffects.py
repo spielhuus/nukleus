@@ -59,6 +59,7 @@ class Justify(Enum):
 
 @dataclass
 class TextEffects():
+    face: ''
     font_width: float
     font_height: float
     font_thickness: str
@@ -67,6 +68,7 @@ class TextEffects():
     hidden: bool
 
     def __init__(self, **kwargs) -> None:
+        self.face = kwargs.get('face', 0)
         self.font_width = kwargs.get('font_width', 0)
         self.font_height = kwargs.get('font_height', 0)
         self.font_thickness = kwargs.get('font_thickness', '')
@@ -76,6 +78,7 @@ class TextEffects():
 
     @classmethod
     def parse(cls, sexp: SEXP_T) -> TextEffects:
+        _face = ''
         _font_width = 0
         _font_height = 0
         _font_thickness = ''
@@ -100,7 +103,7 @@ class TextEffects():
                 case _:
                     raise ValueError(f"unknown effects element {token}")
 
-        return TextEffects(font_width=_font_width, font_height=_font_height,
+        return TextEffects(face=_face, font_width=_font_width, font_height=_font_height,
                            font_thickness=_font_thickness, font_style=_font_style,
                            justify=_justify, hidden=_hidden)
 
@@ -111,8 +114,9 @@ class TextEffects():
         :param indent [int]: indent count for this element.
         :rtype str: sexp string.
         """
-        string = f'{"  " * indent}(effects (font (size '
-        string += f'{self.font_height:g} {self.font_width:g})'
+        string = f'{"  " * indent}(effects '
+        string += '' if self.face == '' else f'(face {self.face}) '
+        string += f'(font (size {self.font_height:g} {self.font_width:g})'
         if self.font_thickness != '':
             string += f' (thickness {self.font_thickness})'
         if self.font_style != '':

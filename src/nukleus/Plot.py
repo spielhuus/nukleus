@@ -1,8 +1,11 @@
 from io import BytesIO
-from typing import List, IO
+from typing import List, IO, Text
 
 import cairo
+import gi
+gi.require_version('Pango', '1.0')
 from gi.repository import Pango
+gi.require_version('PangoCairo', '1.0')
 from gi.repository import PangoCairo
 
 import numpy as np
@@ -17,11 +20,29 @@ from .model.Wire import Wire
 from .Schema import Schema
 from .Theme import themes
 
-FONT_SCALE = 3
-Y_TRANS = np.array([1, -1])
-
 f_coord = lambda arr:  [(np.min(arr[...,0]), np.min(arr[...,1])),
                         (np.max(arr[...,0]), np.max(arr[...,1]))]
+
+class FileTypeException(Exception):
+    pass
+
+def _merge_text_effects(text_effects: TextEffects, theme_effects: TextEffects) -> TextEffects:
+    if not text_effects:
+        return theme_effects
+
+    if text_effects.face == '':
+        text_effects.face = theme_effects.face
+    if text_effects.font_height == 0:
+        text_effects.font_height = theme_effects.font_height
+    if text_effects.font_width == 0:
+        text_effects.font_width = theme_effects.font_width
+    if text_effects.font_style == '':
+        text_effects.font_style = theme_effects.font_style
+    if text_effects.font_thickness == '':
+        text_effects.font_thickness = theme_effects.font_thickness
+
+    return text_effects
+
 
 class DrawLine:
     def __init__(self, pts: PTS_T, width: float, color: rgb, type: str) -> None:
@@ -50,15 +71,15 @@ class DrawPolyLine:
         self.type = type
         self.fill = fill
 
-    def dimension(self, ctx):
+    def dimension(self, _):
         return f_coord(np.array(self.pts))
 
     def draw(self, ctx):
         ctx.set_source_rgba(*self.color.get())
         ctx.set_line_width(self.width)
         ctx.move_to(self.pts[0][0], self.pts[0][1])
-        for p in self.pts[1:]:
-            ctx.line_to(p[0], p[1])
+        for point in self.pts[1:]:
+            ctx.line_to(point[0], point[1])
         ctx.stroke_preserve()
         if self.fill:
             ctx.set_source_rgba(*self.fill.get())
@@ -74,15 +95,15 @@ class DrawRect:
         self.type = type
         self.fill = fill
 
-    def dimension(self, ctx):
+    def dimension(self, _):
         return f_coord(np.array(self.pts))
 
     def draw(self, ctx):
         ctx.set_source_rgba(*self.color.get())
         ctx.set_line_width(self.width)
         ctx.move_to(self.pts[0][0], self.pts[0][1])
-        for p in self.pts[1:]:
-            ctx.line_to(p[0], p[1])
+        for point in self.pts[1:]:
+            ctx.line_to(point[0], point[1])
         ctx.stroke_preserve()
         if self.fill:
             ctx.set_source_rgba(*self.fill.get())
@@ -99,7 +120,7 @@ class DrawCircle:
         self.type = type
         self.fill = fill
 
-    def dimension(self, ctx):
+    def dimension(self, _):
         return [(self.pos[0]-self.radius, self.pos[1]-self.radius), 
                 (self.pos[0]+self.radius, self.pos[1]+self.radius)]
 
@@ -113,24 +134,48 @@ class DrawCircle:
 
 
 class DrawText:
-    def __init__(self, pos: POS_T, text: str, rotation, font_width, font_height, font_weight, font_thickness, justify, hidden) -> None:
+    def __init__(self, pos: POS_T, text: str, rotation, text_effects: TextEffects) -> None:
         self.pos = pos
         self.text = text
         self.rotation = rotation
-        self.font_width=font_width
-        self.font_height=font_height
-        self.font_weight=font_weight
-        self.font_thickness=font_thickness
-        self.justify=justify
-        self.hidden=hidden
+        self.font_face = text_effects.face
+        self.font_width=text_effects.font_width
+        self.font_height=text_effects.font_height
+        self.font_weight=text_effects.font_style
+        self.font_thickness=text_effects.font_thickness
+        self.justify=text_effects.justify
+        self.hidden=text_effects.hidden
 
-        x, y = (pos[0], pos[1])
-        #        if Justify.CENTER in text_effects.justify:
-        #            x_bearing, y_bearing, width, height, x_advance, y_advance = \
-        #                self.ctx.text_extents(string)
-        #            x = x - (width / 2 + x_bearing)
-        #            #y = y - (height / 2 + y_bearing)
-        #        elif Justify.RIGHT in text_effects.justify:
+    def dimension(self, ctx):
+        layout = PangoCairo.create_layout(ctx)
+        pctx = layout.get_context()
+        desc = Pango.FontDescription()
+        desc.set_size(960)
+        desc.set_family(self.font_face)
+        layout.set_font_description(desc)
+        layout.set_alignment(Pango.Alignment.CENTER)
+        font_options = cairo.FontOptions()
+        font_options.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+        PangoCairo.context_set_font_options(pctx, font_options)
+        layout.set_text(self.text)
+        size = layout.get_size()
+        size_w = float(size[0]) / Pango.SCALE
+        size_h = float(size[1]) / Pango.SCALE
+
+        return [(self.pos[0], self.pos[1]), (self.pos[0]+size_w, self.pos[1]+size_h)]
+
+    def draw(self, ctx):
+        # TODO print(f'{self.text} {self.rotation}')
+        ctx.save()
+
+        pos_x, pos_y = (self.pos[0], self.pos[1])
+        if Justify.CENTER in self.justify:
+            width = float(self.dimension(ctx)[1][0]) / Pango.SCALE
+            pos_x -= width / 2.
+        elif Justify.RIGHT in self.justify:
+            width = float(self.dimension(ctx)[1][0]) / Pango.SCALE
+            pos_x -= width
+
         #            x_bearing, y_bearing, width, height, x_advance, y_advance = \
         #                self.ctx.text_extents(string)
         #            x = x - (width + x_bearing)
@@ -142,31 +187,13 @@ class DrawText:
         #            y = y - (height + y_bearing)
 
 
-    def dimension(self, ctx):
-        layout = PangoCairo.create_layout(ctx) # TODO pangocairo.create_layout(ctx)
-        pctx = layout.get_context()
-        desc = Pango.FontDescription()
-        desc.set_size(960)
-        desc.set_family('osifont')
-        layout.set_font_description(desc)
-        layout.set_alignment(Pango.Alignment.CENTER)
-        fo = cairo.FontOptions()
-        fo.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
-        PangoCairo.context_set_font_options(pctx, fo)
-        layout.set_text(self.text)
-        size = layout.get_pixel_size()
-        return [(self.pos[0], self.pos[1]), (self.pos[0]+size[0], self.pos[1]+size[1])]
-
-    def draw(self, ctx):
-        # TODO print(f'{self.text} {self.rotation}')
-        ctx.save()
-        ctx.translate(self.pos[0], self.pos[1])
-        layout = PangoCairo.create_layout(ctx) # TODO pangocairo.create_layout(ctx)
+        ctx.translate(pos_x, pos_y)
+        layout = PangoCairo.create_layout(ctx)
         pctx = layout.get_context()
         #layout.set_width(pango.units_from_double(10))
         desc = Pango.FontDescription()
         desc.set_size(960)
-        desc.set_family('osifont')
+        desc.set_family(self.font_face)
         layout.set_font_description(desc)
         layout.set_alignment(Pango.Alignment.CENTER)
         #layout.set_markup(f'<span font="2">{self.text}</span>')
@@ -179,16 +206,19 @@ class DrawText:
         #ctx.rotate(self.rotation * math.pi / 180.)
         
         # TODO remove draw box around text
-        size = layout.get_pixel_size()
-        ctx.set_source_rgba(*rgb(1, 0, 0, 1).get())
-        ctx.set_line_width(0.1)
-        ctx.move_to(0, 0)
-        ctx.line_to(size[0], 0)
-        ctx.line_to(size[0], size[1])
-        ctx.line_to(0, size[1])
-        ctx.line_to(0, 0)
-        ctx.stroke_preserve()
-        ctx.stroke()
+#        size = layout.get_size()
+#        size_w = float(size[0]) / Pango.SCALE
+#        size_h = float(size[1]) / Pango.SCALE
+#        size = (size_w, size_h)
+#        ctx.set_source_rgba(*rgb(1, 0, 0, 1).get())
+#        ctx.set_line_width(0.1)
+#        ctx.move_to(0, 0)
+#        ctx.line_to(size[0], 0)
+#        ctx.line_to(size[0], size[1])
+#        ctx.line_to(0, size[1])
+#        ctx.line_to(0, 0)
+#        ctx.stroke_preserve()
+#        ctx.stroke()
 
         ctx.restore()
 
@@ -239,7 +269,9 @@ class NodeJunction(Node):
 
 class NodeLocalLabel(Node):
     def __init__(self, element: LocalLabel, theme: str) -> None:
-        self.text = DrawText(element.pos, element.text, 0, 1.25, 1.25, 'normal', 2, Justify.CENTER, False)
+        text_effects = _merge_text_effects(
+                element.text_effects, themes[theme]['text_effects'])
+        self.text = DrawText(element.pos, element.text, 0, text_effects)
 
     def dimension(self, ctx) -> List[float]:
         return self.text.dimension(ctx)
@@ -250,7 +282,9 @@ class NodeLocalLabel(Node):
 
 class NodeGlobalLabel(Node):
     def __init__(self, element: GlobalLabel, theme: str) -> None:
-        self.text = DrawText(element.pos, element.text, 0, 1.25, 1.25, 'normal', 2, Justify.CENTER, False)
+        text_effects = _merge_text_effects(
+                element.text_effects, themes[theme]['text_effects'])
+        self.text = DrawText(element.pos, element.text, 0, text_effects)
 
     def dimension(self, ctx) -> List[float]:
         return self.text.dimension(ctx)
@@ -370,7 +404,8 @@ class NodeSymbol(Node):
                         o[1] = abs(o[1])
 
                         pp = element._pos(pin._pos())
-                        self.texts.append(DrawText((pp + o)[0], pin.number[0], 0, 1.25, 1.25, 'normal', 2, Justify.CENTER, False))
+                        text_effects = themes[theme]['pin_number']
+                        self.texts.append(DrawText(element.pos, pin.number[0], 0, text_effects))
 
                     if (
                         pin.name[0] != "~"
@@ -380,7 +415,8 @@ class NodeSymbol(Node):
 
                         pp = element._pos(pin._pos())
                         name_position = pp[1] + sym.pin_names_offset
-                        self.texts.append(DrawText(name_position, pin.name[0], 0, 1.25, 1.25, 'normal', 2, Justify.CENTER, False))
+                        text_effects = themes[theme]['pin_name']
+                        self.texts.append(DrawText(name_position, pin.name[0], 0, text_effects))
 
         # Add the visible text properties
         for field in element.properties:
@@ -397,7 +433,10 @@ class NodeSymbol(Node):
                 angle -= 180
             elif angle == 90:
                 angle = 270
-            self.texts.append(DrawText(field.pos, field.value, angle, 1.25, 1.25, 'normal', 2, Justify.CENTER, False))
+
+            text_effects = _merge_text_effects(
+                    field.text_effects, themes[theme]['text_effects'])
+            self.texts.append(DrawText(field.pos, field.value, angle, text_effects))
 
     def dimension(self, ctx) -> List[float]:
         pts = []
@@ -448,7 +487,7 @@ class PlotContext:
             self.sfc = cairo.SVGSurface(buffer, width / 25.4 * 72, height / 25.4 * 72)
 
         self.ctx = cairo.Context(self.sfc)
-        self.ctx.scale(72. / 25.4, 72. / 25.4)  # TODO
+        self.ctx.scale(72. / 25.4, 72. / 25.4)
         self.ctx.select_font_face(
             "Sans", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL
         )
@@ -464,6 +503,13 @@ class PlotContext:
 
 
 def plot(schema: Schema, out: IO=BytesIO(), image_type='svg') -> IO:
+    
+    # get the image type if out is a filename
+    if isinstance(out, str):
+        image_type = out.split('.')[-1]
+        if image_type not in ['png', 'svg', 'pdf']:
+            raise FileTypeException('file type not in (png, svg, pdf)', image_type)
+
     factory = ElementFactory(schema)
     with PlotContext(out, 297, 210, image_type) as ctx:
         outline = factory.dimension(ctx.ctx)
@@ -476,12 +522,9 @@ def plot(schema: Schema, out: IO=BytesIO(), image_type='svg') -> IO:
         border.draw(ctx.ctx)
         factory.draw(ctx.ctx)
 
-
-        
         if image_type == 'png':
             out = BytesIO()
             assert ctx.sfc, 'image cotext is not set.'
             ctx.sfc.write_to_png(out)
-            #TODO write image when a filename is given 
 
     return out

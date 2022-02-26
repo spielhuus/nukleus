@@ -1,15 +1,10 @@
 import sys
-from IPython.display import SVG, display
-from PIL import Image
-from io import BytesIO
 import argparse
+
 sys.path.append('src')
 sys.path.append('../src')
 
-import os
 import nukleus
-
-
 
 def main():
     parser = argparse.ArgumentParser(description='plot a kicad schema file.')
@@ -20,11 +15,10 @@ def main():
     args = parser.parse_args()
 
     schema = nukleus.load_schema(args.input)
-    plot = nukleus.Plot()
-    image_bytes = plot.plot(schema)
+    nukleus.plot(schema, args.output, image_type='pdf')
 
-    with open(args.output, 'bw') as file:
-        file.write(image_bytes.getbuffer())
+#    with open(args.output, 'bw') as file:
+#        file.write(image_bytes.getbuffer())
 
 #display(SVG(data=bytes.getbuffer()))
 #image = Image.open(bytes)
