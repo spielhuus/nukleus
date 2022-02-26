@@ -44,10 +44,14 @@ jobs:
 #          path: ~/.local/share/virtualenvs
 #          key: ${{ runner.os }}-pipenv-${{ hashFiles('**/Pipfile.lock') }}
 
-      - name: Install dependencies
+      - name: Install native dependencies
 #        if: steps.cache-pipenv.outputs.cache-hit != 'true'
         run: |
           sudo apt-get install -y -qq build-essential gobject-introspection
+
+      - name: Install dependencies
+#        if: steps.cache-pipenv.outputs.cache-hit != 'true'
+        run: |
           pip install -r requirements.txt
 
       - name: Run test suite
