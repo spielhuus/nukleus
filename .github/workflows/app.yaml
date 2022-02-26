@@ -47,6 +47,7 @@ jobs:
       - name: Install dependencies
 #        if: steps.cache-pipenv.outputs.cache-hit != 'true'
         run: |
+          sudo apt-get install -y -qq build-essential gobject-introspection
           pip install -r requirements.txt
 
       - name: Run test suite
