@@ -1,5 +1,5 @@
 <p align="left">
-  <a href="https://github.com/actions/setup-python"><img alt="GitHub Actions status" src="https://github.com/actions/setup-python/workflows/nukleus/badge.svg"></a>
+  <a href="https://github.com/spielhuus/nukleus"><img alt="GitHub Actions status" src="https://github.com/spielhuus/nukleus/workflows/nukleus/badge.svg"></a>
 </p>
 
 # nukleus
