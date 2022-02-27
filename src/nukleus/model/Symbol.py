@@ -91,7 +91,7 @@ class Symbol(PositionalElement):
                 case ['uuid', uuid]:
                     _identifier = uuid
                 case ['property', *_]:
-                    _properties.append(Property.parse(token))
+                    _properties.append(Property.parse(cast(SEXP_T, token)))
                 case ['fields_autoplaced']:
                     pass  # TODO
                 case ['pin', *items]:

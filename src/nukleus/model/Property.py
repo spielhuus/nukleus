@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, List
+from typing import Any, List, cast
 
 from ..SexpParser import SEXP_T
 from .SchemaElement import POS_T
@@ -30,8 +30,8 @@ class Property:
 
     @classmethod
     def parse(cls, sexp: SEXP_T) -> Property:
-        _key: str = sexp[1]
-        _value: str = sexp[2]
+        _key: str = cast(str, sexp[1])
+        _value: str = cast(str, sexp[2])
         _id: int = 0
         _pos: POS_T = (0, 0)
         _angle: float = 0
@@ -47,7 +47,7 @@ class Property:
                 case ["id", id]:
                     _id = int(id)
                 case ["effects", *_]:
-                    _text_effects = TextEffects.parse(token)
+                    _text_effects = TextEffects.parse(cast(SEXP_T, token))
                 case _:
                     raise ValueError(f"unknown property element {token}")
 

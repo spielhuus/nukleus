@@ -12,6 +12,5 @@ class NC(DrawElement):
         self.element: Optional[NoConnect] = None
 
     def _get(self, library: Library, last_pos: POS_T, _: float):
-        self.element = NoConnect.new()
-        self.element.pos = last_pos
+        self.element = NoConnect(pos=last_pos)
         return (self, self.element, last_pos)

@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import List
+from typing import List, cast
 
-from .PositionalElement import PositionalElement
+from .PositionalElement import PositionalElement, POS_T
 from .Property import Property
 from .TextEffects import TextEffects
-
+from ..SexpParser import SEXP_T
 
 class GlobalLabel(PositionalElement):
     """
@@ -37,7 +37,7 @@ class GlobalLabel(PositionalElement):
         _identifier = None
         _pos: POS_T = (0, 0)
         _angle: float = 0
-        _text: str = sexp[1]
+        _text: str = cast(str, sexp[1])
         _shape: str = ""
         _autoplaced: str = ""
         _text_effects: TextEffects = TextEffects()
@@ -53,13 +53,13 @@ class GlobalLabel(PositionalElement):
                 case ["uuid", identifier]:
                     _identifier = identifier
                 case ["effects", *_]:
-                    _text_effects = TextEffects.parse(token)
+                    _text_effects = TextEffects.parse(cast(SEXP_T, token))
                 case ["shape", shape]:
                     _shape = shape
                 case ["fields_autoplaced"]:
                     _autoplaced = "fields_autoplaced"
                 case ["property", *_]:
-                    _properties.append(Property.parse(token))
+                    _properties.append(Property.parse(cast(SEXP_T, token)))
                 case _:
                     raise ValueError(f"unknown label element {token}")
 

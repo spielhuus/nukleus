@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List
+from typing import List, cast
 
 from .PositionalElement import PositionalElement, POS_T
 from .TextEffects import TextEffects
@@ -27,7 +27,7 @@ class LocalLabel(PositionalElement):
         _identifier = None
         _pos: POS_T = (0, 0)
         _angle: float = 0
-        _text: str = sexp[1]
+        _text: str = cast(str, sexp[1])
         _text_effects: TextEffects = TextEffects()
 
         for token in sexp[2:]:
@@ -40,7 +40,7 @@ class LocalLabel(PositionalElement):
                 case ['uuid', identifier]:
                     _identifier = identifier
                 case ['effects', *_]:
-                    _text_effects = TextEffects.parse(token)
+                    _text_effects = TextEffects.parse(cast(SEXP_T, token))
                 case _:
                     raise ValueError(f"unknown label element {token}")
 

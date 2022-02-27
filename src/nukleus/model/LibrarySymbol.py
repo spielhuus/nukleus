@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List
+from typing import List, cast
 
 from ..SexpParser import SEXP_T
 from .GraphicItem import GraphicItem, Polyline, Rectangle, Circle, Arc
@@ -42,7 +42,7 @@ class LibrarySymbol(SchemaElement):
 
     @classmethod
     def parse(cls, sexp: SEXP_T) -> LibrarySymbol:
-        _identifier: str = sexp[1]
+        _identifier: str = cast(str, sexp[1])
         _extends: str = ''
         _pin_numbers_hide: bool = False
         _pin_names_offset: float = 0
@@ -80,19 +80,19 @@ class LibrarySymbol(SchemaElement):
                 case ['on_board', flag]:
                     _on_board = flag == "yes"
                 case ['property', *_]:
-                    _properties.append(Property.parse(token))
+                    _properties.append(Property.parse(cast(SEXP_T, token)))
                 case ['polyline', *_]:
-                    _graphics.append(Polyline.parse(token))
+                    _graphics.append(Polyline.parse(cast(SEXP_T, token)))
                 case ['rectangle', *_]:
-                    _graphics.append(Rectangle.parse(token))
+                    _graphics.append(Rectangle.parse(cast(SEXP_T, token)))
                 case ['circle', *_]:
-                    _graphics.append(Circle.parse(token))
+                    _graphics.append(Circle.parse(cast(SEXP_T, token)))
                 case ['arc', *_]:
-                    _graphics.append(Arc.parse(token))
+                    _graphics.append(Arc.parse(cast(SEXP_T, token)))
                 case ['symbol', *_]:
-                    _units.append(LibrarySymbol.parse(token))
+                    _units.append(LibrarySymbol.parse(cast(SEXP_T, token)))
                 case ['pin', *_]:
-                    pin = Pin.parse(token)
+                    pin = Pin.parse(cast(SEXP_T, token))
                     _pins.append(pin)
                 case ['text', *_]:
                     pass

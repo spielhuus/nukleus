@@ -20,6 +20,19 @@ from .model.Wire import Wire
 from .Schema import Schema
 from .Theme import themes
 
+
+def check_notebook():
+    try:
+        __IPYTHON__
+        return True
+    except NameError:
+        return False
+
+BORDER=5
+PAPER = {
+    'A4': (297, 210)
+}
+
 f_coord = lambda arr:  [(np.min(arr[...,0]), np.min(arr[...,1])),
                         (np.max(arr[...,0]), np.max(arr[...,1]))]
 
@@ -150,7 +163,7 @@ class DrawText:
         layout = PangoCairo.create_layout(ctx)
         pctx = layout.get_context()
         desc = Pango.FontDescription()
-        desc.set_size(960)
+        desc.set_size(self.font_height*1024)
         desc.set_family(self.font_face)
         layout.set_font_description(desc)
         layout.set_alignment(Pango.Alignment.CENTER)
@@ -192,7 +205,7 @@ class DrawText:
         pctx = layout.get_context()
         #layout.set_width(pango.units_from_double(10))
         desc = Pango.FontDescription()
-        desc.set_size(960)
+        desc.set_size(self.font_height*1024)
         desc.set_family(self.font_face)
         layout.set_font_description(desc)
         layout.set_alignment(Pango.Alignment.CENTER)
@@ -453,6 +466,63 @@ class NodeSymbol(Node):
         [x.draw(ctx) for x in self.lines]
         [x.draw(ctx) for x in self.texts]
 
+
+class NodeBorder(Node):
+    def __init__(self, schema: Schema, width: float, height: float, theme: str) -> None:
+        print(f"border {width} {height}")
+#        text_effects = _merge_text_effects(
+#                element.text_effects, themes[theme]['text_effects'])
+        border_theme = themes[theme]['border']
+        border = float(border_theme['width'])
+        self.lines = [
+            DrawPolyLine([
+                (border,border),
+                (width-border,border),
+                (width-border,height-border),
+                (border,height-border),
+                (border,border)
+            ], border_theme['line'].width, border_theme['line'].color, border_theme['line'].type),
+            DrawPolyLine([
+                (width-border-110.,height-border-40),
+                (width-border,height-border-40),
+                (width-border,height-border),
+                (width-border-110,height-border),
+                (width-border-110,height-border-40)
+            ], border_theme['line'].width, border_theme['line'].color, border_theme['line'].type),
+            DrawPolyLine([
+                (width-border-110.,height-border-20),
+                (width-border,height-border-20),
+            ], border_theme['line'].width, border_theme['line'].color, border_theme['line'].type),
+            DrawPolyLine([
+                (width-border-110.,height-border-border),
+                (width-border,height-border-border),
+            ], border_theme['line'].width, border_theme['line'].color, border_theme['line'].type),
+            DrawPolyLine([
+                (width-border-110.,height-border-10),
+                (width-border,height-border-10),
+            ], border_theme['line'].width, border_theme['line'].color, border_theme['line'].type),
+            DrawPolyLine([
+                (width-border-110.,height-border-15),
+                (width-border,height-border-15),
+            ], border_theme['line'].width, border_theme['line'].color, border_theme['line'].type),
+            DrawText(
+                (width-border-100, height-border-35), schema.comment_1, 0, border_theme['comment_1']),
+            DrawText(
+                (width-border-100, height-border-32), schema.comment_2, 0, border_theme['comment_2']),
+            DrawText(
+                (width-border-100, height-border-29), schema.comment_3, 0, border_theme['comment_3']),
+            DrawText(
+                (width-border-100, height-border-27), schema.comment_4, 0, border_theme['comment_4']),
+        ]
+
+    def dimension(self, _) -> List[float]:
+        return []
+
+    def draw(self, ctx):
+        print("output border")
+        [x.draw(ctx) for x in self.lines]
+
+
 class ElementFactory:
     def __init__(self, schema: Schema, theme: str = "kicad2000"):
         self._creators = {Wire: NodeWire, Junction: NodeJunction, LocalLabel: NodeLocalLabel, GlobalLabel: NodeGlobalLabel, NoConnect: NodeNoConnect, Symbol: NodeSymbol}
@@ -502,8 +572,8 @@ class PlotContext:
         self.sfc.flush()
 
 
-def plot(schema: Schema, out: IO=BytesIO(), image_type='svg') -> IO:
-    
+def plot(schema: Schema, out: IO=BytesIO(), border: bool=False, image_type='svg', theme: str = "kicad2000") -> IO:
+
     # get the image type if out is a filename
     if isinstance(out, str):
         image_type = out.split('.')[-1]
@@ -511,20 +581,38 @@ def plot(schema: Schema, out: IO=BytesIO(), image_type='svg') -> IO:
             raise FileTypeException('file type not in (png, svg, pdf)', image_type)
 
     factory = ElementFactory(schema)
-    with PlotContext(out, 297, 210, image_type) as ctx:
-        outline = factory.dimension(ctx.ctx)
-        border = DrawPolyLine([(outline[0][0], outline[0][1]),
-                          (outline[1][0], outline[0][1]),
-                          (outline[1][0], outline[1][1]),
-                          (outline[0][0], outline[1][1]),
-                          (outline[0][0], outline[0][1])],
-                          0.5, rgb(1, 0, 0, 1), 'solid')
-        border.draw(ctx.ctx)
-        factory.draw(ctx.ctx)
+    with PlotContext(BytesIO(), 297, 210, image_type) as outline_ctx:
+        outline = factory.dimension(outline_ctx.ctx)
+        width = outline[1][0] - outline[0][0] + 2*BORDER
+        height = outline[1][1] - outline[0][1] + 2*BORDER
+        if border:
+            if schema.paper != '':
+                paper = schema.paper
+                width = PAPER[paper][0]
+                height = PAPER[paper][1]
+            else:
+                raise ValueError('Border is set to true, but no paper size given')
 
-        if image_type == 'png':
-            out = BytesIO()
-            assert ctx.sfc, 'image cotext is not set.'
-            ctx.sfc.write_to_png(out)
+        with PlotContext(out, width, height, image_type) as ctx:
+            if not border:
+                ctx.ctx.translate(-outline[0][0]+BORDER, -outline[0][1]+BORDER)
+            else:
+                factory.nodes.append(NodeBorder(schema, width, height, theme))
+            factory.draw(ctx.ctx)
+
+
+            if image_type == 'png':
+                out = BytesIO()
+                assert ctx.sfc, 'image cotext is not set.'
+                ctx.sfc.write_to_png(out)
+
+    if check_notebook():
+        try:
+            from IPython.display import SVG
+            out.flush()
+            out.seek(0)
+            return SVG(data=out.getbuffer())
+        except BaseException as err:
+            print(f'can not display data {err}')
 
     return out

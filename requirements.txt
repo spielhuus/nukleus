@@ -10,3 +10,6 @@ build
 coverage
 sphinx
 pyright
+jupyter
+nbconvert
+sconstool-nbconvert

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import List
+from typing import List, cast
 
 from ..SexpParser import SEXP_T
 
@@ -16,7 +16,7 @@ class Justify(Enum):
     CENTER = 6
 
     @staticmethod
-    def get_justify(types: str) -> List[Justify]:
+    def get_justify(types: List[str]) -> List[Justify]:
         _lookup = {'left': Justify.LEFT,
                    'right': Justify.RIGHT,
                    'top': Justify.TOP,
@@ -59,7 +59,7 @@ class Justify(Enum):
 
 @dataclass
 class TextEffects():
-    face: ''
+    face: str
     font_width: float
     font_height: float
     font_thickness: str

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import math
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, cast
 
 import numpy as np
 
@@ -53,9 +53,9 @@ class Pin():
                 case ['length', length]:
                     _length = float(length)
                 case ['name', name, *effects]:
-                    _name = (name, TextEffects.parse(effects[0]))
+                    _name = (name, TextEffects.parse(cast(SEXP_T, effects[0])))
                 case ['number', number, *effects]:
-                    _number = (number, TextEffects.parse(effects[0]))
+                    _number = (number, TextEffects.parse(cast(SEXP_T, effects[0])))
                 case 'hide':
                     _hidden = True
                 case 'input'|'output'|'bidirectional'|'tri_state'|'passive'|'free'|'unspecified'| \
@@ -74,7 +74,9 @@ class Pin():
     def _pos(self):
         theta = np.deg2rad(self.angle)
         rot = np.array([math.cos(theta), math.sin(theta)])
-        return np.array([self.pos, self.pos + rot * self.length])
+        verts = np.array([self.pos, self.pos + rot * self.length])
+        verts = np.round(verts, 3)
+        return verts
 
     def sexp(self, indent=1) -> str:
         """

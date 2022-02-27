@@ -1,0 +1,26 @@
+import json
+import os
+import nukleus
+
+from SCons.Node import NodeList
+
+
+
+env = Environment(ENV=os.environ,
+                  tools=['default', nukleus.generate],
+                  NBCONVERT_ENVIRONMENT_VARS={'flags': ['execute', 'no-input'],
+                                              'to': 'html',
+                                              'log-level': 'CRITICAL',
+                                              'ExecutePreprocessor.kernel_name': 'python3',
+                                              'HTMLExporter.exclude_anchor_links': True,
+                                              'template': 'hugo',
+                                              'TemplateExporter.extra_template_basedirs': '/templates/',
+                                              'TemplateExporter.exclude_output_prompt': True,
+                                              'TemplateExporter.exclude_output_stdin': True}
+                  )
+
+env.schema('main.pdf', 'main.kicad_sch')
+#SConscript(Glob('**/**/SConscript'),
+#           exports=['env', 'PCB', 'GERBER', 'SCHEMA', 'REPORTS', 'FILES', 'HTML'])
+#env.reports('content/report.json', REPORTS)
+#env.report2xunit('content/report.xml', 'content/report.json')

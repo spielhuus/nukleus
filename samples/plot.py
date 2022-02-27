@@ -12,24 +12,12 @@ def main():
                         help='the input filename.')
     parser.add_argument('--output', dest='output', required=True,
                         help='the output filename.')
+    parser.add_argument('--border', dest='border', action='store_true', required=False,
+                        help='draw the border.')
     args = parser.parse_args()
 
     schema = nukleus.load_schema(args.input)
-    nukleus.plot(schema, args.output, image_type='pdf')
-
-#    with open(args.output, 'bw') as file:
-#        file.write(image_bytes.getbuffer())
-
-#display(SVG(data=bytes.getbuffer()))
-#image = Image.open(bytes)
-#image = Image.open(BytesIO(bytes.getbuffer()))
-
-
-#image = Image.open('plot.svg')
-#image.show()
-
-
-
+    nukleus.plot(schema, args.output, border=args.border)
 
 if __name__ == "__main__":
     main()

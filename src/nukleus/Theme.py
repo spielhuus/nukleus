@@ -3,6 +3,36 @@ from nukleus.model.TextEffects import TextEffects
 from .model import StrokeDefinition, rgb
 
 themes = {'kicad2000': {
+    'border': {
+        'width': 5.,
+        'line': StrokeDefinition(
+            width=0.12, type='solid', color=rgb(132 / 255.0, 0, 0, 1)),
+        'comment_1': TextEffects(
+            face='osifont', font_width=2.54, font_height=2.54,
+            font_thickness='', font_style='',
+            justify=[], hidden=False
+        ),
+        'comment_2': TextEffects(
+            face='osifont', font_width=2.54, font_height=2.54,
+            font_thickness='', font_style='',
+            justify=[], hidden=False
+        ),
+        'comment_3': TextEffects(
+            face='osifont', font_width=2.54, font_height=2.54,
+            font_thickness='', font_style='',
+            justify=[], hidden=False
+        ),
+        'comment_4': TextEffects(
+            face='osifont', font_width=1.27, font_height=1.27,
+            font_thickness='', font_style='',
+            justify=[], hidden=False
+        ),
+        'comment_5': TextEffects(
+            face='osifont', font_width=1.27, font_height=1.27,
+            font_thickness='', font_style='',
+            justify=[], hidden=False
+        ),
+    },
     'text_effects': TextEffects(
         face='osifont', font_width=1.27, font_height=1.27,
         font_thickness='', font_style='',

@@ -1,0 +1,19 @@
+import os
+import sconstool_nbconvert
+
+# create a build environment with the nbconvert builder
+# the NBCONVERT_ENVIRONMENT_VARS must contain a list of flags
+# allowed flags are [execute] [allow-errors] [inplace]
+#                   [clear-output] [no-prompt] [no-input] [show-input]
+# it can also contain a list of build options:
+# any options are allowed
+env = Environment(ENV = {'PATH' : os.environ['PATH']},
+                  tools=['default', sconstool_nbconvert.generate],
+                  NBCONVERT_ENVIRONMENT_VARS={'flags': ['execute', 'no-input'],
+                  'to': 'html',
+                 'log-level': 'CRITICAL',
+                 'ExecutePreprocessor.kernel_name': 'python3',
+                 'HTMLExporter.exclude_anchor_links': True,
+                 'template': 'classic'})
+
+env.nbconvert('rendered_templ.html', os.path.join('test.ipynb'))

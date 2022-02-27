@@ -3,7 +3,7 @@
 from __future__ import annotations
 from typing import List, Dict
 
-from .Spice import get_includes, spice_model
+from .SpiceModel import get_includes, spice_model
 
 
 class Element:

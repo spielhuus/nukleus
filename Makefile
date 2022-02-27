@@ -39,7 +39,8 @@ coverage: $(VENV)/bin/activate
 	$(COVERAGE) report -m
 
 type: 
-	 $(PYRIGHT) $(SOURCES)
+#	 $(PYRIGHT) $(SOURCES)
+	 $(PYTHON) -m pyright $(SOURCES)
 
 
 install: $(TARGET)

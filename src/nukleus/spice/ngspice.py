@@ -114,8 +114,8 @@ class ngspice():
             """
             https://sourceforge.net/p/ngspice/discussion/133842/thread/1cece652/#4e32/5ab8/9027
             On Windows, when environment variable SPICE_LIB_DIR is empty, ngspice
-            looks in `C:\Spice64\share\ngspice\scripts`.  If the variable is not empty
-            it tries `%SPICE_LIB_DIR%\scripts\spinit`
+            looks in C:\\Spice64\\share\\ngspice\\scripts. If the variable is not empty
+            it tries '%SPICE_LIB_DIR%\\scripts\\spinit'
             """
 
             if 'SPICE_LIB_DIR' not in os.environ:

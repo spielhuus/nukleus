@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import List, cast
+
 from nukleus.model.StrokeDefinition import StrokeDefinition
 
 from ..SexpParser import SEXP_T
@@ -34,7 +36,7 @@ class Wire(SchemaElement):
                             case ['xy', _x, _y]:
                                 _pts.append((float(_x), float(_y)))
                 case ['stroke', *stroke]:
-                    _stroke_definition = StrokeDefinition.parse(stroke)
+                    _stroke_definition = StrokeDefinition.parse(cast(SEXP_T, stroke))
                 case _:
                     raise ValueError(f"unknown wire element {token}")
 
