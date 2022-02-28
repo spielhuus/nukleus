@@ -19,27 +19,30 @@ draw.add(Line())
 draw.add(Element("U1", "Amplifier_Operational:TL072", unit=1,
                  Spice_Netlist_Enabled='Y',
                  Spice_Primitive='X',
-                 Spice_Model='TL072c').anchor(2))
+                 Spice_Model='TL072c').anchor(2).mirror('x'))
 draw.add(Line().at(draw.U1[1].getPins()['1']))
 draw.add(( dot1 := Dot()))
 draw.add(Line())
 draw.add(Label("OUTPUT"))
 draw.add(Line().up().at(dot1).length(draw.unit*4))
 draw.add(Element("R2", "Device:R", value="100k").rotate(270))
-draw.add(Line().tox(draw.U1[1].getPins()['3']))
-draw.add(Line().toy(draw.U1[1].getPins()['3']))
-draw.add(Line().tox(draw.U1[1].getPins()['3']))
+draw.add(Line().tox(draw.U1[1].getPins()['2']))
+draw.add(Line().toy(draw.U1[1].getPins()['2']))
+draw.add(Line().tox(draw.U1[1].getPins()['2']))
+draw.add(Dot())
+draw.add(Element("GND", "power:GND").at(draw.U1[1].getPins()['3']))
 
 draw.add(Element("U1", "Amplifier_Operational:TL072", unit=2).at((30, 50)))
 draw.add(Element("U1", "Amplifier_Operational:TL072", unit=3).at((50, 50)))
 draw.add(Element("+15V", "power:+15V").at(draw.U1[3].getPins()['8']))
 draw.add(Element("-15V", "power:-15V").at(draw.U1[3].getPins()['4']).rotate(180))
 
-print(draw.sexp())
+#print(draw.sexp())
 
 nl = netlist(draw)
 circuit = Circuit()
 circuit.models(spice)
+circuit.V('1', 'INPUT', 'GND', 'DC 5 AC 5 SINE(5 100)')
 schema_to_spice(draw, circuit, nl)
 print(circuit)
 

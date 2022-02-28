@@ -1,5 +1,3 @@
-import glob
-import math
 import os
 import re
 from typing import Dict, List, Set, Tuple
@@ -12,13 +10,14 @@ from .Schema import Schema
 
 
 class Net(object):
-    def __init__(self, id: str):
-        self.id: str = id
+    def __init__(self, identifier: str, named: bool=False):
+        self.identifier: str = identifier
         self.coords: Set[POS_T] = set()
         self.pins: List[Pin] = []
+        self.named = named
 
     def __str__(self) -> str:
-        return f"Net({self.id}, {self.coords} {self.id})"
+        return f"Net({self.identifier}, {self.coords} {self.identifier} named={'True' if self.named else 'False'})"
 
 
 def netlist(schema: Schema) -> Dict[POS_T, Net]:
@@ -27,18 +26,18 @@ def netlist(schema: Schema) -> Dict[POS_T, Net]:
 
     # get the named netlists
     for text in schema.get_elements(LocalLabel):
-        c = text.pos
-        net: Net | None = d.get(c)
-        net = Net(text.text)
-        net.coords.add(c)
-        d[c] = net
+        coord = text.pos
+        net: Net | None = d.get(coord)
+        net = Net(text.text, named=True)
+        net.coords.add(coord)
+        d[coord] = net
 
     for text in schema.get_elements(GlobalLabel):
-        c = text.pos
-        net: Net | None = d.get(c)
-        net = Net(text.text)
-        net.coords.add(c)
-        d[c] = net
+        coord = text.pos
+        net: Net | None = d.get(coord)
+        net = Net(text.text, named=True)
+        net.coords.add(coord)
+        d[coord] = net
 
     # search for power and gnd and replace netnames
     for comp in schema.get_elements(Symbol):
@@ -47,26 +46,29 @@ def netlist(schema: Schema) -> Dict[POS_T, Net]:
             for subsym in lib.units:
                 for pin in subsym.pins:
                     vert = comp._pos(pin._pos())
-                    c = (vert[0][0], vert[0][1])
-                    net = d.get(c)
+                    coord = (vert[0][0], vert[0][1])
+                    net = d.get(coord)
                     if not net:
                         net = Net(comp.property('Value').value)
-                        net.coords.add(c)
-                        d[c] = net
+                        net.coords.add(coord)
+                        d[coord] = net
 
                     net.pins.append(
                         (comp.property('Reference').value, pin.name, pin))
-                    d[c] = net
+                    d[coord] = net
 
     for wire in schema.get_elements(Wire):
         c0 = (wire.pts[0])
         c1 = (wire.pts[1])
         net0 = d.get(c0)
         net1 = d.get(c1)
-
         if net0 and net1:
             net = net0
-            net.coords = net0.coords.union(net1.coords)
+            if net0.named:
+                net1.identifier = net0.identifier
+            elif net1.named:
+                net0.identifier = net1.identifier
+            net.coords = net1.coords.union(net0.coords)
 
         elif net0:
             net = net0
@@ -79,8 +81,8 @@ def netlist(schema: Schema) -> Dict[POS_T, Net]:
         net.coords.add(c0)
         net.coords.add(c1)
 
-        for c in net.coords:
-            d[c] = net
+        for coord in net.coords:
+            d[coord] = net
 
     return d
 
@@ -118,7 +120,7 @@ def schema_to_spice(schema: Schema, circuit: Circuit,
                             # id += 1
                             d[c] = net
 
-                        nets[pin.number[0]] = net.id
+                        nets[pin.number[0]] = net.identifier
 
         comp = getattr(schema, ref)[0]  # get the first unit
         if not comp.has_property("Spice_Netlist_Enabled") or \

@@ -7,7 +7,7 @@ from nukleus.model import SchemaElement, POS_T
 
 def totuple(a):
     try:
-        return tuple(totuple(i) for i in a)
+        return tuple(totuple(round(i, 2)) for i in a)
     except TypeError:
         return a
 

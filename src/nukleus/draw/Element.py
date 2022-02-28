@@ -18,6 +18,7 @@ class Element(DrawElement):
         self.pos = None
         self._anchor: str = '0'
         self._angle = 0
+        self._mirror = ''
         self.library_symbol: Optional[LibrarySymbol] = None
         self.element: Optional[Symbol] = None
 
@@ -37,11 +38,13 @@ class Element(DrawElement):
         return self.element._pos(self._pin(number)._pos())[0]
 
     def _get(self, library: Library, last_pos: POS_T, _: float):
+        print(f'Draw Symbol: {last_pos}')
         self.library_symbol = library.get(self.lib_name)
         self.library_symbol.identifier = self.lib_name
         self.element = Symbol.new(self.ref, self.lib_name, self.library_symbol)
         self.element.unit = self.unit
         self.element.angle = self._angle
+        self.element.mirror = self._mirror
         self.element.property("Reference").value = self.ref
         if self._value:
             self.element.property("Value").value = self._value
@@ -68,9 +71,10 @@ class Element(DrawElement):
 
         # calculate position
         _pos = self.pos if self.pos is not None else last_pos
+        print(f'_pos {_pos}')
         self.element.pos = tuple(totuple(_pos -
                    self.element._pos(pins[self._anchor]._pos())[0]))
-
+        print(f'self.element.pos {self.element.pos}')
         # when the anchor pin in found, set the next pos
         if self._anchor != '0':
             _last_pos = tuple(totuple(self.element._pos(self._pin(_pin_numbers[0])._pos())[0]))
@@ -123,3 +127,6 @@ class Element(DrawElement):
         self._angle = 180
         return self
 
+    def mirror(self, axis: str):
+        self._mirror =axis
+        return self

@@ -5,9 +5,9 @@ import sys
 sys.path.append('src')
 sys.path.append('..')
 
-from nukleus import Schema
 import nukleus.Spice as spice
 from nukleus import load_schema
+from nukleus import spice_path
 import nukleus.Circuit as Circuit
 
 class TestSpice(unittest.TestCase):
@@ -16,7 +16,7 @@ class TestSpice(unittest.TestCase):
         schema = load_schema('samples/files/main/main.kicad_sch')
         nl = spice.netlist(schema)
         cwd = os.getcwd() + '/samples/files/spice'
-        models = spice.load_spice_models([cwd])
+        models = spice_path([cwd])
         circuit = Circuit()
         circuit.models(models)
         spice.schema_to_spice(schema, circuit, nl)
