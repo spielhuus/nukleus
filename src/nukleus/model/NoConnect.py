@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from .PositionalElement import PositionalElement, POS_T
 from ..SexpParser import SEXP_T
+from .PositionalElement import POS_T, PositionalElement
 
 
 class NoConnect(PositionalElement):
@@ -18,6 +18,11 @@ class NoConnect(PositionalElement):
 
     @classmethod
     def parse(cls, sexp: SEXP_T) -> NoConnect:
+        """Parse the sexp input.
+
+        :param sexp SEXP_T: Sexp as List.
+        :rtype Polyline: The NoConnect Object.
+        """
         _identifier = None
         _pos: POS_T = (0, 0)
         _angle: float = 0
@@ -33,9 +38,8 @@ class NoConnect(PositionalElement):
 
         return NoConnect(identifier=_identifier, pos=_pos, angle=_angle)
 
-    def sexp(self, indent: int=1) -> str:
-        """
-        Output the element as sexp string.
+    def sexp(self, indent: int = 1) -> str:
+        """Output the element as sexp string.
 
         :param indent [int]: indent count for this element.
         :rtype str: sexp string.

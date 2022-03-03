@@ -16,11 +16,27 @@ class GraphicItem():
     def __init__(self, fill) -> None:
         self.fill = fill
 
-    def sexp(self, indent: int = 1) -> str:
+    @classmethod
+    def sexp(cls, indent: int = 1) -> str:
+        """
+        Create sexp string from the object.
+
+        :param indent int: indent count.
+        :rtype str: sexp string.
+        """
         assert False, f'abstract method called with indent: {indent}'
 
 
 class Polyline(GraphicItem):
+    '''
+    Polyline
+    Draw a polyline.
+
+    args:
+        :arg fill FillType: fill type
+        :arg points Tuple[float, float]: Coordinates of the line
+        :arg stroke_definition StrokeDefinition: Line description.
+    '''
     points: List[Tuple[float, float]]
     stroke_definition: StrokeDefinition
 
@@ -32,6 +48,12 @@ class Polyline(GraphicItem):
 
     @classmethod
     def parse(cls, sexp: SEXP_T) -> Polyline:
+        """
+        Parse the sexp input.
+
+        :param sexp SEXP_T: Sexp as List.
+        :rtype Polyline: The Polyline Object.
+        """
         _fill: FillType = FillType.NONE
         _points: List[Tuple[float, float]] = []
         _stroke_definition: StrokeDefinition = StrokeDefinition()
@@ -167,7 +189,7 @@ class Circle(GraphicItem):
                     raise ValueError(f"unknown polyline element {token}")
 
         return Circle(center=_center, radius=_radius,
-                         fill=_fill, stroke_definition=_stroke_definition)
+                      fill=_fill, stroke_definition=_stroke_definition)
 
     def sexp(self, indent: int = 1) -> str:
         """
@@ -220,7 +242,7 @@ class Arc(GraphicItem):
                     raise ValueError(f"unknown polyline element {token}")
 
         return Arc(start=_start, mid=_mid, end=_end,
-                         fill=_fill, stroke_definition=_stroke_definition)
+                   fill=_fill, stroke_definition=_stroke_definition)
 
     def sexp(self, indent: int = 1) -> str:
         """

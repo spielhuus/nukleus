@@ -8,12 +8,14 @@ from .model import POS_T, GraphicItem, LibrarySymbol, LocalLabel, GlobalLabel, \
     SymbolInstance, Circle, Arc, Polyline, FillType, Justify, get_fill_type, rgb
 
 from .model.GlobalLabel import GlobalLabel
+from .model.GraphicalText import GraphicalText
 from .model.Junction import Junction
 from .model.LibrarySymbol import LibrarySymbol
 from .model.NoConnect import NoConnect
 from .model.Symbol import Symbol
 from .model.HierarchicalSheet import HierarchicalSheet
 from .model.HierarchicalSheetInstance import HierarchicalSheetInstance
+from .model.TextEffects import TextEffects
 
 from .SexpParser import load_tree
 
@@ -411,9 +413,8 @@ class ParserV6():
                         print(f"image: {uuid}")
                     case ["polyline", pts, stroke, uuid]:
                         print(f"polyline: {uuid}")
-                    case ["text", text, pos, effects, uuid]:
-                        print(f"text: {uuid}")
-                        _xy, _angle = self._pos(pos)
+                    case ["text", *_]:
+                        schema.append(GraphicalText.parse(item))
                     case ["label", text, pos, effects, uuid]:
                         schema.append(LocalLabel.parse(item))
                     case ["global_label", *_]:

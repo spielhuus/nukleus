@@ -1,4 +1,4 @@
-from nukleus.model.TextEffects import TextEffects
+from nukleus.model.TextEffects import Justify, TextEffects
 
 from .model import StrokeDefinition, rgb
 
@@ -36,7 +36,7 @@ themes = {'kicad2000': {
     'text_effects': TextEffects(
         face='osifont', font_width=1.27, font_height=1.27,
         font_thickness='', font_style='',
-        justify=[], hidden=False
+        justify=[Justify.CENTER], hidden=False
     ),
     'pin_number': TextEffects(
         face='osifont', font_width=0.75, font_height=0.75,

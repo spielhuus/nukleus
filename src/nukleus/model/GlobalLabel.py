@@ -5,6 +5,7 @@ from typing import List, cast
 from .PositionalElement import PositionalElement, POS_T
 from .Property import Property
 from .TextEffects import TextEffects
+from .Utils import ffmt
 from ..SexpParser import SEXP_T
 
 class GlobalLabel(PositionalElement):
@@ -84,7 +85,7 @@ class GlobalLabel(PositionalElement):
         strings: List[str] = []
         strings.append(
             f'{"  " * indent}(global_label "{self.text}" (shape {self.shape}) '
-            f"(at {self.pos[0]:g} {self.pos[1]:g} {self.angle:g})"
+            f"(at {ffmt(self.pos[0])} {ffmt(self.pos[1])} {ffmt(self.angle)})"
             f'{"" if self.autoplaced == "" else " (fields_autoplaced)"}'
         )
         strings.append(self.text_effects.sexp(indent=indent + 1))

@@ -24,6 +24,11 @@ class Junction(PositionalElement):
 
     @classmethod
     def parse(cls, sexp: SEXP_T) -> Junction:
+        """Parse the sexp input.
+
+        :param sexp SEXP_T: Sexp as List.
+        :rtype Polyline: The NoConnect Object.
+        """
         _identifier = None
         _pos: POS_T = (0, 0)
         _angle: float = 0

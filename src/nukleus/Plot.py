@@ -53,18 +53,20 @@ def _merge_text_effects(text_effects: TextEffects, theme_effects: TextEffects) -
         text_effects.font_style = theme_effects.font_style
     if text_effects.font_thickness == '':
         text_effects.font_thickness = theme_effects.font_thickness
+    if len(text_effects.justify) == 0:
+        text_effects.justify = theme_effects.justify
 
     return text_effects
 
 
 class DrawLine:
-    def __init__(self, pts: PTS_T, width: float, color: rgb, type: str) -> None:
+    def __init__(self, pts: PTS_T, width: float, color: rgb, line_type: str) -> None:
         self.pts = pts
         self.width = width
         self.color = color
-        self.type = type
+        self.line_type = line_type
 
-    def dimension(self, ctx):
+    def dimension(self, _):
         return f_coord(np.array(self.pts))
 
     def draw(self, ctx):
@@ -163,7 +165,7 @@ class DrawText:
         layout = PangoCairo.create_layout(ctx)
         pctx = layout.get_context()
         desc = Pango.FontDescription()
-        desc.set_size(self.font_height*1024)
+        desc.set_size(self.font_height*Pango.SCALE)
         desc.set_family(self.font_face)
         layout.set_font_description(desc)
         layout.set_alignment(Pango.Alignment.CENTER)
@@ -182,12 +184,21 @@ class DrawText:
         ctx.save()
 
         pos_x, pos_y = (self.pos[0], self.pos[1])
-        if Justify.CENTER in self.justify:
-            width = float(self.dimension(ctx)[1][0]) / Pango.SCALE
-            pos_x -= width / 2.
+        width = float(self.dimension(ctx)[1][0])
+        if Justify.LEFT in self.justify:
+            pass
         elif Justify.RIGHT in self.justify:
-            width = float(self.dimension(ctx)[1][0]) / Pango.SCALE
-            pos_x -= width
+            print(f'LEFT {self.text} {pos_x} {width}')
+            pos_x += (pos_x - width)
+        else:
+            pos_x += (pos_x - width) / 2
+
+        height = float(self.dimension(ctx)[0][1])
+        if Justify.TOP in self.justify:
+            pos_y += (pos_y - height)
+        elif Justify.CENTER in self.justify:
+            pos_y += (pos_y - height) / 2
+
 
         #            x_bearing, y_bearing, width, height, x_advance, y_advance = \
         #                self.ctx.text_extents(string)
@@ -404,7 +415,7 @@ class NodeSymbol(Node):
                             element._pos(pp),
                             width=sd.width,
                             color=sd.color,
-                            type=sd.type,
+                            line_type=sd.type,
                         ))
 
                     if (
@@ -426,8 +437,10 @@ class NodeSymbol(Node):
                         and not sym.extends == "power"
                     ):
 
+                        name_position = element._pos(
+                                pin.calc_pos(pin.pos, sym.pin_names_offset)[1])
                         pp = element._pos(pin._pos())
-                        name_position = pp[1] + sym.pin_names_offset
+                        _name_position = pp[1] + sym.pin_names_offset
                         text_effects = themes[theme]['pin_name']
                         self.texts.append(DrawText(name_position, pin.name[0], 0, text_effects))
 
@@ -438,17 +451,25 @@ class NodeSymbol(Node):
             if field.value == "~":
                 continue
 
-            angle = element.angle - field.angle
+            angle = field.angle
+#            angle = element.angle - field.angle
 #            print(
 #                f"FIELD ANGLE: {field.value} {field.angle} {element.angle} {angle}"
 #            )
-            if angle >= 180:
-                angle -= 180
-            elif angle == 90:
-                angle = 270
+#            if angle >= 180:
+#                angle -= 180
+#            elif angle == 90:
+#                angle = 270
 
             text_effects = _merge_text_effects(
                     field.text_effects, themes[theme]['text_effects'])
+            if element.angle + field.angle == 180:
+                if Justify.LEFT in text_effects.justify:
+                    text_effects.justify = [Justify.RIGHT]
+                elif Justify.RIGHT in text_effects.justify:
+                    print(f"REDRUM {field.value} to LEFT")
+                    text_effects.justify = [Justify.LEFT]
+
             self.texts.append(DrawText(field.pos, field.value, angle, text_effects))
 
     def dimension(self, ctx) -> List[float]:
@@ -469,7 +490,6 @@ class NodeSymbol(Node):
 
 class NodeBorder(Node):
     def __init__(self, schema: Schema, width: float, height: float, theme: str) -> None:
-        print(f"border {width} {height}")
 #        text_effects = _merge_text_effects(
 #                element.text_effects, themes[theme]['text_effects'])
         border_theme = themes[theme]['border']
@@ -519,7 +539,6 @@ class NodeBorder(Node):
         return []
 
     def draw(self, ctx):
-        print("output border")
         [x.draw(ctx) for x in self.lines]
 
 
