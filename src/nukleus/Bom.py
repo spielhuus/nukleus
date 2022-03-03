@@ -13,13 +13,18 @@ def bom(schema: Schema) -> List[List[str]]:
     # search for power and gnd and replace netnames
     result_bom = []
     for ref in schema.references():
-        symbol = getattr(schema, ref)
-        result_bom.append([
-            symbol[0].property('Reference').value,
-            symbol[0].property('Value').value,
-            symbol[0].property('Footprint').value,
-            symbol[0].property('Datasheet').value,
-            symbol[0].property('Description').value,
-            ])
+        symbols = getattr(schema, ref)
+        ref = symbols[0].property('Reference').value
+        val = symbols[0].property('Value').value
+        footprint = symbols[0].property('Footprint').value
+        datasheet = ''
+        for symbol in symbols:
+            if symbol.has_property('Datasheet'):
+                datasheet = symbol.property('Datasheet').value
+        description = ''
+        for symbol in symbols:
+            if symbol.has_property('Description'):
+                description = symbol.property('Description').value
+        result_bom.append([ref, val, footprint, datasheet, description])
 
     return result_bom

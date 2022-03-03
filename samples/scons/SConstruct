@@ -20,6 +20,7 @@ env = Environment(ENV=os.environ,
                   )
 
 env.schema('main.pdf', 'main.kicad_sch')
+env.bom('main.bom', 'main.kicad_sch')
 #SConscript(Glob('**/**/SConscript'),
 #           exports=['env', 'PCB', 'GERBER', 'SCHEMA', 'REPORTS', 'FILES', 'HTML'])
 #env.reports('content/report.json', REPORTS)

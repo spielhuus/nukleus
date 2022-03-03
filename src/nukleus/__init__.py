@@ -2,6 +2,7 @@ from typing import List
 
 import os
 import sys
+import json
 
 from . import draw, model, spice
 from .Circuit import Circuit
@@ -49,7 +50,9 @@ def spice_path(paths: List[str]):
 ## The Scons bindings
 def scons_bom(target, source, env):
     schema = load_schema(source[0].abspath)
-    bom(schema, target[0].abspath)
+    res = bom(schema)
+    with open(target[0].abspath, 'w') as file:
+        file.write(json.dumps(res))
 
 def scons_schema(target, source, env):
     schema = load_schema(source[0].abspath)
