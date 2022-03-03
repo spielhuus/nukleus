@@ -11,6 +11,7 @@ from .Plot import plot
 from .Schema import Schema
 from .Spice import netlist, schema_to_spice
 from .SpiceModel import load_spice_models
+from .Bom import bom
 
 import SCons.Builder
 import SCons.Tool
@@ -44,7 +45,12 @@ def load_schema(filename: str):
 def spice_path(paths: List[str]):
     return load_spice_models(paths)
 
+
 ## The Scons bindings
+def scons_bom(target, source, env):
+    schema = load_schema(source[0].abspath)
+    bom(schema, target[0].abspath)
+
 def scons_schema(target, source, env):
     schema = load_schema(source[0].abspath)
     plot(schema, target[0].abspath, border=True)
@@ -68,6 +74,7 @@ def generate(env):
 #    kiscan = SCons.Script.Scanner(function = kicad_scan, skeys = ['.pro'])
 #    env['BUILDERS']['preflight'] = SCons.Builder.Builder(action=kibot_preflight, source_scanner = kiscan)
     env['BUILDERS']['schema'] = SCons.Builder.Builder(action=scons_schema)
+    env['BUILDERS']['bom'] = SCons.Builder.Builder(action=scons_bom)
 #    env['BUILDERS']['pcb'] = SCons.Builder.Builder(action=kibot_pcb, source_scanner = kiscan)
 #    env['BUILDERS']['gerbers'] = SCons.Builder.Builder(action=kibot_gerbers, source_scanner = kiscan)
 #    env['BUILDERS']['bom'] = SCons.Builder.Builder(action=kibot_bom, source_scanner = kiscan)
