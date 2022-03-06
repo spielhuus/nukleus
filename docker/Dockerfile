@@ -8,7 +8,7 @@ RUN pacman -Syu --noconfirm &&\
                            zsh neovim sudo \
                            hugo kicad kicad-library
 RUN python3 -m pip install git+https://github.com/spielhuus/nukleus.git
-RUN python3 -m pip install sconstool-nbconvert jupyterlab schemdraw
+RUN python3 -m pip install sconstool-nbconvert jupyterlab schemdraw sympy
 
 # Setup an entrypoint script
 COPY entrypoint.sh /entrypoint.sh

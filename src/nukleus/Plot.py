@@ -229,7 +229,6 @@ class DrawText:
         return [(self.pos[0], self.pos[1]), (self.pos[0]+size_w, self.pos[1]+size_h)]
 
     def draw(self, ctx):
-        # TODO print(f'{self.text} {self.rotation}')
         ctx.save()
 
         pos_x, pos_y = (self.pos[0], self.pos[1])

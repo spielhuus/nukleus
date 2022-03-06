@@ -1,8 +1,7 @@
 import json
+import logging
 import os
 import shutil
-import sys
-from typing import List
 
 import SCons.Builder
 import SCons.Tool
@@ -19,7 +18,6 @@ from ..Schema import Schema
 from ..Spice import netlist
 
 # The Scons bindings
-
 
 def scons_schema(target, source, env):
     schema = Schema()
@@ -61,10 +59,8 @@ def scons_gerbers(target, source, env):
 
 
 def _board_name(name: str) -> str:
-    print(f'get board name for {name}')
-    board = name.split('.')[0]
-    print(f'get board name for {name} -> {board}')
-    return board
+    return name.split('.')[0]
+
 
 def scons_bom(target, source, env):
 
@@ -120,7 +116,7 @@ def scons_erc(target, source, env):
 
 def scons_reports(target, source, env):
     source_files = []
-    for path in source :
+    for path in source:
         source_files.append(path.abspath)
 
     with open(target[0].abspath, 'w') as file:
@@ -128,6 +124,9 @@ def scons_reports(target, source, env):
 
 
 def generate(env):
+
+    # initialize the logger
+    logging.basicConfig(format='%(levelname)s:%(message)s', encoding='utf-8', level=logging.INFO)
 
     env.SetDefault(NUKLEUS_CONTEXT={})
     env.SetDefault(NUKLEUS_ENVIRONMENT_VARS={})
