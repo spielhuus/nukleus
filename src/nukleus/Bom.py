@@ -7,8 +7,7 @@ from .model import POS_T, GlobalLabel, LocalLabel, Pin, Symbol, Wire
 from .Schema import Schema
 
 
-
-def bom(schema: Schema) -> List[List[str]]:
+def bom(schema: Schema):
 
     # search for power and gnd and replace netnames
     result_bom = []
@@ -25,6 +24,7 @@ def bom(schema: Schema) -> List[List[str]]:
         for symbol in symbols:
             if symbol.has_property('Description'):
                 description = symbol.property('Description').value
-        result_bom.append([ref, val, footprint, datasheet, description])
+        result_bom.append({'ref': ref, 'value': val, 'footprint': footprint,
+                           'datasheet': datasheet, 'description': description})
 
     return {'bom': result_bom}
