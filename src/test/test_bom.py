@@ -1,8 +1,6 @@
 import sys
 import unittest
 
-from pprint import pprint
-
 sys.path.append("src")
 
 from nukleus.ParserV6 import ParserV6
@@ -16,6 +14,6 @@ class TestParserPlot(unittest.TestCase):
         parser.schema(schema, "samples/files/summe_v6/main.kicad_sch")
 
         res = bom(schema)
-        #pprint(res)
         self.assertEqual(1, len(res))
-        self.assertEqual(6, len(res['bom']))
+        self.assertEqual(4, len(res['bom']))
+        self.assertEqual(['C1', 'C2'], res['bom'][0]['ref'])
