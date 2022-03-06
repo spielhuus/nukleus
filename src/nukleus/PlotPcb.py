@@ -4,12 +4,11 @@ import logging
 import zipfile
 from PyPDF2 import PdfFileMerger, PdfFileReader
 
-#import sys
-#sys.path.append('/usr/lib/python3.10/site-packages/')
-
 import pcbnew
 
 from .PcbUtils import PCB, Layer
+
+logger = logging.getLogger(__name__)
 
 def drc(pcb: PCB, target: str) -> None:
     pcbnew.WriteDRCReport(pcb.board, target, pcbnew.EDA_UNITS_MILLIMETRES, True)
@@ -21,7 +20,7 @@ def pcb(pcb: PCB, target, layers, temp_dir):
         pcbnew.PCB_PLOT_PARAMS.NO_DRILL_SHAPE)
 
     for layer in layers:
-        logging.debug('plotting layer {} ({}) to Gerber'.format(
+        logger.debug('plotting layer {} ({}) to Gerber'.format(
             layer.get_name(), layer.layer_id))
         output_filename = layer.plot(pcbnew.PLOT_FORMAT_GERBER)
         output_files.append(output_filename)
@@ -42,7 +41,7 @@ def pdf(pcb: PCB, target, layers, temp_dir):
         pcbnew.PCB_PLOT_PARAMS.NO_DRILL_SHAPE)
 
     for layer in layers:
-        logging.debug('plotting layer {} ({}) to PDF'.format(
+        logger.debug('plotting layer {} ({}) to PDF'.format(
             layer.get_name(), layer.layer_id))
         output_filename = layer.plot(pcbnew.PLOT_FORMAT_PDF)
         with open(output_filename, 'rb') as file:
@@ -54,6 +53,3 @@ def pdf(pcb: PCB, target, layers, temp_dir):
             merger.append(PdfFileReader(file), bookmark='Drill map')
 
     merger.write(target)
-
-
-

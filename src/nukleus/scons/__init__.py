@@ -127,6 +127,7 @@ def generate(env):
 
     # initialize the logger
     logging.basicConfig(format='%(levelname)s:%(message)s', encoding='utf-8', level=logging.INFO)
+    logging.getLogger().setLevel(logging.INFO)
 
     env.SetDefault(NUKLEUS_CONTEXT={})
     env.SetDefault(NUKLEUS_ENVIRONMENT_VARS={})

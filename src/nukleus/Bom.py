@@ -8,7 +8,6 @@ from .Schema import Schema
 
 
 def _number(input):
-    print(f'input number: {input}')
     numbers = ''
     for char in input:
         if char.isdigit():
