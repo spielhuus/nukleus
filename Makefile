@@ -5,6 +5,9 @@ PIP = $(VENV)/bin/pip
 PYRIGHT = $(VENV)/bin/pyright
 COVERAGE = $(VENV)/bin/coverage
 SPHINX = $(VENV)/bin/sphinx-build
+PCBNEW := $(shell find /usr/lib -name 2pcbnew.py)
+PCBNEWSO := $(shell find /usr/lib -name 2_pcbnew.so)
+PYVERSION := $(shell python3 --version|sed 's/.* \([0-9]\.[0-9]*\).*/\1/')
 
 # You can set these variables from the command line, and also
 # from the environment for the first two.
@@ -29,7 +32,12 @@ $(TARGET): $(VENV)/bin/activate $(SOURCES)
 
 $(VENV)/bin/activate: requirements.txt
 	python3 -m venv $(VENV)
+	$(PYTHON) -m pip install --upgrade pip
 	$(PIP) install -r requirements.txt
+	$(info '$(PCBNEW)')
+	@[ -z "${PCBNEW}" ] && (echo "not linking pcbnew") || ln -s $(PCBNEW) $(VENV)/lib/python$(PYVERSION)/site-packages/pcbnew.py
+	@[ -z "${PCBNEWSO}" ] && (echo "not linking pcbnew") || ln -s $(PCBNEWSO) $(VENV)/lib/python$(PYVERSION)/site-packages/_pcbnew.so
+
 
 test: $(VENV)/bin/activate
 	$(PYTHON) -m unittest discover -s src/test

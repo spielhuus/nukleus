@@ -162,7 +162,7 @@ class Circle(GraphicItem):
     stroke_definition: StrokeDefinition
 
     def __init__(self, **kwargs) -> None:
-        self.center: float = kwargs.get('center', 0)
+        self.center: float = kwargs.get('center', 0)  # TODO must be pos_t
         self.radius: float = kwargs.get('radius', 0)
         self.stroke_definition: StrokeDefinition = kwargs.get(
             'stroke_definition', StrokeDefinition())

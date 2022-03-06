@@ -11,8 +11,11 @@ from gi.repository import PangoCairo
 import numpy as np
 
 from .model import (FillType, GlobalLabel, Junction, Justify, LibrarySymbol,
-                    LocalLabel, NoConnect, Pin, Polyline, Rectangle,
+                    LocalLabel, NoConnect, Pin,
                     StrokeDefinition, Symbol, TextEffects, rgb)
+
+
+from .model.GraphicItem import Arc, Polyline, Rectangle, Circle
 from .model.SchemaElement import POS_T, PTS_T, SchemaElement
 from .model.HierarchicalSheetInstance import HierarchicalSheetInstance
 from .model.SymbolInstance import SymbolInstance
@@ -79,7 +82,17 @@ class DrawLine:
 
 
 class DrawPolyLine:
+    """Draw a polyline"""
     def __init__(self, pts: PTS_T, width: float, color: rgb, type: str, fill: rgb|None=None) -> None:
+        """
+        Initialize the polyline object.
+
+        :param pts PTS_T: Polyline points.
+        :param width float: Line width.
+        :param color rgb: Line color.
+        :param type str: Line type.
+        :param fill rgb|None: Fill the polyline. Default is no fill.
+        """
         self.pts = pts
         self.width = width
         self.color = color
@@ -126,8 +139,44 @@ class DrawRect:
         ctx.stroke()
 
 
+class DrawArc:
+    def __init__(self, start: POS_T, mid: POS_T, end: POS_T, width: float, color: rgb, type: str, fill: rgb|None=None) -> None:
+        self.start = start
+        self.med = mid
+        self.end = end
+        self.width = width
+        self.color = color
+        self.type = type
+        self.fill = fill
+
+    def dimension(self, _):
+        return f_coord(np.array(self.start))
+
+    def draw(self, ctx):
+        ctx.set_source_rgba(*self.color.get())
+        ctx.set_line_width(self.width)
+        ctx.move_to(self.start[0], self.start[1])
+        ctx.arc(self.start[0], self.start[1], self.med[0], 0, 100)
+        ctx.stroke_preserve()
+        if self.fill:
+            ctx.set_source_rgba(*self.fill.get())
+            ctx.fill()
+        ctx.stroke()
+
+
 class DrawCircle:
-    def __init__(self, pos: POS_T, radius, width: float, color: rgb, type: str, fill: rgb|None=None) -> None:
+    """Draw a circle"""
+    def __init__(self, pos: POS_T, radius: float, width: float, color: rgb, type: str, fill: rgb|None=None) -> None:
+        """
+        Initialize a Circle object.
+
+        :param pos POS_T: Center of the circle.
+        :param radius float: Radius of the circle.
+        :param width float: Line width. 
+        :param color rgb: Line color.
+        :param type str: Line type.
+        :param fill rgb|None: Fill color, default is no fill.
+        """
         self.pos = pos
         self.radius = radius
         self.width = width
@@ -188,15 +237,16 @@ class DrawText:
         if Justify.LEFT in self.justify:
             pass
         elif Justify.RIGHT in self.justify:
-            print(f'LEFT {self.text} {pos_x} {width}')
             pos_x += (pos_x - width)
         else:
             pos_x += (pos_x - width) / 2
 
-        height = float(self.dimension(ctx)[0][1])
+        height = float(self.dimension(ctx)[1][1])
         if Justify.TOP in self.justify:
+            pass
+        elif Justify.BOTTOM in self.justify:
             pos_y += (pos_y - height)
-        elif Justify.CENTER in self.justify:
+        else:
             pos_y += (pos_y - height) / 2
 
 
@@ -230,19 +280,19 @@ class DrawText:
         #ctx.rotate(self.rotation * math.pi / 180.)
         
         # TODO remove draw box around text
-#        size = layout.get_size()
-#        size_w = float(size[0]) / Pango.SCALE
-#        size_h = float(size[1]) / Pango.SCALE
-#        size = (size_w, size_h)
-#        ctx.set_source_rgba(*rgb(1, 0, 0, 1).get())
-#        ctx.set_line_width(0.1)
-#        ctx.move_to(0, 0)
-#        ctx.line_to(size[0], 0)
-#        ctx.line_to(size[0], size[1])
-#        ctx.line_to(0, size[1])
-#        ctx.line_to(0, 0)
-#        ctx.stroke_preserve()
-#        ctx.stroke()
+        size = layout.get_size()
+        size_w = float(size[0]) / Pango.SCALE
+        size_h = float(size[1]) / Pango.SCALE
+        size = (size_w, size_h)
+        ctx.set_source_rgba(*rgb(.2, .2, .2, 1).get())
+        ctx.set_line_width(0.1)
+        ctx.move_to(0, 0)
+        ctx.line_to(size[0], 0)
+        ctx.line_to(size[0], size[1])
+        ctx.line_to(0, size[1])
+        ctx.line_to(0, 0)
+        ctx.stroke_preserve()
+        ctx.stroke()
 
         ctx.restore()
 
@@ -392,17 +442,29 @@ class NodeSymbol(Node):
                             type=sd.type,
                             fill=fill,
                         ))
-#
-#                #            #             if isinstance(draw, DrawArc):
-#                #            #                 print("draw arc")
-#                #            #                 dp = np.array([draw.x, draw.y])
-#                #            #                 pl.arc(dp, draw.r, draw.start * 0.1, draw.end * 0.1,
-#                #            #                        linewidth, edgecolor, facecolor)
-#                #
-#                #            #             elif isinstance(draw, DrawCircle):
-#                #            #                 dp = np.array([draw.x, draw.y])
-#                #            #                 pl.circle(dp, draw.r, linewidth, edgecolor, facecolor)
-#                #
+
+                    elif isinstance(draw, Arc):
+                        self.graphs.append(DrawArc(
+                            element._pos(draw.start),
+                            draw.mid,
+                            draw.end,
+                            draw.stroke_definition.width,
+                            rgb(1,0,0,1), # TODO draw.stroke_definition.color,
+                            draw.stroke_definition.type
+                        ))
+                        #dp = np.array([draw.x, draw.y])
+                        #pl.arc(dp, draw.r, draw.start * 0.1, draw.end * 0.1,
+                        #       linewidth, edgecolor, facecolor)
+
+                    elif isinstance(draw, Circle):
+                        self.graphs.append(DrawCircle(
+                            element._pos(draw.center),
+                            draw.radius,
+                            draw.stroke_definition.width,
+                            rgb(1,0,0,1), # TODO draw.stroke_definition.color,
+                            draw.stroke_definition.type
+                        ))
+                        # TODO pl.circle(dp, draw.r, linewidth, edgecolor, facecolor)
                     else:
                         print(f"unknown graph type: {draw}")
 #                #
@@ -467,10 +529,16 @@ class NodeSymbol(Node):
                 if Justify.LEFT in text_effects.justify:
                     text_effects.justify = [Justify.RIGHT]
                 elif Justify.RIGHT in text_effects.justify:
-                    print(f"REDRUM {field.value} to LEFT")
                     text_effects.justify = [Justify.LEFT]
 
             self.texts.append(DrawText(field.pos, field.value, angle, text_effects))
+            self.graphs.append(DrawCircle(
+                field.pos,
+                .2,
+                themes[theme]["no_connect"].width,
+                rgb(1,0,0,1),
+                themes[theme]["no_connect"].type
+            ))
 
     def dimension(self, ctx) -> List[float]:
         pts = []

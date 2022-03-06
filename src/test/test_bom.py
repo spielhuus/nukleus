@@ -16,5 +16,5 @@ class TestParserPlot(unittest.TestCase):
         parser.schema(schema, "samples/files/summe_v6/main.kicad_sch")
 
         res = bom(schema)
-        pprint(res)
+        #pprint(res)
         self.assertEqual(6, len(res))

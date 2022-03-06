@@ -1,6 +1,6 @@
 import json
 import os
-import nukleus
+import nukleus.scons as nukleus
 
 from SCons.Node import NodeList
 
@@ -8,6 +8,23 @@ from SCons.Node import NodeList
 
 env = Environment(ENV=os.environ,
                   tools=['default', nukleus.generate],
+                  NUKLEUS_ENVIRONMENT_VARS={'pcb': {
+                        'layers': [
+                            'F.Cu',
+                            'B.Cu',
+                            'In1.Cu',
+                            'In2.Cu',
+                            'In3.Cu',
+                            'In4.Cu',
+                            'In5.Cu',
+                            'In6.Cu',
+                            'F.SilkS',
+                            'B.SilkS',
+                            'F.Mask',
+                            'B.Mask',
+                            'Edge.Cuts',
+                        ],
+                      }},
                   NBCONVERT_ENVIRONMENT_VARS={'flags': ['execute', 'no-input'],
                                               'to': 'html',
                                               'log-level': 'CRITICAL',
@@ -19,8 +36,11 @@ env = Environment(ENV=os.environ,
                                               'TemplateExporter.exclude_output_stdin': True}
                   )
 
-env.schema('main.pdf', 'main.kicad_sch')
+env.schema('main_schema.pdf', 'main.kicad_sch')
 env.bom('main.bom', 'main.kicad_sch')
+env.drc('main_drc.txt', 'main.kicad_pcb')
+env.gerbers('main_pcb.zip', 'main.kicad_pcb')
+env.pcb('main_pcb.pdf', 'main.kicad_pcb')
 #SConscript(Glob('**/**/SConscript'),
 #           exports=['env', 'PCB', 'GERBER', 'SCHEMA', 'REPORTS', 'FILES', 'HTML'])
 #env.reports('content/report.json', REPORTS)

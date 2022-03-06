@@ -1,8 +1,5 @@
 pycairo
 PyGObject
-#pangocairocffi
-#cairocffi
-#cairocffi
 matplotlib
 ipython
 numpy
@@ -13,3 +10,4 @@ pyright
 jupyter
 nbconvert
 sconstool-nbconvert
+PyPDF2

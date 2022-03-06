@@ -29,7 +29,6 @@ def __load_model__(filename: str):
 
 
 def load_spice_models(paths: List[str]) -> List[spice_model]:
-    print(f'LOAD SPICE MODELS: {paths}')
     for path in paths:
         models = []
         for filename in glob.iglob(f'{path}/**', recursive=True):
@@ -68,7 +67,6 @@ def __get_includes__(path, includes, models):
 def get_includes(key, includes, models):
     found = False
     for m in models:
-        print(f'>>{m.keys}')
         if key in m.keys:
             found = True
             if not __contains__(m.path, includes):
