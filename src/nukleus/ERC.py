@@ -14,16 +14,8 @@ def erc(schema: Schema, netlist: Dict[POS_T, Net]) -> List[List[str]]:
 
     # check if all pins are connected
     result_erc = []
-    for sym in schema.elements:
 
     for ref in schema.references():
         symbol = getattr(schema, ref)
-        result_bom.append([
-            symbol[0].property('Reference').value,
-            symbol[0].property('Value').value,
-            symbol[0].property('Footprint').value,
-            symbol[0].property('Datasheet').value,
-            symbol[0].property('Description').value,
-            ])
 
-    return result_erc
+    return {'erc': result_erc}

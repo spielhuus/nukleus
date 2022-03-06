@@ -7,6 +7,7 @@ sys.path.append('src')
 sys.path.append('..')
 
 from nukleus.Reports import report_parser
+import nukleus
 
 DRC_STRING = """** Drc report for /home/etienne/nukleus/samples/scons/main.kicad_pcb **
 ** Created on 2022-03-05 15:28:44 **
@@ -46,9 +47,14 @@ DRC_STRING = """** Drc report for /home/etienne/nukleus/samples/scons/main.kicad
 class TestReports(unittest.TestCase):
 
     def test_parse_drc(self):
-        in_stream = io.StringIO(DRC_STRING)
         out = {}
-        report_parser(in_stream, out)
-        #pprint.pprint(out)
+        report_parser(DRC_STRING, out)
         self.assertEqual(2, len(out))
         self.assertEqual(8, len(out['drc']))
+
+    def test_parse_erc(self):
+        schema = nukleus.load_schema('samples/files/summe_v6/main.kicad_sch')
+        netlist = nukleus.Spice.netlist(schema)
+        erc_res = nukleus.erc(schema, netlist)
+        pprint.pprint(erc_res)
+        self.assertEqual(2, len(erc_res))

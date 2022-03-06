@@ -15,6 +15,7 @@ from .Spice import netlist, schema_to_spice
 from .SpiceModel import load_spice_models
 from .Bom import bom
 from .Reports import report_parser
+from .ERC import erc
 
 #SYMBOL_SEARCH_PATH_POSIX = [
 #    '/usr/share/kicad/symbols',

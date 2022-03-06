@@ -17,4 +17,5 @@ class TestParserPlot(unittest.TestCase):
 
         res = bom(schema)
         #pprint(res)
-        self.assertEqual(6, len(res))
+        self.assertEqual(1, len(res))
+        self.assertEqual(6, len(res['bom']))

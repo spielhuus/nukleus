@@ -36,12 +36,13 @@ env = Environment(ENV=os.environ,
                                               'TemplateExporter.exclude_output_stdin': True}
                   )
 
+REPORTS = NodeList()
+
 env.schema('main_schema.pdf', 'main.kicad_sch')
-env.bom('main.bom', 'main.kicad_sch')
-env.drc('main_drc.txt', 'main.kicad_pcb')
+REPORTS += env.bom('main.bom', 'main.kicad_sch', project_name="summe")
+REPORTS += env.drc('main_drc.json', 'main.kicad_pcb', project_name="summe")
+REPORTS += env.erc('main_erc.json', 'main.kicad_sch', project_name="summe")
 env.gerbers('main_pcb.zip', 'main.kicad_pcb')
 env.pcb('main_pcb.pdf', 'main.kicad_pcb')
-#SConscript(Glob('**/**/SConscript'),
-#           exports=['env', 'PCB', 'GERBER', 'SCHEMA', 'REPORTS', 'FILES', 'HTML'])
-#env.reports('content/report.json', REPORTS)
+env.reports('report.json', REPORTS)
 #env.report2xunit('content/report.xml', 'content/report.json')

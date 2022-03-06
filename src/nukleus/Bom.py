@@ -27,4 +27,4 @@ def bom(schema: Schema) -> List[List[str]]:
                 description = symbol.property('Description').value
         result_bom.append([ref, val, footprint, datasheet, description])
 
-    return result_bom
+    return {'bom': result_bom}

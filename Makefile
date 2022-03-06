@@ -5,8 +5,8 @@ PIP = $(VENV)/bin/pip
 PYRIGHT = $(VENV)/bin/pyright
 COVERAGE = $(VENV)/bin/coverage
 SPHINX = $(VENV)/bin/sphinx-build
-PCBNEW := $(shell find /usr/lib -name 2pcbnew.py)
-PCBNEWSO := $(shell find /usr/lib -name 2_pcbnew.so)
+PCBNEW := $(shell find /usr/lib -name pcbnew.py)
+PCBNEWSO := $(shell find /usr/lib -name _pcbnew.so)
 PYVERSION := $(shell python3 --version|sed 's/.* \([0-9]\.[0-9]*\).*/\1/')
 
 # You can set these variables from the command line, and also
