@@ -1,23 +1,20 @@
 from io import BytesIO
-from typing import List, IO, Text
+from typing import IO, List, Text
 
-import cairo
 import gi
 gi.require_version('Pango', '1.0')
-from gi.repository import Pango
 gi.require_version('PangoCairo', '1.0')
-from gi.repository import PangoCairo
-
+import cairo
 import numpy as np
+from gi.repository import Pango, PangoCairo
 
 from .model import (FillType, GlobalLabel, Junction, Justify, LibrarySymbol,
-                    LocalLabel, NoConnect, Pin,
-                    StrokeDefinition, Symbol, TextEffects, rgb)
-
-
-from .model.GraphicItem import Arc, Polyline, Rectangle, Circle
-from .model.SchemaElement import POS_T, PTS_T, SchemaElement
+                    LocalLabel, NoConnect, Pin, StrokeDefinition, Symbol,
+                    TextEffects, rgb)
+from .model.GraphicalText import GraphicalText
+from .model.GraphicItem import Arc, Circle, Polyline, Rectangle
 from .model.HierarchicalSheetInstance import HierarchicalSheetInstance
+from .model.SchemaElement import POS_T, PTS_T, SchemaElement
 from .model.SymbolInstance import SymbolInstance
 from .model.Wire import Wire
 from .Schema import Schema
@@ -31,16 +28,20 @@ def check_notebook():
     except NameError:
         return False
 
-BORDER=5
+
+BORDER = 5
 PAPER = {
     'A4': (297, 210)
 }
 
-f_coord = lambda arr:  [(np.min(arr[...,0]), np.min(arr[...,1])),
-                        (np.max(arr[...,0]), np.max(arr[...,1]))]
+
+def f_coord(arr): return [(np.min(arr[..., 0]), np.min(arr[..., 1])),
+                          (np.max(arr[..., 0]), np.max(arr[..., 1]))]
+
 
 class FileTypeException(Exception):
     pass
+
 
 def _merge_text_effects(text_effects: TextEffects, theme_effects: TextEffects) -> TextEffects:
     if not text_effects:
@@ -83,7 +84,8 @@ class DrawLine:
 
 class DrawPolyLine:
     """Draw a polyline"""
-    def __init__(self, pts: PTS_T, width: float, color: rgb, type: str, fill: rgb|None=None) -> None:
+
+    def __init__(self, pts: PTS_T, width: float, color: rgb, type: str, fill: rgb | None = None) -> None:
         """
         Initialize the polyline object.
 
@@ -116,7 +118,7 @@ class DrawPolyLine:
 
 
 class DrawRect:
-    def __init__(self, pts: PTS_T, width: float, color: rgb, type: str, fill: rgb|None=None) -> None:
+    def __init__(self, pts: PTS_T, width: float, color: rgb, type: str, fill: rgb | None = None) -> None:
         self.pts = pts
         self.width = width
         self.color = color
@@ -140,7 +142,7 @@ class DrawRect:
 
 
 class DrawArc:
-    def __init__(self, start: POS_T, mid: POS_T, end: POS_T, width: float, color: rgb, type: str, fill: rgb|None=None) -> None:
+    def __init__(self, start: POS_T, mid: POS_T, end: POS_T, width: float, color: rgb, type: str, fill: rgb | None = None) -> None:
         self.start = start
         self.med = mid
         self.end = end
@@ -166,7 +168,8 @@ class DrawArc:
 
 class DrawCircle:
     """Draw a circle"""
-    def __init__(self, pos: POS_T, radius: float, width: float, color: rgb, type: str, fill: rgb|None=None) -> None:
+
+    def __init__(self, pos: POS_T, radius: float, width: float, color: rgb, type: str, fill: rgb | None = None) -> None:
         """
         Initialize a Circle object.
 
@@ -185,7 +188,7 @@ class DrawCircle:
         self.fill = fill
 
     def dimension(self, _):
-        return [(self.pos[0]-self.radius, self.pos[1]-self.radius), 
+        return [(self.pos[0]-self.radius, self.pos[1]-self.radius),
                 (self.pos[0]+self.radius, self.pos[1]+self.radius)]
 
     def draw(self, ctx):
@@ -203,12 +206,12 @@ class DrawText:
         self.text = text
         self.rotation = rotation
         self.font_face = text_effects.face
-        self.font_width=text_effects.font_width
-        self.font_height=text_effects.font_height
-        self.font_weight=text_effects.font_style
-        self.font_thickness=text_effects.font_thickness
-        self.justify=text_effects.justify
-        self.hidden=text_effects.hidden
+        self.font_width = text_effects.font_width
+        self.font_height = text_effects.font_height
+        self.font_weight = text_effects.font_style
+        self.font_thickness = text_effects.font_thickness
+        self.justify = text_effects.justify
+        self.hidden = text_effects.hidden
 
     def dimension(self, ctx):
         layout = PangoCairo.create_layout(ctx)
@@ -248,7 +251,6 @@ class DrawText:
         else:
             pos_y += (pos_y - height) / 2
 
-
         #            x_bearing, y_bearing, width, height, x_advance, y_advance = \
         #                self.ctx.text_extents(string)
         #            x = x - (width + x_bearing)
@@ -259,11 +261,10 @@ class DrawText:
         #            #x = x - (width / 2 + x_bearing)
         #            y = y - (height + y_bearing)
 
-
         ctx.translate(pos_x, pos_y)
         layout = PangoCairo.create_layout(ctx)
         pctx = layout.get_context()
-        #layout.set_width(pango.units_from_double(10))
+        # layout.set_width(pango.units_from_double(10))
         desc = Pango.FontDescription()
         desc.set_size(self.font_height*1024)
         desc.set_family(self.font_face)
@@ -277,7 +278,7 @@ class DrawText:
         layout.set_text(self.text)
         PangoCairo.show_layout(ctx, layout)
         #ctx.rotate(self.rotation * math.pi / 180.)
-        
+
         # TODO remove draw box around text
         size = layout.get_size()
         size_w = float(size[0]) / Pango.SCALE
@@ -343,7 +344,7 @@ class NodeJunction(Node):
 class NodeLocalLabel(Node):
     def __init__(self, element: LocalLabel, theme: str) -> None:
         text_effects = _merge_text_effects(
-                element.text_effects, themes[theme]['text_effects'])
+            element.text_effects, themes[theme]['text_effects'])
         self.text = DrawText(element.pos, element.text, 0, text_effects)
 
     def dimension(self, ctx) -> List[float]:
@@ -356,7 +357,20 @@ class NodeLocalLabel(Node):
 class NodeGlobalLabel(Node):
     def __init__(self, element: GlobalLabel, theme: str) -> None:
         text_effects = _merge_text_effects(
-                element.text_effects, themes[theme]['text_effects'])
+            element.text_effects, themes[theme]['text_effects'])
+        self.text = DrawText(element.pos, element.text, 0, text_effects)
+
+    def dimension(self, ctx) -> List[float]:
+        return self.text.dimension(ctx)
+
+    def draw(self, ctx) -> None:
+        return self.text.draw(ctx)
+
+
+class NodeGraphicalText(Node):
+    def __init__(self, element: GraphicalText, theme: str) -> None:
+        text_effects = _merge_text_effects(
+            element.text_effects, themes[theme]['text_effects'])
         self.text = DrawText(element.pos, element.text, 0, text_effects)
 
     def dimension(self, ctx) -> List[float]:
@@ -374,13 +388,15 @@ class NodeNoConnect(Node):
         o: float = 0.5
         self.lines = [
             DrawLine(
-                (element.pos + np.array([o, -o]), element.pos + np.array([-o, o])),
+                (element.pos + np.array([o, -o]),
+                 element.pos + np.array([-o, o])),
                 width,
                 color,
                 type,
             ),
             DrawLine(
-                (element.pos + np.array([o, -o]), element.pos + np.array([-o, o])),
+                (element.pos + np.array([o, -o]),
+                 element.pos + np.array([-o, o])),
                 width,
                 color,
                 type,
@@ -388,7 +404,7 @@ class NodeNoConnect(Node):
         ]
 
     def dimension(self, ctx) -> List[float]:
-        return [] #res
+        return []  # res
 
     def draw(self, ctx):
         [x.draw(ctx) for x in self.lines]
@@ -397,7 +413,7 @@ class NodeNoConnect(Node):
 class NodeSymbol(Node):
     def __init__(self, element: Symbol, theme: str) -> None:
         self.graphs = []
-        self.lines= []
+        self.lines = []
         self.texts = []
         assert element.library_symbol, 'library symbol is not set'
         sym = element.library_symbol
@@ -448,11 +464,12 @@ class NodeSymbol(Node):
                             draw.mid,
                             draw.end,
                             draw.stroke_definition.width,
-                            rgb(1,0,0,1), # TODO draw.stroke_definition.color,
+                            # TODO draw.stroke_definition.color,
+                            rgb(1, 0, 0, 1),
                             draw.stroke_definition.type
                         ))
                         #dp = np.array([draw.x, draw.y])
-                        #pl.arc(dp, draw.r, draw.start * 0.1, draw.end * 0.1,
+                        # pl.arc(dp, draw.r, draw.start * 0.1, draw.end * 0.1,
                         #       linewidth, edgecolor, facecolor)
 
                     elif isinstance(draw, Circle):
@@ -460,7 +477,8 @@ class NodeSymbol(Node):
                             element._pos(draw.center),
                             draw.radius,
                             draw.stroke_definition.width,
-                            rgb(1,0,0,1), # TODO draw.stroke_definition.color,
+                            # TODO draw.stroke_definition.color,
+                            rgb(1, 0, 0, 1),
                             draw.stroke_definition.type
                         ))
                         # TODO pl.circle(dp, draw.r, linewidth, edgecolor, facecolor)
@@ -490,7 +508,8 @@ class NodeSymbol(Node):
 
                         pp = element._pos(pin._pos())
                         text_effects = themes[theme]['pin_number']
-                        self.texts.append(DrawText(element.pos, pin.number[0], 0, text_effects))
+                        self.texts.append(
+                            DrawText(element.pos, pin.number[0], 0, text_effects))
 
                     if (
                         pin.name[0] != "~"
@@ -499,11 +518,12 @@ class NodeSymbol(Node):
                     ):
 
                         name_position = element._pos(
-                                pin.calc_pos(pin.pos, sym.pin_names_offset)[1])
+                            pin.calc_pos(pin.pos, sym.pin_names_offset)[1])
                         pp = element._pos(pin._pos())
                         _name_position = pp[1] + sym.pin_names_offset
                         text_effects = themes[theme]['pin_name']
-                        self.texts.append(DrawText(name_position, pin.name[0], 0, text_effects))
+                        self.texts.append(
+                            DrawText(name_position, pin.name[0], 0, text_effects))
 
         # Add the visible text properties
         for field in element.properties:
@@ -523,19 +543,20 @@ class NodeSymbol(Node):
 #                angle = 270
 
             text_effects = _merge_text_effects(
-                    field.text_effects, themes[theme]['text_effects'])
+                field.text_effects, themes[theme]['text_effects'])
             if element.angle + field.angle == 180:
                 if Justify.LEFT in text_effects.justify:
                     text_effects.justify = [Justify.RIGHT]
                 elif Justify.RIGHT in text_effects.justify:
                     text_effects.justify = [Justify.LEFT]
 
-            self.texts.append(DrawText(field.pos, field.value, angle, text_effects))
+            self.texts.append(
+                DrawText(field.pos, field.value, angle, text_effects))
             self.graphs.append(DrawCircle(
                 field.pos,
                 .2,
                 themes[theme]["no_connect"].width,
-                rgb(1,0,0,1),
+                rgb(1, 0, 0, 1),
                 themes[theme]["no_connect"].type
             ))
 
@@ -557,40 +578,40 @@ class NodeSymbol(Node):
 
 class NodeBorder(Node):
     def __init__(self, schema: Schema, width: float, height: float, theme: str) -> None:
-#        text_effects = _merge_text_effects(
-#                element.text_effects, themes[theme]['text_effects'])
+        #        text_effects = _merge_text_effects(
+        #                element.text_effects, themes[theme]['text_effects'])
         border_theme = themes[theme]['border']
         border = float(border_theme['width'])
         self.lines = [
             DrawPolyLine([
-                (border,border),
-                (width-border,border),
-                (width-border,height-border),
-                (border,height-border),
-                (border,border)
+                (border, border),
+                (width-border, border),
+                (width-border, height-border),
+                (border, height-border),
+                (border, border)
             ], border_theme['line'].width, border_theme['line'].color, border_theme['line'].type),
             DrawPolyLine([
-                (width-border-110.,height-border-40),
-                (width-border,height-border-40),
-                (width-border,height-border),
-                (width-border-110,height-border),
-                (width-border-110,height-border-40)
+                (width-border-110., height-border-40),
+                (width-border, height-border-40),
+                (width-border, height-border),
+                (width-border-110, height-border),
+                (width-border-110, height-border-40)
             ], border_theme['line'].width, border_theme['line'].color, border_theme['line'].type),
             DrawPolyLine([
-                (width-border-110.,height-border-20),
-                (width-border,height-border-20),
+                (width-border-110., height-border-20),
+                (width-border, height-border-20),
             ], border_theme['line'].width, border_theme['line'].color, border_theme['line'].type),
             DrawPolyLine([
-                (width-border-110.,height-border-border),
-                (width-border,height-border-border),
+                (width-border-110., height-border-border),
+                (width-border, height-border-border),
             ], border_theme['line'].width, border_theme['line'].color, border_theme['line'].type),
             DrawPolyLine([
-                (width-border-110.,height-border-10),
-                (width-border,height-border-10),
+                (width-border-110., height-border-10),
+                (width-border, height-border-10),
             ], border_theme['line'].width, border_theme['line'].color, border_theme['line'].type),
             DrawPolyLine([
-                (width-border-110.,height-border-15),
-                (width-border,height-border-15),
+                (width-border-110., height-border-15),
+                (width-border, height-border-15),
             ], border_theme['line'].width, border_theme['line'].color, border_theme['line'].type),
             DrawText(
                 (width-border-100, height-border-35), schema.comment_1, 0, border_theme['comment_1']),
@@ -611,7 +632,10 @@ class NodeBorder(Node):
 
 class ElementFactory:
     def __init__(self, schema: Schema, theme: str = "kicad2000"):
-        self._creators = {Wire: NodeWire, Junction: NodeJunction, LocalLabel: NodeLocalLabel, GlobalLabel: NodeGlobalLabel, NoConnect: NodeNoConnect, Symbol: NodeSymbol}
+        self._creators = {Wire: NodeWire, Junction: NodeJunction, LocalLabel: NodeLocalLabel,
+                          GlobalLabel: NodeGlobalLabel, NoConnect: NodeNoConnect,
+                          Symbol: NodeSymbol,
+                          GraphicalText: NodeGraphicalText}
         self.nodes = []
         for element in schema.elements:
             creator = self._creators.get(type(element))
@@ -619,7 +643,6 @@ class ElementFactory:
                 self.nodes.append(creator(element, theme))
             elif not isinstance(element, (LibrarySymbol, SymbolInstance, HierarchicalSheetInstance)):
                 print(f'element not found {type(element)}')
-
 
     def dimension(self, ctx) -> List[float]:
         coords = []
@@ -638,9 +661,11 @@ class PlotContext:
     def __init__(self, buffer, width: int, height: int, image_type: str):
         self.sfc = None
         if image_type == 'pdf':
-            self.sfc = cairo.PDFSurface(buffer, width / 25.4 * 72, height / 25.4 * 72)
+            self.sfc = cairo.PDFSurface(
+                buffer, width / 25.4 * 72, height / 25.4 * 72)
         else:
-            self.sfc = cairo.SVGSurface(buffer, width / 25.4 * 72, height / 25.4 * 72)
+            self.sfc = cairo.SVGSurface(
+                buffer, width / 25.4 * 72, height / 25.4 * 72)
 
         self.ctx = cairo.Context(self.sfc)
         self.ctx.scale(72. / 25.4, 72. / 25.4)
@@ -658,13 +683,14 @@ class PlotContext:
         self.sfc.flush()
 
 
-def plot(schema: Schema, out: IO=BytesIO(), border: bool=False, image_type='svg', theme: str = "kicad2000") -> IO:
+def plot(schema: Schema, out: IO = BytesIO(), border: bool = False, image_type='svg', theme: str = "kicad2000") -> IO:
 
     # get the image type if out is a filename
     if isinstance(out, str):
         image_type = out.split('.')[-1]
         if image_type not in ['png', 'svg', 'pdf']:
-            raise FileTypeException('file type not in (png, svg, pdf)', image_type)
+            raise FileTypeException(
+                'file type not in (png, svg, pdf)', image_type)
 
     factory = ElementFactory(schema)
     with PlotContext(BytesIO(), 297, 210, image_type) as outline_ctx:
@@ -677,7 +703,8 @@ def plot(schema: Schema, out: IO=BytesIO(), border: bool=False, image_type='svg'
                 width = PAPER[paper][0]
                 height = PAPER[paper][1]
             else:
-                raise ValueError('Border is set to true, but no paper size given')
+                raise ValueError(
+                    'Border is set to true, but no paper size given')
 
         with PlotContext(out, width, height, image_type) as ctx:
             if not border:
@@ -685,7 +712,6 @@ def plot(schema: Schema, out: IO=BytesIO(), border: bool=False, image_type='svg'
             else:
                 factory.nodes.append(NodeBorder(schema, width, height, theme))
             factory.draw(ctx.ctx)
-
 
             if image_type == 'png':
                 out = BytesIO()

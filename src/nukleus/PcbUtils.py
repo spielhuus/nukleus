@@ -59,7 +59,7 @@ class PCB():
 
     def plot_drill(self):
         board_name = os.path.splitext(os.path.basename(self.board.GetFileName()))[0]
-        logger.info('Plotting drill file')
+        logger.debug('Plotting drill file')
         drill_writer = pcbnew.EXCELLON_WRITER(self.board)
 
         mirror = False
