@@ -657,9 +657,10 @@ class ElementFactory:
     def draw(self, ctx) -> None:
         [x.draw(ctx) for x in self.nodes]
 
+SCALE = 72.0 / 25.4
 
 class PlotContext:
-    def __init__(self, buffer, width: int, height: int, image_type: str):
+    def __init__(self, buffer, width: int, height: int, scale: float, image_type: str):
         self.sfc = None
         if image_type == 'pdf':
             self.sfc = cairo.PDFSurface(
@@ -669,7 +670,7 @@ class PlotContext:
                 buffer, width / 25.4 * 72, height / 25.4 * 72)
 
         self.ctx = cairo.Context(self.sfc)
-        self.ctx.scale(72. / 25.4, 72. / 25.4)
+        self.ctx.scale(scale, scale)
         self.ctx.select_font_face(
             "Sans", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL
         )
@@ -684,7 +685,7 @@ class PlotContext:
         self.sfc.flush()
 
 
-def plot(schema: Schema, out: IO = BytesIO(), border: bool = False, image_type='svg', theme: str = "kicad2000") -> IO:
+def plot(schema: Schema, out: IO = BytesIO(), border: bool = False, scale: float=SCALE, image_type='svg', theme: str = "kicad2000") -> IO:
 
     # get the image type if out is a filename
     if isinstance(out, str):
@@ -694,7 +695,8 @@ def plot(schema: Schema, out: IO = BytesIO(), border: bool = False, image_type='
                 'file type not in (png, svg, pdf)', image_type)
 
     factory = ElementFactory(schema)
-    with PlotContext(BytesIO(), 297, 210, image_type) as outline_ctx:
+    # just draw and get the size
+    with PlotContext(BytesIO(), 297, 210, scale, image_type) as outline_ctx:  # TODO what is the best size for that
         outline = factory.dimension(outline_ctx.ctx)
         width = outline[1][0] - outline[0][0] + 2*BORDER
         height = outline[1][1] - outline[0][1] + 2*BORDER
@@ -707,7 +709,8 @@ def plot(schema: Schema, out: IO = BytesIO(), border: bool = False, image_type='
                 raise ValueError(
                     'Border is set to true, but no paper size given')
 
-        with PlotContext(out, width, height, image_type) as ctx:
+        # draw with the final size
+        with PlotContext(out, width, height, scale, image_type) as ctx:
             if not border:
                 ctx.ctx.translate(-outline[0][0]+BORDER, -outline[0][1]+BORDER)
             else:
