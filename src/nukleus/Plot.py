@@ -31,7 +31,8 @@ def check_notebook():
 
 BORDER = 5
 PAPER = {
-    'A4': (297, 210)
+    'A4': (297, 210),
+    'A3': (420, 297)
 }
 
 
