@@ -30,7 +30,7 @@ jobs:
       - name: Install native dependencies
 #        if: steps.cache-pipenv.outputs.cache-hit != 'true'
         run: |
-          sudo apt-get install -y -qq build-essential libgirepository1.0-dev libcairo2-dev libpango1.0-dev
+          sudo apt-get install -y -qq kicad build-essential libgirepository1.0-dev libcairo2-dev libpango1.0-dev
 
       - name: Install dependencies
 #        if: steps.cache-pipenv.outputs.cache-hit != 'true'

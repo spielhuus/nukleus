@@ -57,4 +57,4 @@ class TestReports(unittest.TestCase):
         netlist = nukleus.Spice.netlist(schema)
         erc_res = nukleus.erc(schema, netlist)
         pprint.pprint(erc_res)
-        self.assertEqual(2, len(erc_res))
+        self.assertEqual(1, len(erc_res))

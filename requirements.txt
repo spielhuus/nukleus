@@ -6,6 +6,7 @@ numpy
 build
 coverage
 sphinx
+python-docs-theme
 pyright
 jupyter
 nbconvert
