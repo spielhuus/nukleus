@@ -12,7 +12,7 @@ def _number(input):
     for char in input:
         if char.isdigit():
             numbers += char
-
+    assert len(numbers) > 0, f'no number found in {input}'
     return int(numbers)
 
 
