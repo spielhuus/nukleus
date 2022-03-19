@@ -2,7 +2,7 @@ from typing import Tuple, TypeAlias, List
 import uuid
 
 POS_T: TypeAlias = Tuple[float, float]
-PTS_T: TypeAlias = List[Tuple[float, float]]
+PTS_T: TypeAlias = List[POS_T]
 
 class SchemaElement():
     """  Base element for the schetic items. """

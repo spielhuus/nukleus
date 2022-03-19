@@ -17,6 +17,7 @@ from .model.HierarchicalSheetInstance import HierarchicalSheetInstance
 from .model.SchemaElement import POS_T, PTS_T, SchemaElement
 from .model.SymbolInstance import SymbolInstance
 from .model.Wire import Wire
+from .model.Utils import transform
 from .Schema import Schema
 from .Theme import themes
 
@@ -444,7 +445,7 @@ class NodeSymbol(Node):
                         fill = themes[theme]["component_outline"].color
                     if isinstance(draw, Polyline):
                         self.graphs.append(DrawPolyLine(
-                            element._pos(draw.points),
+                            transform(element, draw.points),
                             width=sd.width,
                             color=sd.color,
                             type=sd.stroke_type,
@@ -459,7 +460,7 @@ class NodeSymbol(Node):
                             (draw.start_x, draw.start_y),
                         ]
                         self.graphs.append(DrawPolyLine(
-                            element._pos(verts),
+                            transform(element, verts),
                             width=sd.width,
                             color=sd.color,
                             type=sd.stroke_type,
@@ -468,7 +469,7 @@ class NodeSymbol(Node):
 
                     elif isinstance(draw, Arc):
                         self.graphs.append(DrawArc(
-                            element._pos(draw.start),
+                            transform(element, draw.start),
                             draw.mid,
                             draw.end,
                             draw.stroke_definition.width,
@@ -482,7 +483,7 @@ class NodeSymbol(Node):
 
                     elif isinstance(draw, Circle):
                         self.graphs.append(DrawCircle(
-                            element._pos(draw.center),
+                            transform(element, draw.center),
                             draw.radius,
                             draw.stroke_definition.width,
                             # TODO draw.stroke_definition.color,
@@ -497,9 +498,9 @@ class NodeSymbol(Node):
                 for pin in subsym.pins:
                     if pin.length:
                         sd = themes[theme]["pin"]
-                        pp = pin._pos()
+                        pp = transform(pin)
                         self.lines.append(DrawLine(
-                            element._pos(pp),
+                            transform(element, pp),
                             width=sd.width,
                             color=sd.color,
                             line_type=sd.stroke_type,
@@ -514,7 +515,7 @@ class NodeSymbol(Node):
                         o[0] = -abs(o[0])
                         o[1] = abs(o[1])
 
-                        pp = element._pos(pin._pos())
+                        pp = transform(element, transform(pin))
                         text_effects = themes[theme]['pin_number']
                         self.texts.append(
                             DrawText(element.pos, pin.number[0], 0, text_effects))
@@ -525,9 +526,9 @@ class NodeSymbol(Node):
                         and not sym.extends == "power"
                     ):
 
-                        name_position = element._pos(
+                        name_position = transform(element,
                             pin.calc_pos(pin.pos, sym.pin_names_offset)[1])
-                        pp = element._pos(pin._pos())
+                        pp = transform(element, transform(pin))
                         _name_position = pp[1] + sym.pin_names_offset
                         text_effects = themes[theme]['pin_name']
                         self.texts.append(
@@ -647,13 +648,12 @@ class ElementFactory:
             elif not isinstance(element, (LibrarySymbol, SymbolInstance, HierarchicalSheetInstance)):
                 print(f'element not found {type(element)}')
 
-    def dimension(self, ctx) -> List[float]:
+    def dimension(self, ctx) -> List[List[float]]:
         coords = []
         for node in self.nodes:
             node_coords = node.dimension(ctx)
             if len(node_coords) == 2:
                 coords.append(node_coords)
-
         return f_coord(np.array(coords))
 
     def draw(self, ctx) -> None:

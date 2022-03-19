@@ -8,7 +8,8 @@ from ..model.Property import Property
 from ..model.Pin import Pin, PinImpl
 from ..model.SchemaElement import POS_T
 from ..model.PositionalElement import PositionalElement
-from ..model.Symbol import Symbol, pinPosition, placeFields
+from ..model.Symbol import Symbol
+from ..model.Utils import pinPosition, placeFields, transform
 from .DrawElement import DrawElement, PinNotFoundError, totuple
 
 
@@ -22,7 +23,7 @@ class Element(DrawElement):
         self.unit = unit
         self.properties = kwargs
 
-        self.pos = None
+        self.pos: POS_T|None = None
         self._anchor: str = '0'
         self._angle = 0
         self._mirror = ''
@@ -48,7 +49,7 @@ class Element(DrawElement):
         :rtype POS_T: Pin position.
         """
         assert self.element is not None
-        return self.element._pos(self._pin(number)._pos())[0]
+        return transform(self.element, transform(self._pin(number)))[0]
 
     def _get(self, library: Library, last_pos: POS_T, _: float):
         self.library_symbol = library.get(self.lib_name)
@@ -87,11 +88,11 @@ class Element(DrawElement):
         # calculate position
         _pos = self.pos if self.pos is not None else last_pos
         self.element.pos = tuple(totuple(_pos -
-                                         self.element._pos(pins[self._anchor]._pos())[0]))
+                                         transform(self.element, transform(pins[self._anchor]))[0]))
         # when the anchor pin is found, set the next pos
         if self._anchor != '0':
-            _last_pos = tuple(totuple(self.element._pos(
-                self._pin(_pin_numbers[0])._pos())[0]))
+            _last_pos = tuple(totuple(transform(self.element,
+                transform(self._pin(_pin_numbers[0])))[0]))
         else:
             _last_pos = tuple(totuple(_pos))
 
@@ -124,7 +125,7 @@ class Element(DrawElement):
         if isinstance(pos, PinImpl):
             pin_impl = cast(PinImpl, pos)
             _parent = pin_impl.parent
-            _pos = cast(Symbol, _parent)._pos(pin_impl._pos())
+            _pos = transform(cast(Symbol, _parent), transform(pin_impl))
             self.pos = tuple(totuple(_pos[0]))
         elif isinstance(pos, DrawElement):
             draw_element = cast(DrawElement, pos)

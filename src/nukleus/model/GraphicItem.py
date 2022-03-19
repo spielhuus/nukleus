@@ -13,11 +13,6 @@ from .StrokeDefinition import StrokeDefinition
 from ..SexpParser import SEXP_T
 
 
-def f_coord(arr): 
-    return [(np.min(arr[..., 0]), np.min(arr[..., 1])),
-            (np.max(arr[..., 0]), np.max(arr[..., 1]))]
-
-
 class GraphicItem():
     """Abstract Class for a GraphicItem."""
 
@@ -54,8 +49,8 @@ class Polyline(GraphicItem):
             'stroke_definition', StrokeDefinition())
         super().__init__(kwargs.get('fill', FillType.NONE))
 
-    def size(self) -> List[float]:
-        return f_coord(np.array(self.points))
+#    def size(self) -> List[float]:
+#        return f_coord(np.array(self.points))
 
     @classmethod
     def parse(cls, sexp: SEXP_T) -> Polyline:
@@ -113,8 +108,8 @@ class Rectangle(GraphicItem):
             'stroke_definition', StrokeDefinition())
         super().__init__(kwargs.get('fill', FillType.NONE))
 
-    def size(self) -> List[float]:
-        return np.array([(self.start_x, self.start_y), (self.end_x, self.end_y)])
+#    def size(self) -> List[float]:
+#        return np.array([(self.start_x, self.start_y), (self.end_x, self.end_y)])
 
     @classmethod
     def parse(cls, sexp: SEXP_T) -> Rectangle:

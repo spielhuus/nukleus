@@ -67,12 +67,12 @@ class Pin():
         return Pin(type=_type, style=_style, pos=_pos, angle=_angle,
                    length=_length, hidden=_hidden, name=_name, number=_number)
 
-    def _pos(self) -> POS_T:
-        theta = np.deg2rad(self.angle)
-        rot = np.array([math.cos(theta), math.sin(theta)])
-        verts = np.array([self.pos, self.pos + rot * self.length])
-        verts = np.round(verts, 3)
-        return verts
+#    def _pos(self) -> POS_T:
+#        theta = np.deg2rad(self.angle)
+#        rot = np.array([math.cos(theta), math.sin(theta)])
+#        verts = np.array([self.pos, self.pos + rot * self.length])
+#        verts = np.round(verts, 3)
+#        return verts
 
     def calc_pos(self, pos: POS_T, offset=0) -> POS_T:
         theta = np.deg2rad(self.angle)

@@ -34,8 +34,8 @@ class Capacitor(Element):
 
 
 class Bjt(Element):
-    def __init__(self, ref: str, nodes: List[str], value: str):
-        super().__init__(ref, nodes, value)
+#    def __init__(self, ref: str, nodes: List[str], value: str):
+#        super().__init__(ref, nodes, value)
 
     def __str__(self):
         return "Bjt{} {} {}".format(
@@ -43,8 +43,8 @@ class Bjt(Element):
 
 
 class X(Element):
-    def __init__(self, ref: str, nodes: List[str], value: str):
-        super().__init__(ref, nodes, value)
+#    def __init__(self, ref: str, nodes: List[str], value: str):
+#        super().__init__(ref, nodes, value)
 
     def __str__(self):
         return "X{} {} {}".format(
@@ -52,8 +52,8 @@ class X(Element):
 
 
 class V(Element):
-    def __init__(self, ref: str, nodes: List[str], value: str):
-        super().__init__(ref, nodes, value)
+#    def __init__(self, ref: str, nodes: List[str], value: str):
+#        super().__init__(ref, nodes, value)
 
     def __str__(self):
         return "V{} {} {}".format(
@@ -185,8 +185,8 @@ class SubCircuit(Circuit):
     __name__: str = ""
     __nodes__: List[str] = []
 
-    def __init__(self):
-        super().__init__()
+#    def __init__(self):
+#        super().__init__()
 
     def __str__(self):
         """Return the formatted subcircuit definition."""

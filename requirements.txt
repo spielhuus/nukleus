@@ -3,6 +3,7 @@ PyGObject
 matplotlib
 ipython
 numpy
+nptyping
 build
 coverage
 sphinx

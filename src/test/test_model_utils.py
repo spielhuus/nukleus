@@ -5,24 +5,25 @@ sys.path.append("src")
 sys.path.append("../src")
 
 from nukleus.Library import Library
-from nukleus.model.Symbol import Symbol, pinPosition, placeFields, isUnit
+from nukleus.model.Symbol import Symbol
+from nukleus.model.Utils import pinPosition, placeFields, is_unit
 
 
 class TestUtilsPlaceFields(unittest.TestCase):
     def test_is_unit(self):
         lib = Library(['samples/files/symbols/'])
         lib_sym = lib.get('Device:R')
-        self.assertFalse(isUnit(lib_sym, 1))
-        self.assertTrue(isUnit(lib_sym.units[0], 1))
-        self.assertTrue(isUnit(lib_sym.units[1], 1))
+        self.assertFalse(is_unit(lib_sym, 1))
+        self.assertTrue(is_unit(lib_sym.units[0], 1))
+        self.assertTrue(is_unit(lib_sym.units[1], 1))
 
     def test_is_unit_opamp(self):
         lib = Library(['samples/files/symbols/'])
         lib_sym = lib.get('Amplifier_Operational:TL072')
-        self.assertFalse(isUnit(lib_sym, 1))
-        self.assertTrue(isUnit(lib_sym.units[0], 1))
-        self.assertFalse(isUnit(lib_sym.units[1], 1))
-        self.assertFalse(isUnit(lib_sym.units[2], 1))
+        self.assertFalse(is_unit(lib_sym, 1))
+        self.assertTrue(is_unit(lib_sym.units[0], 1))
+        self.assertFalse(is_unit(lib_sym.units[1], 1))
+        self.assertFalse(is_unit(lib_sym.units[2], 1))
 
     def test_get_pin_pos(self):
         lib = Library(['samples/files/symbols/'])
@@ -124,6 +125,6 @@ class TestUtilsPlaceFields(unittest.TestCase):
         lib = Library(['samples/files/symbols/'])
         lib_sym = lib.get('power:+15V')
         symbol = Symbol.new(ref="+15V", lib_name="power:+15V",
-                            library_symbol=lib_sym)
+                        library_symbol=lib_sym)
         placeFields(symbol)
         self.assertEqual((0.0, -3.81), symbol.properties[0].pos)

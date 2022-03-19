@@ -1,16 +1,27 @@
 from typing import Dict, List, Set, Tuple
 
 from . import Circuit
-from .model import POS_T, GlobalLabel, LocalLabel, Pin, Symbol, Wire
+from .model.SchemaElement import POS_T
+from .model.GlobalLabel import GlobalLabel
+from .model.LocalLabel import LocalLabel
+from .model.Pin import Pin
+from .model.Symbol import Symbol
+from .model.Wire import Wire
+from .model.Utils import transform
 from .Schema import Schema
 
 
 class Net(object):
+    """Netlist object."""
     def __init__(self, identifier: str, named: bool=False):
         self.identifier: str = identifier
+        """Netlist identifier"""
         self.coords: Set[POS_T] = set()
+        """Netlist coordinates"""
         self.pins: List[Pin] = []
+        """List of pins"""
         self.named = named
+        """Named net"""
 
     def __str__(self) -> str:
         return(f"Net({self.identifier}, {self.coords} "
@@ -42,7 +53,7 @@ def netlist(schema: Schema) -> Dict[POS_T, Net]:
         if lib.extends == 'power':
             for subsym in lib.units:
                 for pin in subsym.pins:
-                    vert = comp._pos(pin._pos())
+                    vert = transform(comp, transform(pin))
                     coord = (vert[0][0], vert[0][1])
                     net = d.get(coord)
                     if not net:
@@ -107,7 +118,7 @@ def schema_to_spice(schema: Schema, circuit: Circuit,
                 single_unit = True if unit == 0 else single_unit
                 if unit == 0 or unit == comp.unit or single_unit:
                     for pin in subsym.pins:
-                        verts = comp._pos(pin._pos()[0])  # TODO[0]
+                        verts = transform(comp, transform(pin)[0])
                         c = (verts[0], verts[1])
                         net = d.get(c)
 
@@ -162,5 +173,3 @@ def schema_to_spice(schema: Schema, circuit: Circuit,
                     value = value[:-1]
                 # value = unit.parse_unit(value)
                 circuit.L(comp.reference, nets['1'], nets['2'], value)
-
-
