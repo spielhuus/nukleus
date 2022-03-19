@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from typing import List, cast
 
-from .PositionalElement import PositionalElement, POS_T
+from .SchemaElement import POS_T
+from .PositionalElement import PositionalElement
 from .Property import Property
 from .TextEffects import TextEffects
 from .Utils import ffmt
@@ -14,19 +15,21 @@ class GlobalLabel(PositionalElement):
     schematics in a design. This section will not exist if no global labels
     are defined in the schematic.
     """
-
-    text: str
-    shape: str
-    autoplaced: str
-    text_effects: TextEffects
-    properties: List[Property]
-
     def __init__(self, **kwargs) -> None:
         self.text = kwargs.get("text", "")
+        """The TEXT is a quoted string that defines the global label."""
         self.shape = kwargs.get("shape", "")
+        """The shape token attribute defines the way the global label
+        is drawn. See table below for global label shapes."""
         self.autoplaced = kwargs.get("autoplaced", "")
-        self.text_effects = kwargs.get("text_effects", ("", TextEffects()))
-        self.properties = kwargs.get("properties", ("", []))
+        """The optional fields_autoplaced is a flag that indicates
+        that any PROPERTIES associated with the global label
+        have been place automatically."""
+        self.text_effects = kwargs.get("text_effects", TextEffects())
+        """The TEXT_EFFECTS section defines how the global label text is drawn."""
+        self.properties = kwargs.get("properties", [])
+        """The PROPERTIES section defines the properties of the global label.
+        Currently, the only supported property is the inter-sheet reference."""
         super().__init__(
             kwargs.get("identifier", None),
             kwargs.get("pos", ((0, 0), (0, 0))),
@@ -35,6 +38,11 @@ class GlobalLabel(PositionalElement):
 
     @classmethod
     def parse(cls, sexp: SEXP_T) -> GlobalLabel:
+        """Parse the sexp input.
+
+        :param sexp SEXP_T: Sexp as List.
+        :rtype GlobalLabel: The GlobalLabel Object.
+        """
         _identifier = None
         _pos: POS_T = (0, 0)
         _angle: float = 0
@@ -45,24 +53,22 @@ class GlobalLabel(PositionalElement):
         _properties: List[Property] = []
 
         for token in sexp[2:]:
-            match token:
-                case ["at", x, y, angle]:
-                    _pos = (float(x), float(y))
-                    _angle = float(angle)
-                case ["at", x, y]:
-                    _pos = (float(x), float(y))
-                case ["uuid", identifier]:
-                    _identifier = identifier
-                case ["effects", *_]:
-                    _text_effects = TextEffects.parse(cast(SEXP_T, token))
-                case ["shape", shape]:
-                    _shape = shape
-                case ["fields_autoplaced"]:
-                    _autoplaced = "fields_autoplaced"
-                case ["property", *_]:
-                    _properties.append(Property.parse(cast(SEXP_T, token)))
-                case _:
-                    raise ValueError(f"unknown label element {token}")
+            if token[0] == 'at':
+                _pos = (float(token[1]), float(token[2]))
+                if len(token) == 4:
+                    _angle = float(token[3])
+            elif token[0] == 'uuid':
+                _identifier = token[1]
+            elif token[0] == 'effects':
+                _text_effects = TextEffects.parse(cast(SEXP_T, token))
+            elif token[0] == 'shape':
+                _shape = token[1]
+            elif token[0] == 'fields_autoplaced':
+                _autoplaced = token[0]
+            elif token[0] == 'property':
+                _properties.append(Property.parse(cast(SEXP_T, token)))
+            else:
+                raise ValueError(f"unknown GlobalLabel element {token}")
 
         return GlobalLabel(
             identifier=_identifier,

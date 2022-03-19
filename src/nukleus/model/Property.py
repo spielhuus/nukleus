@@ -12,24 +12,28 @@ class Property:
     """
     The property token defines a key value pair for storing user defined information.
     """
-
-    key: str
-    value: str
-    id: str
-    pos: POS_T
-    angle: float
-    text_effects: TextEffects | None
-
     def __init__(self, **kwargs) -> None:
-        self.key = kwargs.get("key", "")
-        self.value = kwargs.get("value", "")
-        self.pos = kwargs.get("pos", (0, 0))
-        self.angle = kwargs.get("angle", 0)
-        self.id = kwargs.get("id", 0)
-        self.text_effects = kwargs.get("text_effects", TextEffects())
+        self.key: str = kwargs.get("key", "")
+        """The "KEY" string defines the name of the property and must be unique."""
+        self.value: str = kwargs.get("value", "")
+        """The "VALUE" string defines the value of the property."""
+        self.pos: POS_T = kwargs.get("pos", (0, 0))
+        """The POSITION_IDENTIFIER defines the X and Y coordinates
+        of the property."""
+        self.angle: float = kwargs.get("angle", 0)
+        """The angle defines the rotation angle of the property."""
+        self.id: str = kwargs.get("id", 0)
+        """The id token defines an integer ID for the property and must be unique."""
+        self.text_effects: TextEffects = kwargs.get("text_effects", TextEffects())
+        """The TEXT_EFFECTS section defines how the text is displayed."""
 
     @classmethod
     def parse(cls, sexp: SEXP_T) -> Property:
+        """Parse the sexp input.
+
+        :param sexp SEXP_T: Sexp as List.
+        :rtype Property: The Property Object.
+        """
         _key: str = cast(str, sexp[1])
         _value: str = cast(str, sexp[2])
         _id: int = 0
@@ -38,18 +42,16 @@ class Property:
         _text_effects: TextEffects|None = None
 
         for token in sexp[3:]:
-            match token:
-                case ["at", x, y, angle]:
-                    _pos = (float(x), float(y))
-                    _angle = float(angle)
-                case ["at", x, y]:
-                    _pos = (float(x), float(y))
-                case ["id", id]:
-                    _id = int(id)
-                case ["effects", *_]:
-                    _text_effects = TextEffects.parse(cast(SEXP_T, token))
-                case _:
-                    raise ValueError(f"unknown property element {token}")
+            if token[0] == 'at':
+                _pos = (float(token[1]), float(token[2]))
+                if len(token) == 4:
+                    _angle = float(token[3])
+            elif token[0] == 'id':
+                _id = int(token[1])
+            elif token[0] == 'effects':
+                _text_effects = TextEffects.parse(cast(SEXP_T, token))
+            else:
+                raise ValueError(f"unknown Property element {token}")
 
         return Property(
             key=_key,

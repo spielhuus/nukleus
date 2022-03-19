@@ -7,6 +7,7 @@ from .DrawElement import DrawElement
 
 
 class Label(DrawElement):
+    """Place a label on the schematic."""
     def __init__(self, text: str):
         self.pos = None
         self.text = text

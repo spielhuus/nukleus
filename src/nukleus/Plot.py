@@ -263,12 +263,15 @@ class DrawText:
         #            y = y - (height + y_bearing)
 
         ctx.translate(pos_x, pos_y)
+
         layout = PangoCairo.create_layout(ctx)
         pctx = layout.get_context()
+        ctx.rotate(self.rotation * 3.14 / 180)
+
         # layout.set_width(pango.units_from_double(10))
         desc = Pango.FontDescription()
         desc.set_size(self.font_height*1024)
-        desc.set_family(self.font_face)
+        desc.set_family("Sans") #self.font_face)
         layout.set_font_description(desc)
         layout.set_alignment(Pango.Alignment.CENTER)
         #layout.set_markup(f'<span font="2">{self.text}</span>')
@@ -276,9 +279,12 @@ class DrawText:
         fo.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
         PangoCairo.context_set_font_options(pctx, fo)
 
+
         layout.set_text(self.text)
         PangoCairo.show_layout(ctx, layout)
-        #ctx.rotate(self.rotation * math.pi / 180.)
+
+        
+        #ctx.rotate(self.rotation) # * math.pi / 180.)
 
         # TODO remove draw box around text
         size = layout.get_size()
@@ -315,7 +321,7 @@ class NodeWire(Node):
             element.pts,
             themes[theme]["no_connect"].width,
             themes[theme]["no_connect"].color,
-            themes[theme]["no_connect"].type
+            themes[theme]["no_connect"].stroke_type
         )
 
     def dimension(self, ctx) -> List[float]:
@@ -332,7 +338,7 @@ class NodeJunction(Node):
             .2,
             themes[theme]["no_connect"].width,
             themes[theme]["no_connect"].color,
-            themes[theme]["no_connect"].type
+            themes[theme]["no_connect"].stroke_type
         )
 
     def dimension(self, ctx) -> List[float]:
@@ -362,6 +368,7 @@ class NodeGlobalLabel(Node):
         self.text = DrawText(element.pos, element.text, 0, text_effects)
 
     def dimension(self, ctx) -> List[float]:
+
         return self.text.dimension(ctx)
 
     def draw(self, ctx) -> None:
@@ -385,7 +392,7 @@ class NodeNoConnect(Node):
     def __init__(self, element: NoConnect, theme: str) -> None:
         width = themes[theme]["no_connect"].width
         color = themes[theme]["no_connect"].color
-        type = themes[theme]["no_connect"].type
+        type = themes[theme]["no_connect"].stroke_type
         o: float = 0.5
         self.lines = [
             DrawLine(
@@ -413,6 +420,7 @@ class NodeNoConnect(Node):
 
 class NodeSymbol(Node):
     def __init__(self, element: Symbol, theme: str) -> None:
+        self.symbol = element
         self.graphs = []
         self.lines = []
         self.texts = []
@@ -440,7 +448,7 @@ class NodeSymbol(Node):
                             element._pos(draw.points),
                             width=sd.width,
                             color=sd.color,
-                            type=sd.type,
+                            type=sd.stroke_type,
                             fill=fill,
                         ))
                     elif isinstance(draw, Rectangle):
@@ -455,7 +463,7 @@ class NodeSymbol(Node):
                             element._pos(verts),
                             width=sd.width,
                             color=sd.color,
-                            type=sd.type,
+                            type=sd.stroke_type,
                             fill=fill,
                         ))
 
@@ -467,7 +475,7 @@ class NodeSymbol(Node):
                             draw.stroke_definition.width,
                             # TODO draw.stroke_definition.color,
                             rgb(1, 0, 0, 1),
-                            draw.stroke_definition.type
+                            draw.stroke_definition.stroke_type
                         ))
                         #dp = np.array([draw.x, draw.y])
                         # pl.arc(dp, draw.r, draw.start * 0.1, draw.end * 0.1,
@@ -480,7 +488,7 @@ class NodeSymbol(Node):
                             draw.stroke_definition.width,
                             # TODO draw.stroke_definition.color,
                             rgb(1, 0, 0, 1),
-                            draw.stroke_definition.type
+                            draw.stroke_definition.stroke_type
                         ))
                         # TODO pl.circle(dp, draw.r, linewidth, edgecolor, facecolor)
                     else:
@@ -495,7 +503,7 @@ class NodeSymbol(Node):
                             element._pos(pp),
                             width=sd.width,
                             color=sd.color,
-                            line_type=sd.type,
+                            line_type=sd.stroke_type,
                         ))
 
                     if (
@@ -533,15 +541,12 @@ class NodeSymbol(Node):
             if field.value == "~":
                 continue
 
-            angle = field.angle
-#            angle = element.angle - field.angle
-#            print(
-#                f"FIELD ANGLE: {field.value} {field.angle} {element.angle} {angle}"
-#            )
-#            if angle >= 180:
-#                angle -= 180
-#            elif angle == 90:
-#                angle = 270
+            
+            angle = element.angle + field.angle
+            if angle == 360:
+                angle = 0
+            if angle == 180:
+                angle = 0
 
             text_effects = _merge_text_effects(
                 field.text_effects, themes[theme]['text_effects'])
@@ -553,15 +558,17 @@ class NodeSymbol(Node):
 
             self.texts.append(
                 DrawText(field.pos, field.value, angle, text_effects))
-            self.graphs.append(DrawCircle(
+            self.graphs.append(DrawCircle( # TODO remove
                 field.pos,
                 .2,
                 themes[theme]["no_connect"].width,
                 rgb(1, 0, 0, 1),
-                themes[theme]["no_connect"].type
+                themes[theme]["no_connect"].stroke_type
             ))
 
     def dimension(self, ctx) -> List[float]:
+        if not self.symbol.on_schema:
+            return []
         pts = []
         for graph in self.graphs:
             pts.append(graph.dimension(ctx))
@@ -572,9 +579,10 @@ class NodeSymbol(Node):
         return f_coord(np.array(pts))
 
     def draw(self, ctx):
-        [x.draw(ctx) for x in self.graphs]
-        [x.draw(ctx) for x in self.lines]
-        [x.draw(ctx) for x in self.texts]
+        if self.symbol.on_schema:
+            [x.draw(ctx) for x in self.graphs]
+            [x.draw(ctx) for x in self.lines]
+            [x.draw(ctx) for x in self.texts]
 
 
 class NodeBorder(Node):
@@ -590,39 +598,34 @@ class NodeBorder(Node):
                 (width-border, height-border),
                 (border, height-border),
                 (border, border)
-            ], border_theme['line'].width, border_theme['line'].color, border_theme['line'].type),
+            ], border_theme['line'].width, border_theme['line'].color, border_theme['line'].stroke_type),
             DrawPolyLine([
                 (width-border-110., height-border-40),
                 (width-border, height-border-40),
                 (width-border, height-border),
                 (width-border-110, height-border),
                 (width-border-110, height-border-40)
-            ], border_theme['line'].width, border_theme['line'].color, border_theme['line'].type),
+            ], border_theme['line'].width, border_theme['line'].color, border_theme['line'].stroke_type),
             DrawPolyLine([
                 (width-border-110., height-border-20),
                 (width-border, height-border-20),
-            ], border_theme['line'].width, border_theme['line'].color, border_theme['line'].type),
+            ], border_theme['line'].width, border_theme['line'].color, border_theme['line'].stroke_type),
             DrawPolyLine([
                 (width-border-110., height-border-border),
                 (width-border, height-border-border),
-            ], border_theme['line'].width, border_theme['line'].color, border_theme['line'].type),
+            ], border_theme['line'].width, border_theme['line'].color, border_theme['line'].stroke_type),
             DrawPolyLine([
                 (width-border-110., height-border-10),
                 (width-border, height-border-10),
-            ], border_theme['line'].width, border_theme['line'].color, border_theme['line'].type),
+            ], border_theme['line'].width, border_theme['line'].color, border_theme['line'].stroke_type),
             DrawPolyLine([
                 (width-border-110., height-border-15),
                 (width-border, height-border-15),
-            ], border_theme['line'].width, border_theme['line'].color, border_theme['line'].type),
-            DrawText(
-                (width-border-100, height-border-35), schema.comment_1, 0, border_theme['comment_1']),
-            DrawText(
-                (width-border-100, height-border-32), schema.comment_2, 0, border_theme['comment_2']),
-            DrawText(
-                (width-border-100, height-border-29), schema.comment_3, 0, border_theme['comment_3']),
-            DrawText(
-                (width-border-100, height-border-27), schema.comment_4, 0, border_theme['comment_4']),
+            ], border_theme['line'].width, border_theme['line'].color, border_theme['line'].stroke_type)
         ]
+        for key, value in schema.comment.items():
+            self.lines.append(DrawText(
+                (width-border-100, height-border-35), value, 0, border_theme[f'comment_{key}']))
 
     def dimension(self, _) -> List[float]:
         return []
@@ -664,10 +667,10 @@ class PlotContext:
         self.sfc = None
         if image_type == 'pdf':
             self.sfc = cairo.PDFSurface(
-                buffer, width / 25.4 * 72, height / 25.4 * 72)
+                buffer, width * scale, height * scale)
         else:
             self.sfc = cairo.SVGSurface(
-                buffer, width / 25.4 * 72, height / 25.4 * 72)
+                buffer, width * scale, height * scale)
 
         self.ctx = cairo.Context(self.sfc)
         self.ctx.scale(scale, scale)

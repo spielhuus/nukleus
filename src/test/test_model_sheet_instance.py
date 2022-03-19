@@ -8,7 +8,6 @@ from nukleus.SexpParser import load_tree
 sys.path.append('src')
 sys.path.append('..')
 
-
 class TestHierarchicalSheetInstance(unittest.TestCase):
 
     def test_parse_symbol_instance(self):

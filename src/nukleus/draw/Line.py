@@ -16,6 +16,7 @@ ORIENTATION = {
 
 
 class Line(DrawElement):
+    """Place a connection on the schematic."""
     def __init__(self):
         self.pos: POS_T | None = None
         self._length = 0
@@ -54,6 +55,13 @@ class Line(DrawElement):
 #        return self
 
     def at(self, pos: POS_T | PinImpl | DrawElement):
+        """
+        Position of the element.
+        The position can either be the xy coordinates
+        or a DrawElement.
+
+        :param pos POS_T|DrawElement: Position.
+        """
         if isinstance(pos, PinImpl):
             pin_impl = cast(PinImpl, pos)
             pos = pin_impl.parent._pos(pin_impl._pos())
@@ -92,6 +100,7 @@ class Line(DrawElement):
         return self
 
     def length(self, len: float):
+        """The length of the line."""
         self._length = len
         return self
 

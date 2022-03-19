@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from .SchemaElement import SchemaElement
 
 
-@dataclass
 class HierarchicalSheetInstance(SchemaElement):
     """ The symbol_instance token defines the per symbol information
         for the entire schematic. This section will only exist in
@@ -28,6 +27,11 @@ class HierarchicalSheetInstance(SchemaElement):
 
     @classmethod
     def parse(cls, sexp) -> HierarchicalSheetInstance:
+        """Parse the sexp input.
+
+        :param sexp SEXP_T: Sexp as List.
+        :rtype HierarchicalSheetInstance: The HierarchicalSheetInstance Object.
+        """
         _path: str = ""
         _page: int = 0
 
@@ -47,4 +51,10 @@ class HierarchicalSheetInstance(SchemaElement):
         return HierarchicalSheetInstance(path=_path, page=_page)
 
     def sexp(self, indent: int = 1) -> str:
+        """
+        Output the element as sexp string.
+
+        :param indent [int]: indent count for this element.
+        :rtype str: sexp string.
+        """
         return f'{"  " * indent}(path "{self.path}" (page "{self.page}"))'

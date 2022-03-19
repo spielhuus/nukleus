@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import List
+from typing import List, cast
 
-from .SchemaElement import SchemaElement, POS_T
+from .SchemaElement import SchemaElement, PTS_T
 from .StrokeDefinition import StrokeDefinition
 from ..SexpParser import SEXP_T
 
@@ -13,33 +13,35 @@ class Bus(SchemaElement):
     This section will not exist if there are no buses
     in the schematic.
     """
-    pts: List[POS_T]
-    stroke_definition: StrokeDefinition
-
     def __init__(self, **kwargs) -> None:
         self.pts = kwargs.get('pts', [(0, 0), (0, 0)])
+        """The COORDINATE_POINT_LIST defines the list of X and Y
+        coordinates of start and end points of the wire or bus."""
         self.stroke_definition = kwargs.get('stroke_definition', StrokeDefinition())
+        """The STROKE_DEFINITION defines how the wire or bus is drawn."""
         super().__init__(identifier=kwargs.get('identifier', None))
 
     @classmethod
     def parse(cls, sexp: SEXP_T) -> Bus:
+        """Parse the sexp input.
+
+        :param sexp SEXP_T: Sexp as List.
+        :rtype Bus: The Bus Object.
+        """
         _identifier = None
         _pts: PTS_T = []
         _stroke_definition: StrokeDefinition = StrokeDefinition()
 
         for token in sexp[1:]:
-            match token:
-                case ['uuid', identifier]:
-                    _identifier = identifier
-                case ['pts', *points]:
-                    for _pt in points:
-                        match _pt:
-                            case ['xy', _x, _y]:
-                                _pts.append((float(_x), float(_y)))
-                case ['stroke', *stroke]:
-                    _stroke_definition = StrokeDefinition.parse(stroke)
-                case _:
-                    raise ValueError(f"unknown bus element {token}")
+            if token[0] == 'uuid':
+                _identifier = token[1]
+            elif token[0] == 'pts':
+                for _pt in token[1:]:
+                    _pts.append((float(_pt[1]), float(_pt[2])))
+            elif token[0] == 'stroke':
+                _stroke_definition = StrokeDefinition.parse(cast(SEXP_T, token))
+            else:
+                raise ValueError(f"unknown Bus element {token}")
 
         return Bus(identifier=_identifier, pts=_pts, stroke_definition=_stroke_definition)
 

@@ -1,13 +1,20 @@
 from typing import Optional, Tuple, cast
 
-from nukleus import Library
-from nukleus.model import Symbol, LibrarySymbol, Pin, PinImpl, PositionalElement, \
-                          Property, POS_T
+import numpy as np
 
+from ..Library import Library
+from ..model.LibrarySymbol import LibrarySymbol
+from ..model.Property import Property
+from ..model.Pin import Pin, PinImpl
+from ..model.SchemaElement import POS_T
+from ..model.PositionalElement import PositionalElement
+from ..model.Symbol import Symbol, pinPosition, placeFields
 from .DrawElement import DrawElement, PinNotFoundError, totuple
 
 
 class Element(DrawElement):
+    """Draw an elemet to the schematic"""
+
     def __init__(self, ref, lib_name, value=None, unit=1, **kwargs):
         self.ref = ref
         self.lib_name = lib_name
@@ -34,6 +41,12 @@ class Element(DrawElement):
                                cast(Symbol, self.element).property("Reference").value)
 
     def pin(self, number: int) -> POS_T:
+        """
+        Pin position.
+
+        :param number int: Pin number.
+        :rtype POS_T: Pin position.
+        """
         assert self.element is not None
         return self.element._pos(self._pin(number)._pos())[0]
 
@@ -49,18 +62,21 @@ class Element(DrawElement):
             self.element.property("Value").value = self._value
 
         for name, value in self.properties.items():
-            if self.element.has_property(name):
+            if name == 'on_schema':
+                self.element.on_schema = bool(value)
+            elif self.element.has_property(name):
                 self.element.property(name).value = value
             else:
                 new_property = Property(key=name, value=value)
-                # TODO new_property.pos = tuple(totuple(self.element._pos(new.pos)))
                 self.element.properties.append(new_property)
 
         if self.lib_name == "Device:R":
             if not self.element.has_property('Spice_Netlist_Enabled'):
-                self.element.properties.append(Property(key='Spice_Netlist_Enabled', value='Y'))
+                self.element.properties.append(
+                    Property(key='Spice_Netlist_Enabled', value='Y'))
             if not self.element.has_property('Spice_Primitive'):
-                self.element.properties.append(Property(key='Spice_Primitive', value='R'))
+                self.element.properties.append(
+                    Property(key='Spice_Primitive', value='R'))
 
         # get the anchor pins
         pins = self.element.getPins()
@@ -71,31 +87,45 @@ class Element(DrawElement):
         # calculate position
         _pos = self.pos if self.pos is not None else last_pos
         self.element.pos = tuple(totuple(_pos -
-                   self.element._pos(pins[self._anchor]._pos())[0]))
-        # when the anchor pin in found, set the next pos
+                                         self.element._pos(pins[self._anchor]._pos())[0]))
+        # when the anchor pin is found, set the next pos
         if self._anchor != '0':
-            _last_pos = tuple(totuple(self.element._pos(self._pin(_pin_numbers[0])._pos())[0]))
+            _last_pos = tuple(totuple(self.element._pos(
+                self._pin(_pin_numbers[0])._pos())[0]))
         else:
             _last_pos = tuple(totuple(_pos))
 
         # recalculate the propery positions
-        for prop in self.element.properties:
-            prop.pos = tuple(totuple(self.element._pos(prop.pos)))
+        placeFields(self.element)
 
         assert isinstance(_last_pos, Tuple), 'last pos is not a Tuple'
-        assert isinstance(self.element.pos, Tuple), 'element pos is not a Tuple'
+        assert isinstance(self.element.pos,
+                          Tuple), 'element pos is not a Tuple'
         return (self, self.element, _last_pos)
 
-    def anchor(self, number: str|int = 1):
+    def anchor(self, number: str | int = 1):
+        """
+        Anchor the symbol on a pin.
+
+        :param number str|int: Pin by number.
+        """
         _number = number if isinstance(number, str) else str(number)
         self._anchor = _number
         return self
 
-    def at(self, pos: POS_T|DrawElement):
+    def at(self, pos: POS_T | DrawElement):
+        """
+        Position the element at a position.
+        The position can either be the xy coordinates
+        or a DrawElement.
+
+        :param pos POS_T|DrawElement: Position.
+        """
         if isinstance(pos, PinImpl):
             pin_impl = cast(PinImpl, pos)
-            pos = pin_impl.parent._pos(pin_impl._pos())
-            self.pos = tuple(totuple(pos[0]))
+            _parent = pin_impl.parent
+            _pos = cast(Symbol, _parent)._pos(pin_impl._pos())
+            self.pos = tuple(totuple(_pos[0]))
         elif isinstance(pos, DrawElement):
             draw_element = cast(DrawElement, pos)
             assert draw_element.element, 'element is None'
@@ -104,26 +134,52 @@ class Element(DrawElement):
             self.pos = pos
         return self
 
-    def rotate(self, angle: int):
+    def rotate(self, angle: float):
+        """
+        Rotate the symbol.
+
+        :param angle float: Rotation angle in degree.
+        """
         self._angle = angle
         return self
 
     def right(self):
+        """
+        Orietation of the symbol.
+
+        """
         self._angle = 90
         return self
 
     def left(self):
+        """
+        Orietation of the symbol.
+
+        """
         self._angle = 270
         return self
 
     def up(self):
+        """
+        Orietation of the symbol.
+
+        """
         self._angle = 0
         return self
 
     def down(self):
+        """
+        Orietation of the symbol.
+
+        """
         self._angle = 180
         return self
 
     def mirror(self, axis: str):
-        self._mirror =axis
+        """
+        Mirror the symbol.
+
+        :param axis str: mirror the symbol by x or y axis.
+        """
+        self._mirror = axis
         return self

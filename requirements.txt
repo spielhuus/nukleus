@@ -12,3 +12,5 @@ nbconvert
 sconstool-nbconvert
 PyPDF2
 coverage
+pytest
+pynvim

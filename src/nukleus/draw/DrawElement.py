@@ -21,6 +21,7 @@ class PinNotFoundError(Exception):
 
 
 class DrawElement(ABC):
+    """Abstract class for draw elements."""
     pos: POS_T|None = (0, 0)
     element: SchemaElement|None = None
 

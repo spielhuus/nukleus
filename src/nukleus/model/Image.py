@@ -14,7 +14,8 @@ class Image(SchemaElement):
     image_data: str
 
     @classmethod
-    def new(cls) -> Image:
+    def parse(cls) -> Image:
+
         # TODO ID
         return Image('lskdfj', [(0, 0), (0, 0)], 1, '')
 

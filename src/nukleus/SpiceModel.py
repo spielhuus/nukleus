@@ -15,63 +15,62 @@ class spice_model:
         self.content = content
 
 
-def __load_model__(filename: str):
+def _load_model(filename: str) -> spice_model:
     with open(filename) as file:
         content = file.read()
         keys = []
         includes = []
-        for m in re.findall(r"\.SUBCKT ([a-zA-Z0-9]*) .*", content, re.IGNORECASE):
-            keys.append(m)
-        for m in re.findall(r"\.include (.*)", content, re.IGNORECASE):
-            includes.append(m)
+        for model in re.findall(r"\.SUBCKT ([a-zA-Z0-9]*) .*", content, re.IGNORECASE):
+            keys.append(model)
+        for model in re.findall(r"\.include (.*)", content, re.IGNORECASE):
+            includes.append(model)
 
-        return(spice_model(keys, filename, includes, content))
+        return spice_model(keys, filename, includes, content)
 
 
 def load_spice_models(paths: List[str]) -> List[spice_model]:
+    models = []
     for path in paths:
-        models = []
         for filename in glob.iglob(f'{path}/**', recursive=True):
             if filename in (".", ".."):
                 continue
             if os.path.splitext(filename)[-1].lower() in (".lib", ".mod"):
-                models.append(__load_model__(filename))
+                models.append(_load_model(filename))
 
     return models
 
 
-def __model_by_path__(path, models):
-    for m in models:
-        filename = m.path.split("/")[-1]
+def _model_by_path(path, models):
+    for model in models:
+        filename = model.path.split("/")[-1]
         if path == filename:
-            return m
-
+            return model
     return None
 
 
-def __contains__(path, includes):
+def _contains(path, includes):
     for i in includes:
         if i.path == path:
             return True
     return False
 
 
-def __get_includes__(path, includes, models):
-    if not __contains__(path, includes):
-        model = __model_by_path__(path, models)
+def _get_includes(path, includes, models):
+    if not _contains(path, includes):
+        model = _model_by_path(path, models)
         includes.append(model)
         for i in model.includes:
-            __get_includes__(i)
+            _get_includes(i, includes, models)
 
 
 def get_includes(key, includes, models):
     found = False
-    for m in models:
-        if key in m.keys:
+    for model in models:
+        if key in model.keys:
             found = True
-            if not __contains__(m.path, includes):
-                includes.append(m)
-                for i in m.includes:
-                    __get_includes__(i, includes, models)
+            if not _contains(model.path, includes):
+                includes.append(model)
+                for i in model.includes:
+                    _get_includes(i, includes, models)
 
     assert found, f"Model not found {key}"

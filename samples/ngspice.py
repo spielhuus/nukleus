@@ -10,7 +10,7 @@ import nukleus
 
 schema = nukleus.load_schema('files/summe_v6/main.kicad_sch')
 cwd = os.getcwd() + "/files/spice"
-models = nukleus.Spice.load_spice_models([cwd])
+models = nukleus.SpiceModel.load_spice_models([cwd])
 
 circuit = nukleus.Circuit()
 circuit.models(models)

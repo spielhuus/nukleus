@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from typing import List
 
-from .PositionalElement import PositionalElement, POS_T
+from .Utils import ffmt
+from .SchemaElement import POS_T
+from .PositionalElement import PositionalElement
 from .rgb import rgb
 from ..SexpParser import SEXP_T
 
@@ -12,12 +14,14 @@ class Junction(PositionalElement):
     The junction token defines a junction in the schematic. The junction
     section will not exist if there are no junctions in the schematic.
     """
-    diameter: int
-    color: rgb
-
     def __init__(self, **kwargs) -> None:
         self.diameter = kwargs.get('diameter', 0)
+        """he diameter token attribute defines the DIAMETER of the junction.
+        A diameter of 0 is the default diameter in the system settings."""
         self.color = kwargs.get('color', rgb(0, 0, 0, 0))
+        """The color token attributes define the Red, Green, Blue, and Alpha
+        transparency of the junction. If all four attributes are 0, the
+        default junction color is used."""
         super().__init__(kwargs.get('identifier', None),
                          kwargs.get('pos', ((0, 0), (0, 0))),
                          kwargs.get('angle', 0))
@@ -36,17 +40,18 @@ class Junction(PositionalElement):
         _color: rgb = rgb(0, 0, 0, 0)
 
         for token in sexp[1:]:
-            match token:
-                case ['uuid', identifier]:
-                    _identifier = identifier
-                case ['at', _x, _y]:
-                    _pos = (float(_x), float(_y))
-                case ['diameter', _d]:
-                    _diameter = float(_d)
-                case ['color', r, g, b, a]:
-                    _color = rgb(float(r), float(g), float(b), float(a))
-                case _:
-                    raise ValueError(f"unknown junction element {token}")
+            if token[0] == 'at':
+                _pos = (float(token[1]), float(token[2]))
+                if len(token) == 4:
+                    _angle = float(token[3])
+            elif token[0] == 'uuid':
+                _identifier = token[1]
+            elif token[0] == 'diameter':
+                _diameter = float(token[1])
+            elif token[0] == 'color':
+                _color = rgb(float(token[1]), float(token[2]), float(token[3]), float(token[4]))
+            else:
+                raise ValueError(f"unknown Junction element {token}")
 
         return Junction(identifier=_identifier, pos=_pos, angle=_angle,
                         diameter=_diameter, color=_color)
@@ -60,8 +65,10 @@ class Junction(PositionalElement):
         :rtype str: sexp string.
         """
         strings: List[str] = []
-        strings.append((f'{"  " * indent}(junction (at {self.pos[0]:g} {self.pos[1]:g}) '
-                        f'(diameter {self.diameter:g}) (color 0 0 0 0)'))  # TODO use rgb
+        strings.append(f'{"  " * indent}(junction (at {self.pos[0]:g} {self.pos[1]:g}) '
+                       f'(diameter {self.diameter:g}) '
+                       f'(color {ffmt(self.color.r)} {ffmt(self.color.g)} '
+                       f'{ffmt(self.color.b)} {ffmt(self.color.a)})')
         strings.append(f'{"  " * (indent + 1)}(uuid {self.identifier})')
         strings.append(f'{"  " * indent})')
         return "\n".join(strings)

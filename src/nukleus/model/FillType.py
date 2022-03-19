@@ -2,24 +2,33 @@ from enum import Enum
 
 
 class FillType(Enum):
+    """Fill type for the elements."""
     FOREGROUND = 1
     BACKGROUND = 2
     NONE = 3
 
+def get_fill_str(fill_type_type: FillType) -> str:
+    """
+    get the fill type from the enum.
 
-def get_fill_str(type: FillType) -> str:
-    if type == FillType.FOREGROUND:
+    :param fill_type FillType: The fill type.
+    :rtype str: The type as string.
+    """
+    if fill_type_type == FillType.FOREGROUND:
         return 'outline'
-    elif type == FillType.BACKGROUND:
+    if fill_type_type == FillType.BACKGROUND:
         return 'background'
-    else:
-        return 'none'
+    return 'none'
 
+def get_fill_type(fill_type_type: str) -> FillType:
+    """
+    Get the fill type from string.
 
-def get_fill_type(type: str) -> FillType:
-    if type == 'outline':
+    :param fill_type_type str: The fill type.
+    :rtype FillType: Fill type Enum.
+    """
+    if fill_type_type == 'outline':
         return FillType.FOREGROUND
-    elif type == 'background':
+    if fill_type_type == 'background':
         return FillType.BACKGROUND
-    else:
-        return FillType.NONE
+    return FillType.NONE

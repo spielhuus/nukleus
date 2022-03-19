@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from ..SexpParser import SEXP_T
-from .PositionalElement import POS_T, PositionalElement
+from .SchemaElement import POS_T
+from .PositionalElement import PositionalElement
 
 
 class NoConnect(PositionalElement):
@@ -10,7 +11,6 @@ class NoConnect(PositionalElement):
     The no connect section will not exist if there are not any no connect
     in the schematic.
     """
-
     def __init__(self, **kwargs) -> None:
         super().__init__(kwargs.get('identifier', None),
                          kwargs.get('pos', ((0, 0), (0, 0))),
@@ -21,20 +21,21 @@ class NoConnect(PositionalElement):
         """Parse the sexp input.
 
         :param sexp SEXP_T: Sexp as List.
-        :rtype Polyline: The NoConnect Object.
+        :rtype NoConnect: The NoConnect Object.
         """
         _identifier = None
         _pos: POS_T = (0, 0)
         _angle: float = 0
 
         for token in sexp[1:]:
-            match token:
-                case ['uuid', identifier]:
-                    _identifier = identifier
-                case ['at', _x, _y]:
-                    _pos = (float(_x), float(_y))
-                case _:
-                    raise ValueError(f"unknown no_connect element {token}")
+            if token[0] == 'at':
+                _pos = (float(token[1]), float(token[2]))
+                if len(token) == 4:
+                    _angle = float(token[3])
+            elif token[0] == 'uuid':
+                _identifier = token[1]
+            else:
+                raise ValueError(f"unknown NoConnect element {token}")
 
         return NoConnect(identifier=_identifier, pos=_pos, angle=_angle)
 

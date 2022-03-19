@@ -47,8 +47,7 @@ coverage: $(VENV)/bin/activate
 	$(COVERAGE) report -m
 
 type: 
-#	 $(PYRIGHT) $(SOURCES)
-	 $(PYTHON) -m pyright $(SOURCES)
+	 $(VENV)/bin/pyright $(SOURCES)
 
 
 install: $(TARGET)

@@ -15,13 +15,13 @@ class TestStrokeDefinition(unittest.TestCase):
         sexp_str = load_tree("""    (stroke (width 0) (type default) (color 0 0 0 0))""")
         stroke_definition = StrokeDefinition.parse(sexp_str)
         self.assertEqual(0, stroke_definition.width)
-        self.assertEqual('default', stroke_definition.type)
+        self.assertEqual('default', stroke_definition.stroke_type)
         self.assertEqual(rgb(0, 0, 0, 0), stroke_definition.color)
 
     def test_new_stroke_instance(self):
-        symbol_instance = StrokeDefinition(width=0, type='default', color=rgb(0, 0, 0, 0))
+        symbol_instance = StrokeDefinition(width=0, stroke_type='default', color=rgb(0, 0, 0, 0))
         self.assertEqual(0, symbol_instance.width)
-        self.assertEqual('default', symbol_instance.type)
+        self.assertEqual('default', symbol_instance.stroke_type)
         self.assertEqual(rgb(0, 0, 0, 0), symbol_instance.color)
 
     def test_sexp_stroke_instance(self):

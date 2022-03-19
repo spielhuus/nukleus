@@ -1,8 +1,12 @@
 from __future__ import annotations
 
-import math
-from enum import Enum
 from typing import Dict, List, Tuple, TypeAlias, cast
+
+import math
+from copy import copy
+from enum import Enum
+import re
+from collections import deque
 
 import numpy as np
 
@@ -12,7 +16,105 @@ from .Pin import Pin, PinList
 from .PositionalElement import PositionalElement
 from .Property import Property
 from .SchemaElement import POS_T, SchemaElement
+from .TextEffects import Justify, TextEffects
+from .GraphicItem import f_coord
 from .Utils import ffmt
+
+
+def isUnit(symbol: LibrarySymbol, unit: int) -> bool:
+    match = re.match(r".*_(\d+)_\d+", symbol.identifier)
+    if match:
+        _unit = int(match.group(1))
+        return _unit in (0, unit)
+    return False
+
+def getSymbolSize(symbol):
+    sizes = []
+    for unit in symbol.library_symbol.units:
+        if isUnit(unit, symbol.unit):
+            for graph in unit.graphics:
+                sizes.append(graph.size())
+            for pin in unit.pins:
+                sizes.append(pin._pos())
+
+    if len(sizes) == 0:
+        return np.array([[0, 0], [0, 0]])
+    return f_coord(np.array(sizes))
+
+def pinPosition(symbol) -> List[int]: 
+    res = deque([0, 0, 0, 0])
+
+    for pin in symbol.getPins():
+        assert pin.angle <= 270, "pin angle greater then 270°"
+        res[int(pin.angle / 90)] += 1
+
+    if 'x' in symbol.mirror:
+        pos0 = res[0]
+        pos2 = res[2]
+        res[0] = pos2
+        res[2] = pos0
+
+    if 'y' in symbol.mirror:
+        pos1 = res[1]
+        pos3 = res[3]
+        res[1] = pos1
+        res[3] = pos3
+
+    res.rotate(int(symbol.angle/90))
+    return list(res)
+
+def placeFields(symbol) -> None:
+    positions = pinPosition(symbol)
+    vis_fields = [x for x in symbol.properties if x.text_effects.hidden == False]
+    symbol_size = f_coord(symbol._pos(getSymbolSize(symbol)))
+    if len(symbol.getPins()) == 1:
+        if positions[0] == 1:
+            print("single pin, fields right")
+
+        elif positions[1] == 1:
+            vis_fields[0].pos = (symbol.pos[0], symbol_size[0][1]-0.762)
+            assert vis_fields[0].text_effects, "pin has no text_effects"
+            vis_fields[0].text_effects.justify = [Justify.CENTER]
+
+        elif positions[2] == 1:
+            print("single pin, fields left")
+            vis_fields[0].pos = (0, 2.54)
+            assert vis_fields[0].text_effects, "pin has no text_effects"
+            vis_fields[0].text_effects.justify = [Justify.CENTER]
+
+        elif positions[3] == 1:
+            vis_fields[0].pos = (symbol.pos[0], symbol_size[1][1]+0.762)
+            assert vis_fields[0].text_effects, "pin has no text_effects"
+            vis_fields[0].text_effects.justify = [Justify.CENTER]
+    else:
+        if positions[1] == 0:
+            top_pos = symbol_size[0][1] - ((len(vis_fields)-1) * 2) - 0.762
+            for pin in vis_fields:
+                pin.pos = (symbol.pos[0], top_pos)
+                assert pin.text_effects, "pin has no text_effects"
+                pin.text_effects.justify = [Justify.CENTER]
+                top_pos += 2
+
+        elif positions[0] == 0:
+            top_pos = symbol_size[0][1] + \
+                ((symbol_size[1][1] - symbol_size[0][1]) / 2) - \
+                ((len(vis_fields)-1) * 2) / 2
+            for pin in vis_fields:
+                pin.pos = (symbol_size[1][0]+0.762, top_pos)
+                assert pin.text_effects, "pin has no text_effects"
+                pin.text_effects.justify = [Justify.LEFT]
+                top_pos += 2
+
+        elif positions[2] == 0:
+            print("fields bottom")
+            assert False, "implement"
+        elif positions[3] == 0:
+            print("fields left")
+            assert False, "implement"
+        else:
+            print("all sides have pins")
+            assert False, "implement"
+
 
 MIRROR = {
     '': np.array((1, 0, 0, -1)),
@@ -35,11 +137,15 @@ class PinRef():
 
 
 class Symbol(PositionalElement):
+    """Symbol Object.
+       The Symbol Object represents an instance of a LibrarySymbol.
+    """
     mirror: str
     library_identifier: str
     unit: int
     in_bom: bool
     on_board: bool
+    on_schema: bool
     properties: List[Property]
     pins: List[PinRef]
     library_symbol: LibrarySymbol
@@ -50,11 +156,12 @@ class Symbol(PositionalElement):
         self.unit: int = kwargs.get('unit', 0)
         self.in_bom: bool = kwargs.get('in_bom', True)
         self.on_board: bool = kwargs.get('on_board', True)
+        self.on_schema: bool = kwargs.get('on_schema', True)
         self.properties: List[Property] = kwargs.get('properties', [])
         self.pins: List[PinRef] = kwargs.get('pins', [])
         self.library_symbol: LibrarySymbol = kwargs.get('library_symbol', None)
         super().__init__(kwargs.get('identifier', None),
-                         kwargs.get('pos', ((0, 0), (0, 0))),
+                         kwargs.get('pos', (0, 0)),
                          kwargs.get('angle', 0))
 
     @classmethod
@@ -141,16 +248,27 @@ class Symbol(PositionalElement):
         return _pins
 
     @classmethod
-    def new(cls, ref, lib_name, library_symbol, unit: int = 0) -> Symbol:  # TODO ref must be id
+    def new(cls, ref: str, lib_name: str, library_symbol: LibrarySymbol, unit: int = 0) -> Symbol:
+        """
+        Create a new Symbol.
+        The new symbol unit is created from the library symbol.
+        The lib_name overwrites the library_name.
+
+        :param ref str: Reference of the Symbol.
+        :param lib_name str: Library name.
+        :param library_symbol LibrarySymbol: Library Symbol
+        :param unit int: Unit number
+        :rtype Symbol: New symbol instance.
+        """
         assert library_symbol, "library symbol not set"
         pins = []
         properties = []
         for prop in library_symbol.properties:
             if not prop.key.startswith('ki_'):
+                sym_property = copy(prop)
                 if prop.key == 'Reference':
-                    prop.value = ref
-                #TODO place properties, relative coordinates in library
-                properties.append(prop)
+                    sym_property.value = ref
+                properties.append(sym_property)
 
         for sub in library_symbol.units:
             _, lib_unit, _ = sub.identifier.split('_')
@@ -159,8 +277,8 @@ class Symbol(PositionalElement):
                     pins.append(PinRef(pin.number[0], "uuid"))
 
         sym = Symbol(library_identifier=lib_name, unit=unit,
-                properties=properties,
-                pins=pins, library_symbol=library_symbol)
+                     properties=properties,
+                     pins=pins, library_symbol=library_symbol)
         return sym
 
     def sexp(self, indent=1):
@@ -180,8 +298,8 @@ class Symbol(PositionalElement):
         symbol += f'(on_board {"yes" if self.on_board else "no"})'
         strings.append(symbol)
         strings.append(f'{"  " * (indent + 1)}(uuid {self.identifier})')
-        for property in self.properties:
-            strings.append(property.sexp(indent=indent+1))
+        for prop in self.properties:
+            strings.append(prop.sexp(indent=indent+1))
 
         for pin in self.pins:
             strings.append(pin.sexp(indent=indent+1))

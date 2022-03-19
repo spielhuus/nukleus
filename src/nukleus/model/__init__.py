@@ -13,9 +13,9 @@ from .LibrarySymbol import LibrarySymbol
 from .LocalLabel import LocalLabel
 from .NoConnect import NoConnect
 from .Pin import Pin, PinImpl, PinList
-from .PositionalElement import PositionalElement, POS_T
+from .PositionalElement import PositionalElement
 from .Property import Property
-from .SchemaElement import SchemaElement
+from .SchemaElement import SchemaElement, POS_T, PTS_T
 from .StrokeDefinition import StrokeDefinition, rgb
 from .Symbol import ElementList, Symbol, PinRef
 from .SymbolInstance import SymbolInstance

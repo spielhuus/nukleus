@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import math
-from typing import Any, Dict, List, Tuple, cast
+from typing import Dict, List, Tuple, cast
 
 import numpy as np
 
 from ..SexpParser import SEXP_T
-from .PositionalElement import POS_T, PositionalElement
+from .SchemaElement import POS_T
+from .PositionalElement import PositionalElement
 from .TextEffects import TextEffects
 
 
@@ -14,14 +15,6 @@ class Pin():
     """
     The pin token defines a pin in a symbol definition.
     """
-    type: str
-    style: str
-    pos: POS_T
-    angle: float
-    length: float
-    name: Tuple[str, TextEffects]
-    number: Tuple[str, TextEffects]
-
     def __init__(self, **kwargs) -> None:
         self.type = kwargs.get('type', '')
         self.style = kwargs.get('style', '')
@@ -34,6 +27,11 @@ class Pin():
 
     @classmethod
     def parse(cls, sexp: SEXP_T) -> Pin:
+        """Parse the sexp input.
+
+        :param sexp SEXP_T: Sexp as List.
+        :rtype Pin: The Pin Object.
+        """
         _type = ''
         _style = ''
         _pos = (0, 0)
@@ -44,29 +42,27 @@ class Pin():
         _number = ()
 
         for token in sexp[1:]:
-            match token:
-                case ['at', x, y, angle]:
-                    _pos = (float(x), float(y))
-                    _angle = float(angle)
-                case ['at', x, y]:
-                    _pos = (float(x), float(y))
-                case ['length', length]:
-                    _length = float(length)
-                case ['name', name, *effects]:
-                    _name = (name, TextEffects.parse(cast(SEXP_T, effects[0])))
-                case ['number', number, *effects]:
-                    _number = (number, TextEffects.parse(cast(SEXP_T, effects[0])))
-                case 'hide':
-                    _hidden = True
-                case 'input'|'output'|'bidirectional'|'tri_state'|'passive'|'free'|'unspecified'| \
-                     'power_in'|'power_out'|'open_collector'|'open_emitter'|'no_connect':
-                    _type = token
-                case 'line'|'inverted'|'clock'|'inverted_clock'|'input_low'|'clock_low'| \
-                     'output_low'|'edge_clock_high'|'non_logic':
-                    _style = token
-                case _:
-                    raise ValueError(f"unknown property element {token}")
-
+            if token[0] == 'at':
+                _pos = (float(token[1]), float(token[2]))
+                if len(token) == 4:
+                    _angle = float(token[3])
+            elif token[0] == 'length':
+                _length = float(token[1])
+            elif token[0] == 'name':
+                _name = (token[1], TextEffects.parse(cast(SEXP_T, token[2])))
+            elif token[0] == 'number':
+                _number = (token[1], TextEffects.parse(cast(SEXP_T, token[2])))
+            elif token == 'hide':
+                _hidden = True
+            elif token in ('input','output','bidirectional','tri_state',
+                              'passive','free','unspecified','power_in','power_out',
+                              'open_collector','open_emitter','no_connect'):
+                _type = token
+            elif token in ('line','inverted','clock','inverted_clock','input_low',
+                              'clock_low','output_low','edge_clock_high','non_logic'):
+                _style = token
+            else:
+                raise ValueError(f"unknown Pin element {token}")
 
         return Pin(type=_type, style=_style, pos=_pos, angle=_angle,
                    length=_length, hidden=_hidden, name=_name, number=_number)

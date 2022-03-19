@@ -21,17 +21,17 @@ class TestBus(unittest.TestCase):
         self.assertEqual('0c753b9e-5f93-4479-b1a6-b98503e7ca25', bus.identifier)
         self.assertEqual([(327.66, 111.76), (351.79, 111.76)], bus.pts)
         self.assertEqual(StrokeDefinition(
-            width=0, type='solid', color=rgb(0, 0, 0, 0)), bus.stroke_definition)
+            width=0, stroke_type='solid', color=rgb(0, 0, 0, 0)), bus.stroke_definition)
 
     def test_new_bus(self):
         bus = Bus(pts=[(327.66, 111.76), (351.79, 111.76)], 
                               identifier='0c753b9e-5f93-4479-b1a6-b98503e7ca25',
-                              stroke_definition=StrokeDefinition(width=0, type='solid',
+                              stroke_definition=StrokeDefinition(width=0, stroke_type='solid',
                                                                  color=rgb(0, 0, 0, 0)))
         self.assertEqual('0c753b9e-5f93-4479-b1a6-b98503e7ca25', bus.identifier)
         self.assertEqual([(327.66, 111.76), (351.79, 111.76)], bus.pts)
         self.assertEqual(StrokeDefinition(
-            width=0, type='solid', color=rgb(0, 0, 0, 0)), bus.stroke_definition)
+            width=0, stroke_type='solid', color=rgb(0, 0, 0, 0)), bus.stroke_definition)
 
     def test_sexp_bus(self):
         sexp_str = load_tree("""  (bus (pts (xy 327.66 111.76) (xy 351.79 111.76))

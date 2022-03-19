@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from enum import Enum
-from typing import List, cast
+from typing import Any, List, cast
 
 from ..SexpParser import SEXP_T
 
 
 class Justify(Enum):
+    """Text orientation."""
     LEFT = 1
     RIGHT = 2
     TOP = 3
@@ -16,7 +16,13 @@ class Justify(Enum):
     CENTER = 6
 
     @staticmethod
-    def get_justify(types: List[str]) -> List[Justify]:
+    def get_justify(types: SEXP_T) -> List[Justify]:
+        """
+        Parse the justify string.
+
+        :param types SEXP_T: [TODO:description]
+        :rtype List[Justify]: [TODO:description]
+        """
         _lookup = {'left': Justify.LEFT,
                    'right': Justify.RIGHT,
                    'top': Justify.TOP,
@@ -25,11 +31,17 @@ class Justify(Enum):
                    'center': Justify.CENTER}
         type_list: List[Justify] = []
         for _type in types:
-            type_list.append(_lookup[_type])
+            type_list.append(_lookup[str(_type)])
         return type_list
 
     @staticmethod
     def str(justifiers: List[Justify]) -> str:
+        """
+        Justifiers as string.
+
+        :param justifiers List[Justify]: The justifiers.
+        :rtype str: Justifiers as string.
+        """
         _lookup = {Justify.LEFT: 'left',
                    Justify.RIGHT: 'right',
                    Justify.TOP: 'top',
@@ -39,45 +51,62 @@ class Justify(Enum):
         return " ".join([_lookup[x] for x in justifiers])
 
     @staticmethod
-    def halign(type: List[Justify]) -> str:
-        for t in type:
-            if t == Justify.LEFT:
+    def halign(justifiers: List[Justify]) -> str:
+        """
+        Horizontal align.
+
+        :param justifiers List[Justify]: The List of justifiers.
+        :rtype str: aling [left, right, center]
+        """
+        for justify in justifiers:
+            if justify == Justify.LEFT:
                 return 'left'
-            elif t == Justify.RIGHT:
+            if justify == Justify.RIGHT:
                 return 'right'
         return 'center'
 
     @staticmethod
-    def valign(type: List[Justify]) -> str:
-        for t in type:
-            if t == Justify.TOP:
+    def valign(justifiers: List[Justify]) -> str:
+        """
+        Vertical align.
+
+        :param justifiers List[Justify]: The List of justifiers.
+        :rtype str: aling [top, bottom, center]
+        """
+        for justify in justifiers:
+            if justify == Justify.TOP:
                 return 'top'
-            elif t == Justify.BOTTOM:
+            if justify == Justify.BOTTOM:
                 return 'bottom'
         return 'center'
 
 
-@dataclass
 class TextEffects():
-    face: str
-    font_width: float
-    font_height: float
-    font_thickness: str
-    font_style: str
-    justify: List[Justify]
-    hidden: bool
-
+    """The text effects definition."""
     def __init__(self, **kwargs) -> None:
-        self.face = kwargs.get('face', '')
-        self.font_width = kwargs.get('font_width', 0)
-        self.font_height = kwargs.get('font_height', 0)
-        self.font_thickness = kwargs.get('font_thickness', '')
-        self.font_style = kwargs.get('font_style', '')
-        self.justify = kwargs.get('justify', [])
-        self.hidden = kwargs.get('hidden', True)
+        self.face: str = kwargs.get('face', '')
+        """The optional face token indicates the font family.
+        It should be a TrueType font family name."""
+        self.font_width: float = kwargs.get('font_width', 0)
+        """The font width."""
+        self.font_height: float = kwargs.get('font_height', 0)
+        """The font height."""
+        self.font_thickness: str = kwargs.get('font_thickness', '')
+        """The font thickness."""
+        self.font_style: str = kwargs.get('font_style', '')
+        """The font style."""
+        self.justify: List[Justify] = kwargs.get('justify', [])
+        """The font justify."""
+        self.hidden: bool = kwargs.get('hidden', True)
+        """True if the text is hidden."""
 
     @classmethod
     def parse(cls, sexp: SEXP_T) -> TextEffects:
+        """Parse the sexp input.
+
+        :param sexp SEXP_T: Sexp as List.
+        :rtype TextEffects: The TextEffects Object.
+        """
         _face = ''
         _font_width = 0
         _font_height = 0
@@ -87,21 +116,21 @@ class TextEffects():
         _hidden = False
 
         for token in sexp[1:]:
-            match token:
-                case ['font', ['size', width, height], *style]:
-                    _font_width = float(width)
-                    _font_height = float(height)
-                    _font_style = " ".join(style)
-                case ['font', ['size', width, height]]:
-                    _font_width = float(width)
-                    _font_height = float(height)
-
-                case ['justify', *justify]:
-                    _justify = Justify.get_justify(justify)
-                case 'hide':
-                    _hidden = True
-                case _:
-                    raise ValueError(f"unknown effects element {token}")
+            if token[0] == 'font' and token[1][0] == 'size':
+                _font_width = float(token[1][1])
+                _font_height = float(token[1][2])
+                if len(token) > 2 and token[2][0] == 'thickness':
+                    _font_thickness = token[2][1]
+                    if len(token) > 4:
+                        _font_style = " ".join(token[3:])
+                elif len(token) > 2:
+                    _font_style = " ".join(token[2:])
+            elif token[0] == 'justify':
+                _justify = Justify.get_justify(cast(SEXP_T, token[1:]))
+            elif token == 'hide':
+                _hidden = True
+            else:
+                raise ValueError(f"unknown TextEffects element {token}")
 
         return TextEffects(face=_face, font_width=_font_width, font_height=_font_height,
                            font_thickness=_font_thickness, font_style=_font_style,
@@ -128,3 +157,12 @@ class TextEffects():
             string += ' hide'
         string += ')'
         return string
+
+    def __eq__(self, other: Any) -> Any:
+        return (self.face == other.face and
+               self.font_width == other.font_width and
+               self.font_height == other.font_height and
+               self.font_thickness == other.font_thickness and
+               self.font_style == other.font_style and
+               self.justify == other.justify and
+               self.hidden == other.hidden)

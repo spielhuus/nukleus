@@ -1,4 +1,4 @@
-from typing import List, Type, TypeVar
+from typing import Dict, List, Type, TypeVar
 
 from .model import (ElementList, GlobalLabel, Junction, LibrarySymbol,
                     LocalLabel, NoConnect, SchemaElement, Symbol, Wire, 
@@ -16,11 +16,13 @@ class Schema():
 
         self.title: str = ""
         self.date: str = ""
+        self.company: str = ""
         self.rev: str = ""
-        self.comment_1: str = ""
-        self.comment_2: str = ""
-        self.comment_3: str = ""
-        self.comment_4: str = ""
+        self.comment: Dict[int, str] = {}
+#        self.comment_1: str = ""
+#        self.comment_2: str = ""
+#        self.comment_3: str = ""
+#        self.comment_4: str = ""
 
         self.elements: List[SchemaElement] = []
 
@@ -95,14 +97,18 @@ class Schema():
         strings.append(f"    (title \"{self.title}\")")
         strings.append(f"    (date \"{self.date}\")")
         strings.append(f"    (rev \"{self.rev}\")")
-        if len(self.comment_1) > 0:
-            strings.append(f"    (comment 1 \"{self.comment_1}\")")
-        if len(self.comment_2) > 0:
-            strings.append(f"    (comment 2 \"{self.comment_2}\")")
-        if len(self.comment_3) > 0:
-            strings.append(f"    (comment 3 \"{self.comment_3}\")")
-        if len(self.comment_4) > 0:
-            strings.append(f"    (comment 4 \"{self.comment_4}\")")
+        if self.company != '':
+            strings.append(f"    (company \"{self.company}\")")
+        for com in sorted(self.comment.keys()):
+            strings.append(f"    (comment {com} \"{self.comment[com]}\")")
+#        if len(self.comment_1) > 0:
+#            strings.append(f"    (comment 1 \"{self.comment_1}\")")
+#        if len(self.comment_2) > 0:
+#            strings.append(f"    (comment 2 \"{self.comment_2}\")")
+#        if len(self.comment_3) > 0:
+#            strings.append(f"    (comment 3 \"{self.comment_3}\")")
+#        if len(self.comment_4) > 0:
+#            strings.append(f"    (comment 4 \"{self.comment_4}\")")
         strings.append("  )")
         strings.append("")
         strings.append("  (lib_symbols")
