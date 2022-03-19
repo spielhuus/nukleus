@@ -44,7 +44,7 @@ def main() -> int:
         if action == 'plot':
             if args.output is None:
                 print('Output file is required for plot schematic.')
-                sys, exit(1)
+                sys.exit(1)
             plot(schema, args.output, border=True)
         if action == 'pcb':
             if args.output is None:
@@ -52,7 +52,7 @@ def main() -> int:
                 sys.exit(1)
             if not pcb:
                 print('PCB input file is not set.')
-                sys, exit(1)
+                sys.exit(1)
 
             layer_names = ('F.Cu', 'B.Cu', 'In1.Cu', 'In2.Cu', 'In3.Cu', 'In4.Cu',
                            'In5.Cu', 'In6.Cu', 'F.SilkS', 'B.SilkS', 'F.Mask',
