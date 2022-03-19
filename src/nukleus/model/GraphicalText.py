@@ -2,9 +2,8 @@ from __future__ import annotations
 
 from typing import List, cast
 
-from .PositionalElement import PositionalElement
+from .PositionalElement import PositionalElement, ffmt
 from .TextEffects import TextEffects
-from .Utils import ffmt
 from ..SexpParser import SEXP_T
 
 class GraphicalText(PositionalElement):

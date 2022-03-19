@@ -4,8 +4,7 @@ from typing import Any, List
 
 from ..SexpParser import SEXP_T
 from .rgb import rgb
-from .Utils import ffmt
-
+from .PositionalElement import ffmt
 
 class StrokeDefinition():
     """

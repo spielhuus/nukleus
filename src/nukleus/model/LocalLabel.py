@@ -2,9 +2,8 @@ from __future__ import annotations
 
 from typing import List, cast
 
-from .Utils import ffmt
 from .SchemaElement import POS_T
-from .PositionalElement import PositionalElement
+from .PositionalElement import PositionalElement, ffmt
 from .TextEffects import TextEffects
 from ..SexpParser import SEXP_T
 

@@ -300,7 +300,6 @@ class DrawText:
         ctx.line_to(0, 0)
         ctx.stroke_preserve()
         ctx.stroke()
-
         ctx.restore()
 
 

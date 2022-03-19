@@ -5,7 +5,7 @@ from typing import Any, List, cast
 from ..SexpParser import SEXP_T
 from .SchemaElement import POS_T
 from .TextEffects import TextEffects
-from .Utils import ffmt
+from .PositionalElement import ffmt
 
 
 class Property:

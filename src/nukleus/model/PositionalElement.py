@@ -2,6 +2,16 @@ from __future__ import annotations
 
 from .SchemaElement import SchemaElement
 
+def ffmt(number: float) -> int|float:
+    """
+    convert float to int when there are no decimal places.
+
+    :param number float: The float
+    :rtype int|float: The return number.
+    """
+    if int(number) ==number:
+        return int(number)
+    return number
 
 class PositionalElement(SchemaElement):
     """ Positional element for the schema items """

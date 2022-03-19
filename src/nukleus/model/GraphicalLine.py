@@ -56,7 +56,6 @@ class GraphicalLine(SchemaElement):
         strings: List[str] = []
         string = ''
         string += f'{"  " * indent}(polyline (pts'
-        print(self.pts)
         for _pt in self.pts:
             string += f' (xy {_pt[0]:g} {_pt[1]:g})'
         string += ')'

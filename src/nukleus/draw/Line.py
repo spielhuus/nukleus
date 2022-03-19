@@ -3,7 +3,7 @@ from typing import Optional, Tuple, cast
 import numpy as np
 
 from nukleus import Library
-from nukleus.model import POS_T, PinImpl, PositionalElement, Wire
+from nukleus.model import POS_T, PinImpl, PositionalElement, Wire, Symbol
 
 from .DrawElement import DrawElement, totuple
 
@@ -64,7 +64,7 @@ class Line(DrawElement):
         """
         if isinstance(pos, PinImpl):
             pin_impl = cast(PinImpl, pos)
-            pos = pin_impl.parent._pos(pin_impl._pos())
+            pos = cast(Symbol, pin_impl.parent)._pos(pin_impl._pos())
             self.pos = tuple(totuple(pos[0]))
         elif isinstance(pos, DrawElement):
             assert pos.element and isinstance(pos.element, PositionalElement)
@@ -76,7 +76,7 @@ class Line(DrawElement):
     def tox(self, pos):
         if isinstance(pos, PinImpl):
             pin_impl = cast(PinImpl, pos)
-            pos = pin_impl.parent._pos(pin_impl._pos())
+            pos = cast(Symbol, pin_impl.parent)._pos(pin_impl._pos())
             self._rel_length_x = tuple(totuple(pos[0]))[0]
         elif isinstance(pos, DrawElement):
             assert pos.element and isinstance(pos.element, PositionalElement)
@@ -89,7 +89,7 @@ class Line(DrawElement):
     def toy(self, pos):
         if isinstance(pos, PinImpl):
             pin_impl = cast(PinImpl, pos)
-            pos = pin_impl.parent._pos(pin_impl._pos())
+            pos = cast(Symbol, pin_impl.parent)._pos(pin_impl._pos())
             self._rel_length_y = tuple(totuple(pos[0]))[1]
         elif isinstance(pos, DrawElement):
             assert pos.element and isinstance(pos.element, PositionalElement)

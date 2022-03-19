@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 from typing import List
-
+from functools import lru_cache
 from .model import LibrarySymbol
 from .ParserV6 import ParserV6
 
@@ -21,6 +21,7 @@ class Library():
     def search(self, pattern):
         pass
 
+    @lru_cache
     def get(self, name) -> LibrarySymbol:
         """
         Load a library symbol.
@@ -45,6 +46,7 @@ class Library():
         raise LibrarySymbolNotFound("Symbol not found", name, self.paths)
 
     @classmethod
+    @lru_cache
     def _load(cls, filename):
         parser = ParserV6()
         symbols = []

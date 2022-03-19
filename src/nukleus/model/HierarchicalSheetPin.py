@@ -4,9 +4,8 @@ from typing import List, cast
 
 from nukleus.model.TextEffects import TextEffects
 
-from .Utils import ffmt
 from .SchemaElement import POS_T
-from .PositionalElement import PositionalElement
+from .PositionalElement import PositionalElement, ffmt
 from ..SexpParser import SEXP_T
 
 

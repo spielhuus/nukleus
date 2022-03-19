@@ -1,5 +1,7 @@
 from typing import List, cast
 
+import logging
+
 from nukleus.model.BusEntry import BusEntry
 
 from .model.Bus import Bus
@@ -20,6 +22,8 @@ from .model.Wire import Wire
 from .Schema import Schema
 from .SexpParser import load_tree
 from .SexpParser import SEXP_T
+
+logger = logging.getLogger(__name__)
 
 class _ParserV6Factory:
     def __init__(self):
@@ -76,26 +80,6 @@ class ParserV6():
             else:
                 raise ValueError(f"unknown title block element {token}")
 
-#
-#
-#
-#            match token:
-#                case ['title', title]:
-#                    schema.title = title
-#                case ['date', date]:
-#                    schema.date = date
-#                case ['rev', rev]:
-#                    schema.rev = rev
-#                case ['comment', '1', comment]:
-#                    schema.comment_1 = comment
-#                case ['comment', '2', comment]:
-#                    schema.comment_2 = comment
-#                case ['comment', '3', comment]:
-#                    schema.comment_3 = comment
-#                case ['comment', '4', comment]:
-#                    schema.comment_4 = comment
-#                case _:
-
     def schema(self, schema: Schema, file: str) -> None:
         """
         Open a schema from the filesystem.
@@ -103,7 +87,7 @@ class ParserV6():
         :param file: filename
         :type file: str
         """
-        with open(file, 'r',  encoding="UTF-8") as handle:
+        with open(file, 'r', encoding="UTF-8") as handle:
             parsed = load_tree(handle.read())
             factory = _ParserV6Factory()
             for item in parsed[1:]:
@@ -134,13 +118,21 @@ class ParserV6():
                             element.library_identifier)
                     schema.append(element)
 
-    def libraries(self, target, file: str) -> None:
+    @classmethod
+    def libraries(cls, target, file: str) -> None:
+        """
+        Open a schema from the filesystem.
 
-        with open(file, 'r') as f:
-            parsed = load_tree(f.read())
+        :param file: filename
+        :type file: str
+        """
+        with open(file, 'r', encoding="UTF-8") as handle:
+            parsed = load_tree(handle.read())
             for item in parsed[1:]:
-                match item:
-                    case ["symbol", *_]:
-                        target.append(LibrarySymbol.parse(item))
-                    case _:
-                        print(f"!!! Library {item}")
+                if item[0] == 'symbol':
+                    target.append(LibrarySymbol.parse(cast(SEXP_T, item)))
+                elif item[0] == 'generator':
+                    if item[1] != 'kicad_symbol_editor':
+                        logger.warning('generator is %s', item[1])
+                elif item[0] != 'version':
+                    raise ValueError(f"unknown library element {item}")

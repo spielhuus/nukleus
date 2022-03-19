@@ -3,10 +3,9 @@ from __future__ import annotations
 from typing import List, cast
 
 from .SchemaElement import POS_T
-from .PositionalElement import PositionalElement
+from .PositionalElement import PositionalElement, ffmt
 from .Property import Property
 from .TextEffects import TextEffects
-from .Utils import ffmt
 from ..SexpParser import SEXP_T
 
 class GlobalLabel(PositionalElement):

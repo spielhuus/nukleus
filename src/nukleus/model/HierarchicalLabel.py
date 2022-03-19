@@ -7,9 +7,8 @@ from nukleus.SexpParser import SEXP_T
 from nukleus.model.TextEffects import TextEffects
 
 from .SchemaElement import POS_T
-from .PositionalElement import PositionalElement
+from .PositionalElement import PositionalElement, ffmt
 from .TextEffects import TextEffects
-from .Utils import ffmt
 
 class HierarchicalLabelShape(Enum):
     """

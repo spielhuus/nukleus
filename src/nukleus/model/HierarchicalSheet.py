@@ -2,10 +2,9 @@ from __future__ import annotations
 
 from typing import List, Tuple, cast
 
-from .Utils import ffmt
 from .StrokeDefinition import StrokeDefinition, rgb
 from .SchemaElement import POS_T, PTS_T
-from .PositionalElement import PositionalElement
+from .PositionalElement import PositionalElement, ffmt
 from .Property import Property
 from .Pin import Pin
 from .HierarchicalSheetPin import HierarchicalSheetPin

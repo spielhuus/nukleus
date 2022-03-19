@@ -8,8 +8,8 @@ from nukleus.model.TextEffects import TextEffects
 
 from .FillType import FillType, get_fill_str, get_fill_type
 from .SchemaElement import POS_T, PTS_T
+from .PositionalElement import ffmt
 from .StrokeDefinition import StrokeDefinition
-from .Utils import ffmt
 from ..SexpParser import SEXP_T
 
 

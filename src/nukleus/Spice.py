@@ -1,8 +1,4 @@
-import os
-import re
 from typing import Dict, List, Set, Tuple
-
-import numpy as np
 
 from . import Circuit
 from .model import POS_T, GlobalLabel, LocalLabel, Pin, Symbol, Wire
@@ -17,7 +13,8 @@ class Net(object):
         self.named = named
 
     def __str__(self) -> str:
-        return f"Net({self.identifier}, {self.coords} {self.identifier} named={'True' if self.named else 'False'})"
+        return(f"Net({self.identifier}, {self.coords} "
+               f"{self.identifier} named={'True' if self.named else 'False'})")
 
 
 def netlist(schema: Schema) -> Dict[POS_T, Net]:

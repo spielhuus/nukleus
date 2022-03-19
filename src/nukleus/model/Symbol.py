@@ -13,12 +13,11 @@ import numpy as np
 from ..SexpParser import SEXP_T
 from .LibrarySymbol import LibrarySymbol
 from .Pin import Pin, PinList
-from .PositionalElement import PositionalElement
+from .PositionalElement import PositionalElement, ffmt
 from .Property import Property
 from .SchemaElement import POS_T, SchemaElement
 from .TextEffects import Justify, TextEffects
 from .GraphicItem import f_coord
-from .Utils import ffmt
 
 
 def isUnit(symbol: LibrarySymbol, unit: int) -> bool:
