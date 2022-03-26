@@ -9,7 +9,6 @@ from .PositionalElement import PositionalElement, ffmt
 from .Property import Property
 from .SchemaElement import POS_T, SchemaElement
 
-
 class PinRef():
     """Sympol Pin Reference"""
     def __init__(self, number, identifier) -> None:
@@ -118,20 +117,8 @@ class Symbol(PositionalElement):
                 return True
         return False
 
-    def getPins(self) -> PinList:
-        _pins = PinList()
-        single_unit = False
-        assert self.library_symbol, 'library symbol is not set'
-        for subsym in self.library_symbol.units:
-            unit = int(subsym.identifier.split('_')[-2])
-            single_unit = True if unit == 0 else single_unit
-            if unit == 0 or unit == self.unit or single_unit:
-                _pins.extend(self, subsym.pins)
-
-        return _pins
-
     @classmethod
-    def new(cls, ref: str, lib_name: str, library_symbol: LibrarySymbol, unit: int = 0) -> Symbol:
+    def new(cls, ref: str, lib_name: str, library_symbol: LibrarySymbol, unit: int = 1) -> Symbol:
         """
         Create a new Symbol.
         The new symbol unit is created from the library symbol.

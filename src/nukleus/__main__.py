@@ -39,12 +39,20 @@ def main() -> int:
 
     for action in args.action:
         if action == 'bom':
+            if schema:
+                print('No Schema loaded.')
+                sys.exit(1)
+            assert schema, "no schema loaded"
             bom_res = bom(schema)
             print(bom_res)
         if action == 'plot':
             if args.output is None:
                 print('Output file is required for plot schematic.')
                 sys.exit(1)
+            if schema:
+                print('No Schema loaded.')
+                sys.exit(1)
+            assert schema, "no schema loaded"
             plot(schema, args.output, border=True)
         if action == 'pcb':
             if args.output is None:

@@ -8,14 +8,12 @@ import SCons.Tool
 from SCons.Errors import StopError
 
 from ..Bom import bom
-from ..ERC import erc
 from ..ParserV6 import ParserV6
 from ..PcbUtils import PCB, Layer
 from ..Plot import plot
 from ..PlotPcb import drc, pcb, pdf
 from ..Reports import combine_reports, report_parser
 from ..Schema import Schema
-from ..Spice import netlist
 
 # The Scons bindings
 

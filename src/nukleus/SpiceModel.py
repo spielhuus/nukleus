@@ -3,9 +3,6 @@ import os
 import re
 from typing import List
 
-#from .model import POS_T, GlobalLabel, LocalLabel, Pin, Symbol, Wire
-#from .Schema import Schema
-
 
 class spice_model:
     def __init__(self, keys, path, includes, content):

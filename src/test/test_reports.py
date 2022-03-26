@@ -52,9 +52,10 @@ class TestReports(unittest.TestCase):
         self.assertEqual(2, len(out))
         self.assertEqual(8, len(out['drc']))
 
-    def test_parse_erc(self):
-        schema = nukleus.load_schema('samples/files/summe_v6/main.kicad_sch')
-        netlist = nukleus.Spice.netlist(schema)
-        erc_res = nukleus.erc(schema, netlist)
-        pprint.pprint(erc_res)
-        self.assertEqual(1, len(erc_res))
+#TODO
+#    def test_parse_erc(self):
+#        schema = nukleus.load_schema('samples/files/summe_v6/main.kicad_sch')
+#        netlist = nukleus.Spice.netlist(schema)
+#        erc_res = nukleus.erc(schema, netlist)
+#        pprint.pprint(erc_res)
+#        self.assertEqual(1, len(erc_res))

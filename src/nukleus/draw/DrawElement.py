@@ -1,26 +1,24 @@
 from abc import ABC, abstractmethod
 
-from typing import List, Tuple
+from typing import List
 from nptyping import NDArray, Float
 
 from nukleus import Library
 from nukleus.model import SchemaElement, POS_T
 
-def totuple(a: NDArray[Float]) -> Tuple[float, float]:
-    print(f"totuple: {type(a)}: {a}")
+def totuple(a: NDArray[Float]) -> POS_T:
     try:
         return tuple(totuple(round(i, 2)) for i in a)
     except TypeError:
-        print(f"tuple type error with: {a}")
         return a
 
 
 class LogicException(Exception):
-    pass
+    """Exception is raised when a wrong logic is applied."""
 
 
 class PinNotFoundError(Exception):
-    pass
+    """Exception is thrown when a Pin can not be found."""
 
 
 class DrawElement(ABC):

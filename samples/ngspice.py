@@ -4,6 +4,7 @@ sys.path.append('src')
 sys.path.append('../src')
 
 import matplotlib.pyplot as plt
+from nukleus.Netlist import Netlist
 
 import os
 import nukleus
@@ -29,8 +30,8 @@ circuit.models(models)
 #          JackOut(name='OUT')):
 #    circuit.subcircuit(c)
 
-list = nukleus.Spice.netlist(schema)
-nukleus.Spice.schema_to_spice(schema, circuit, list)
+netlist = Netlist(schema)
+netlist.spice(circuit)
 circuit.V("1", "+15V", "GND", "DC 15V")
 circuit.V("2", "-15V", "GND", "DC -15V")
 circuit.V("3", "INPUT", "GND", "DC 5V AC 5 SIN(0 5V 1k)")

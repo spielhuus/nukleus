@@ -74,7 +74,7 @@ class Pin():
 #        verts = np.round(verts, 3)
 #        return verts
 
-    def calc_pos(self, pos: POS_T, offset=0) -> POS_T:
+    def calc_pos(self, pos: POS_T, offset: float=0) -> POS_T:
         theta = np.deg2rad(self.angle)
         rot = np.array([math.cos(theta), math.sin(theta)])
         verts = np.array([pos, pos + rot * self.length + offset])
@@ -108,6 +108,12 @@ class PinImpl(Pin):
                          length=pin.length, hidden=pin.hidden, name=pin.name, number=pin.number)
         self.parent = parent
 
+    def __eq__(self, __o: object) -> bool:
+        if not isinstance(__o, PinImpl):
+            return False
+        other_pin = cast(PinImpl, __o)
+        return(self.parent.identifier == other_pin.parent.identifier and
+               self.number == other_pin.number)
 
 class PinList():
     def __init__(self):
@@ -128,5 +134,5 @@ class PinList():
         return len(self.dict)
 
     def __getitem__(self, key: str):
-        assert key in self.dict, f'key not in PinList: {key}'
+        assert key in self.dict, f'key not in PinList: {key} {self.dict.keys()}'
         return self.dict[key]

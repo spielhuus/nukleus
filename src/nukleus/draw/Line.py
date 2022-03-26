@@ -44,17 +44,6 @@ class Line(DrawElement):
         self.element = Wire(pts=(_pos, _end_pos))
         return (self, self.element, self.element.pts[1])
 
-#    def at(self, pos: POS|DrawElement):
-#        print(f'LineAt: {pos}')
-#        if isinstance(pos, DrawElement):
-#            print(f'LineAtElement: {pos}')
-#            assert pos.element and isinstance(pos.element, PositionalElement)
-#            self.pos = cast(PositionalElement, pos.element).pos
-#        else:
-#            print(f'LineAtPos: {pos}')
-#            self.pos = tuple(totuple(pos))
-#        return self
-
     def at(self, pos: POS_T | PinImpl | DrawElement):
         """
         Position of the element.
@@ -65,8 +54,8 @@ class Line(DrawElement):
         """
         if isinstance(pos, PinImpl):
             pin_impl = cast(PinImpl, pos)
-            pos = transform(cast(Symbol, pin_impl.parent), transform(pin_impl))
-            self.pos = tuple(totuple(pos[0]))
+            _pos = transform(cast(Symbol, pin_impl.parent), transform(pin_impl))
+            self.pos = tuple(totuple(_pos[0]))
         elif isinstance(pos, DrawElement):
             assert pos.element and isinstance(pos.element, PositionalElement)
             self.pos = cast(PositionalElement, pos.element).pos
@@ -75,6 +64,13 @@ class Line(DrawElement):
         return self
 
     def tox(self, pos):
+        """
+        Length of the line.
+        The position can either be the xy coordinates
+        or a DrawElement.
+
+        :param pos POS_T|DrawElement: Position.
+        """
         if isinstance(pos, PinImpl):
             pin_impl = cast(PinImpl, pos)
             pos = transform(cast(Symbol, pin_impl.parent), transform(pin_impl))
@@ -88,6 +84,13 @@ class Line(DrawElement):
         return self
 
     def toy(self, pos):
+        """
+        Length of the line.
+        The position can either be the xy coordinates
+        or a DrawElement.
+
+        :param pos POS_T|DrawElement: Position.
+        """
         if isinstance(pos, PinImpl):
             pin_impl = cast(PinImpl, pos)
             pos = transform(cast(Symbol, pin_impl.parent), transform(pin_impl))
@@ -97,26 +100,45 @@ class Line(DrawElement):
             self._rel_length_y = cast(PositionalElement, pos.element).pos[1]
         else:
             self._rel_length_y = tuple(totuple(pos))[1]
-        #self._rel_length_y = pos[0][1]
         return self
 
-    def length(self, len: float):
-        """The length of the line."""
-        self._length = len
+    def length(self, length: float):
+        """
+        Length of the line.
+
+        :param pos float: Length of the line.
+        """
+        self._length = length
         return self
 
     def right(self):
+        """
+        Orientation of the line.
+
+        """
         self.orientation = 'right'
         return self
 
     def left(self):
+        """
+        Orientation of the line.
+
+        """
         self.orientation = 'left'
         return self
 
     def up(self):
+        """
+        Orientation of the line.
+
+        """
         self.orientation = 'up'
         return self
 
     def down(self):
+        """
+        Orientation of the line.
+
+        """
         self.orientation = 'down'
         return self

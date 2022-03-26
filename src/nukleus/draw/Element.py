@@ -1,7 +1,5 @@
 from typing import Optional, Tuple, cast
 
-import numpy as np
-
 from ..Library import Library
 from ..model.LibrarySymbol import LibrarySymbol
 from ..model.Property import Property
@@ -9,7 +7,7 @@ from ..model.Pin import Pin, PinImpl
 from ..model.SchemaElement import POS_T
 from ..model.PositionalElement import PositionalElement
 from ..model.Symbol import Symbol
-from ..model.Utils import pinPosition, placeFields, transform
+from ..model.Utils import placeFields, transform, sub, get_pins
 from .DrawElement import DrawElement, PinNotFoundError, totuple
 
 
@@ -80,15 +78,14 @@ class Element(DrawElement):
                     Property(key='Spice_Primitive', value='R'))
 
         # get the anchor pins
-        pins = self.element.getPins()
+        pins = get_pins(self.element)
         _pin_numbers = [x.number[0] for x in pins]
         if self._anchor == '0' and len(pins) > 0:
             self._anchor = _pin_numbers[-1]
 
         # calculate position
         _pos = self.pos if self.pos is not None else last_pos
-        self.element.pos = tuple(totuple(_pos -
-                                         transform(self.element, transform(pins[self._anchor]))[0]))
+        self.element.pos = sub(_pos, transform(self.element, transform(pins[self._anchor]))[0])
         # when the anchor pin is found, set the next pos
         if self._anchor != '0':
             _last_pos = tuple(totuple(transform(self.element,

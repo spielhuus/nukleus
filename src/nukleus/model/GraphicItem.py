@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import List, Tuple, cast
 
-import numpy as np
-
 from nukleus.model.TextEffects import TextEffects
 
 from .FillType import FillType, get_fill_str, get_fill_type
@@ -213,9 +211,9 @@ class Arc(GraphicItem):
     """ The arc token defines a graphical arc in a symbol definition. """
 
     def __init__(self, **kwargs) -> None:
-        self.start: float = kwargs.get('start', (0, 0))
-        self.mid: float = kwargs.get('mid', (0, 0))
-        self.end: float = kwargs.get('end', (0, 0))
+        self.start: POS_T = kwargs.get('start', (0, 0))
+        self.mid: POS_T = kwargs.get('mid', (0, 0))
+        self.end: POS_T = kwargs.get('end', (0, 0))
         self.stroke_definition: StrokeDefinition = kwargs.get(
             'stroke_definition', StrokeDefinition())
         super().__init__(kwargs.get('fill', FillType.NONE))

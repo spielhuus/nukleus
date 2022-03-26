@@ -1,11 +1,4 @@
-from typing import Dict, List, Set, Tuple
-
-import numpy as np
-
-from . import Circuit
-from .model import POS_T, GlobalLabel, LocalLabel, Pin, Symbol, Wire
 from .Schema import Schema
-
 
 def _number(input):
     numbers = ''

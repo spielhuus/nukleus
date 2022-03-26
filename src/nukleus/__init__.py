@@ -1,13 +1,8 @@
-import json
-import os
-import shutil
-import sys
 from typing import List
 
 from . import draw, model, spice
 from .Bom import bom
 from .Circuit import Circuit
-from .ERC import erc
 from .Library import Library
 from .ParserV6 import ParserV6
 from .PcbUtils import PCB, Layer
@@ -15,7 +10,7 @@ from .Plot import plot
 from .PlotPcb import pcb, pdf
 from .Reports import report_parser
 from .Schema import Schema
-from .Spice import netlist, schema_to_spice
+from .Netlist import Netlist
 from .SpiceModel import load_spice_models
 
 # SYMBOL_SEARCH_PATH_POSIX = [
@@ -39,13 +34,11 @@ from .SpiceModel import load_spice_models
 def load_pcb(filename: str):
     return PCB(filename)
 
-
 def load_schema(filename: str):
     schema = Schema()
     parser = ParserV6()
     parser.schema(schema, filename)
     return schema
-
 
 def spice_path(paths: List[str]):
     return load_spice_models(paths)

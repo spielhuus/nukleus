@@ -1,12 +1,11 @@
 import os
-import shutil
 import logging
 import zipfile
 from PyPDF2 import PdfFileMerger, PdfFileReader
 
 import pcbnew
 
-from .PcbUtils import PCB, Layer
+from .PcbUtils import PCB
 
 logger = logging.getLogger(__name__)
 

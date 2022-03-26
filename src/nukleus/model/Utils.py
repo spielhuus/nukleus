@@ -4,15 +4,17 @@ from collections import deque
 import re
 import math
 import numpy as np
+from nptyping import NDArray, Float
 
 from .LibrarySymbol import LibrarySymbol
-from .Pin import Pin
+from .Pin import Pin, PinList
 from .Symbol import Symbol
 from .GraphicItem import Polyline, Rectangle
 from .TextEffects import Justify
-from .SchemaElement import PTS_T
+from .SchemaElement import POS_T, PTS_T
 
-def f_coord(arr): 
+def f_coord(arr) -> PTS_T: 
+    arr = np.array(arr)
     return [(np.min(arr[..., 0]), np.min(arr[..., 1])),
             (np.max(arr[..., 0]), np.max(arr[..., 1]))]
 MIRROR = {
@@ -21,6 +23,20 @@ MIRROR = {
     'y': np.array((-1, 0, 0, -1)),
     # 3: np.array((0, -1)),
 }
+
+def totuple(a: NDArray[Float]):
+    if len(a) == 0:
+        return a
+    if isinstance(a[0], np.ndarray):
+        return tuple(map(tuple, a))
+    return (a[0], a[1])
+
+
+def add(pos: POS_T, add: POS_T) -> POS_T:
+    return totuple(np.array(pos) + np.array(add))
+
+def sub(pos: POS_T, sub: POS_T) -> POS_T:
+    return totuple(np.array(pos) - np.array(sub))
 
 def transform(symbol: Symbol|Pin, path=(0, 0)) -> PTS_T:
     """
@@ -41,14 +57,14 @@ def transform(symbol: Symbol|Pin, path=(0, 0)) -> PTS_T:
         verts = np.matmul(verts, trans)
         verts = (symbol.pos + verts)
         verts = np.round(verts, 3)
-        return verts
+        return totuple(verts)
 
     if isinstance(symbol, Pin):
         theta = np.deg2rad(symbol.angle)
         rot = np.array([math.cos(theta), math.sin(theta)])
         verts = np.array([symbol.pos, symbol.pos + rot * symbol.length])
         verts = np.round(verts, 3)
-        return verts
+        return totuple(verts)
 
     raise TypeError(f'unknown type {type(symbol)}')
 
@@ -63,8 +79,20 @@ def is_unit(symbol: LibrarySymbol, unit: int) -> bool:
     match = re.match(r".*_(\d+)_\d+", symbol.identifier)
     if match:
         _unit = int(match.group(1))
-        return _unit in (0, unit)
+        return _unit in (0, (1 if unit == 0 else unit))
     return False
+
+def get_pins(symbol: Symbol) -> PinList:
+    _pins = PinList()
+#        single_unit = False
+    assert symbol.library_symbol, 'library symbol is not set'
+    for subsym in symbol.library_symbol.units:
+        if is_unit(subsym, symbol.unit):
+#            unit = int(subsym.identifier.split('_')[-2])
+#            single_unit = True if unit == 0 else single_unit
+#            if unit == 0 or unit == self.unit or single_unit:
+            _pins.extend(symbol, subsym.pins)
+    return _pins
 
 def symbol_size(symbol: Symbol):
     """
@@ -92,7 +120,7 @@ def symbol_size(symbol: Symbol):
 def pinPosition(symbol) -> List[int]: 
     res = deque([0, 0, 0, 0])
 
-    for pin in symbol.getPins():
+    for pin in get_pins(symbol):
         assert pin.angle <= 270, "pin angle greater then 270°"
         res[int(pin.angle / 90)] += 1
 
@@ -115,7 +143,7 @@ def placeFields(symbol: Symbol) -> None:
     positions = pinPosition(symbol)
     vis_fields = [x for x in symbol.properties if x.text_effects.hidden == False]
     _size = f_coord(transform(symbol, symbol_size(symbol)))
-    if len(symbol.getPins()) == 1:
+    if len(get_pins(symbol)) == 1:
         if positions[0] == 1:
             print("single pin, fields right")
 

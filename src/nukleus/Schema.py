@@ -1,4 +1,4 @@
-from typing import Dict, List, Type, TypeVar
+from typing import Dict, List, Type, TypeVar, cast
 
 from .model import (ElementList, GlobalLabel, Junction, LibrarySymbol,
                     LocalLabel, NoConnect, SchemaElement, Symbol, Wire, 
@@ -48,7 +48,7 @@ class Schema():
         """
         return [x for x in self.elements if isinstance(x, class_type)]
 
-    def getSymbol(self, id: str) -> LibrarySymbol:
+    def getSymbol(self, id: str, class_type: Type[T]) -> T:
         """
         Get a symbol by id. For Kicad schemas this will be the uuid.
 
@@ -57,8 +57,10 @@ class Schema():
         :return: Schema element.
         :rtype: LibrarySymbol
         """
-        return [x for x in self.get_elements(LibrarySymbol)
-                if x.identifier == id][0]
+        if id[0] == '/': # remove the slash if the id is a path
+            id = id[1:]
+        return cast(class_type, [x for x in self.elements
+                if x.identifier == id][0])
 
     def has_symbol(self, id: str) -> bool:
         return len([x for x in self.get_elements(LibrarySymbol)
@@ -69,7 +71,7 @@ class Schema():
         for symbol in self.elements:
             if isinstance(symbol, Symbol) and symbol.has_property("Reference"):
                 if self.getSymbol(
-                        symbol.library_identifier).extends != 'power':
+                        symbol.library_identifier, LibrarySymbol).extends != 'power':
                     syms.append(symbol.property("Reference").value)
         return sorted(set(syms))
 
@@ -78,11 +80,10 @@ class Schema():
         for symbol in object.__getattribute__(self, 'elements'):
             if isinstance(symbol, Symbol) and symbol.has_property("Reference"):
                 if self.getSymbol(
-                    symbol.library_identifier).extends != 'power' and \
+                    symbol.library_identifier, LibrarySymbol).extends != 'power' and \
                         symbol.property('Reference').value == name:
                     syms.append(symbol)
         return syms
-
 
     def sexp(self) -> str:
         strings: List[str] = []
@@ -101,14 +102,6 @@ class Schema():
             strings.append(f"    (company \"{self.company}\")")
         for com in sorted(self.comment.keys()):
             strings.append(f"    (comment {com} \"{self.comment[com]}\")")
-#        if len(self.comment_1) > 0:
-#            strings.append(f"    (comment 1 \"{self.comment_1}\")")
-#        if len(self.comment_2) > 0:
-#            strings.append(f"    (comment 2 \"{self.comment_2}\")")
-#        if len(self.comment_3) > 0:
-#            strings.append(f"    (comment 3 \"{self.comment_3}\")")
-#        if len(self.comment_4) > 0:
-#            strings.append(f"    (comment 4 \"{self.comment_4}\")")
         strings.append("  )")
         strings.append("")
         strings.append("  (lib_symbols")
@@ -147,22 +140,3 @@ class Schema():
         strings.append(")")
         strings.append('')
         return "\n".join(strings)
-
-    def __str__(self) -> str:
-        strings: List[str] = []
-        strings.append(f"Schema[\r\nVersion:'{self.version}'\r\n")
-        strings.append(f"generator:'{self.generator}'\r\n")
-        strings.append(f"paper:'{self.paper}'\r\n")
-        strings.append(f"uuid:{self.uuid}\r\n")
-        strings.append(f"title: {self.title}\r\n")
-        strings.append(f"date: {self.date}\r\n")
-        strings.append(f"rev: {self.rev}\r\n")
-        strings.append(f"comment 1: '{self.comment_1}'\r\n")
-        strings.append(f"comment 2: '{self.comment_2}'\r\n")
-        strings.append(f"comment 3: '{self.comment_3}'\r\n")
-        strings.append(f"comment 4: '{self.comment_4}'\r\n")
-
-        for e in self.elements:
-            strings.append(e.__str__() + '\r\n')
-        strings.append("]")
-        return "".join(strings)

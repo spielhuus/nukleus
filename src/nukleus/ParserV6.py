@@ -115,13 +115,32 @@ class ParserV6():
                     element = factory.parse(cast(SEXP_T, item))
                     if isinstance(element, Symbol):
                         element.library_symbol = schema.getSymbol(
-                            element.library_identifier)
+                            element.library_identifier, LibrarySymbol)
                     schema.append(element)
 
     @classmethod
     def libraries(cls, target, file: str) -> None:
         """
         Open a schema from the filesystem.
+
+        :param file: filename
+        :type file: str
+        """
+        with open(file, 'r', encoding="UTF-8") as handle:
+            parsed = load_tree(handle.read())
+            for item in parsed[1:]:
+                if item[0] == 'symbol':
+                    target.append(LibrarySymbol.parse(cast(SEXP_T, item)))
+                elif item[0] == 'generator':
+                    if item[1] != 'kicad_symbol_editor':
+                        logger.warning('generator is %s', item[1])
+                elif item[0] != 'version':
+                    raise ValueError(f"unknown library element {item}")
+
+    @classmethod
+    def pcb(cls, target, file: str) -> None:
+        """
+        Open a PCB from the filesystem.
 
         :param file: filename
         :type file: str

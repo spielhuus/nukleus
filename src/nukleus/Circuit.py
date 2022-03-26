@@ -185,9 +185,6 @@ class SubCircuit(Circuit):
     __name__: str = ""
     __nodes__: List[str] = []
 
-#    def __init__(self):
-#        super().__init__()
-
     def __str__(self):
         """Return the formatted subcircuit definition."""
 

@@ -1,15 +1,19 @@
 import sys
 import unittest
-
+import numpy as np
 sys.path.append("src")
 sys.path.append("../src")
 
 from nukleus.Library import Library
 from nukleus.model.Symbol import Symbol
-from nukleus.model.Utils import pinPosition, placeFields, is_unit
+from nukleus.model.Utils import pinPosition, placeFields, is_unit, totuple
 
 
 class TestUtilsPlaceFields(unittest.TestCase):
+    def test_is_totuple(self):
+        self.assertEqual(((0, 0), (0, 0)), totuple(np.array([[0, 0], [0, 0]])))
+        self.assertEqual((0, 0), totuple(np.array([0, 0])))
+
     def test_is_unit(self):
         lib = Library(['samples/files/symbols/'])
         lib_sym = lib.get('Device:R')
