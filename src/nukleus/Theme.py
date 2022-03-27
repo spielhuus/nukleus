@@ -57,5 +57,13 @@ themes = {'kicad2000': {
     'component_outline': StrokeDefinition(
         width=0.2, type='solid', color=rgb(132 / 255.0, 0, 0, 1)),
     'component_body': rgb(1, 1, 194 / 255.0, 1),
+    'global_label': {
+            'border_color': rgb(0, 0, 0, 1),
+            'border_width': 0.1,
+            'border_style': 'solid',
+            'fill_color': rgb(0.8, 0.8, 0.8, 1),
+            'hspacing': 2,
+            'vspacing': 0.35
+        }
     },
 }

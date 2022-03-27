@@ -150,10 +150,11 @@ class DrawCircle:
 
 
 class DrawText:
+    """Draw a text to the context."""
     def __init__(self, pos: POS_T, text: str, rotation, text_effects: TextEffects) -> None:
         self.pos = pos
         self.text = text
-        self.rotation = rotation
+        self.rotation = rotation if rotation < 180 else rotation-180
         self.font_face = text_effects.face
         self.font_width = text_effects.font_width
         self.font_height = text_effects.font_height
@@ -162,7 +163,8 @@ class DrawText:
         self.justify = text_effects.justify
         self.hidden = text_effects.hidden
 
-    def dimension(self, ctx) -> List[Tuple[float, float]]:
+
+    def dimension(self, ctx: cairo.Context) -> List[Tuple[float, float]]:
         layout = PangoCairo.create_layout(ctx)
         pctx = layout.get_context()
         desc = Pango.FontDescription()
@@ -181,40 +183,57 @@ class DrawText:
         return [(self.pos[0], self.pos[1]), (self.pos[0]+size_w, self.pos[1]+size_h)]
 
     def draw(self, ctx):
+        assert self.rotation in (0, 90), f'self.rotation is {self.rotation}'
         ctx.save()
 
+#        # TODO Draw pos circle
+#        ctx.set_line_width(0.1)
+#        ctx.set_source_rgba(*rgb(1, 0, 0, 1).get())
+#        ctx.arc(self.pos[0], self.pos[1], .1, 0, 100)
+#        ctx.stroke_preserve()
+#        ctx.fill()
+#        ctx.stroke()
+
         pos_x, pos_y = (self.pos[0], self.pos[1])
-        width = float(self.dimension(ctx)[1][0])
-        if Justify.LEFT in self.justify:
-            pass
-        elif Justify.RIGHT in self.justify:
-            pos_x += (pos_x - width)
-        else:
-            pos_x += (pos_x - width) / 2
+        dim = self.dimension(ctx)
+        width = float(dim[1][0])
+        height = float(dim[1][1])
+        if self.rotation == 0:
+            if Justify.LEFT in self.justify:
+                pass
+            elif Justify.RIGHT in self.justify:
+                pos_x += (pos_x - width)
+            else:
+                pos_x += (pos_x - width) / 2
 
-        height = float(self.dimension(ctx)[1][1])
-        if Justify.TOP in self.justify:
-            pass
-        elif Justify.BOTTOM in self.justify:
-            pos_y += (pos_y - height)
+            if Justify.TOP in self.justify:
+                pass
+            elif Justify.BOTTOM in self.justify:
+                pos_y += (pos_y - height)
+            else:
+                pos_y += (pos_y - height) / 2
         else:
-            pos_y += (pos_y - height) / 2
+            if Justify.LEFT in self.justify:
+                pass
+            elif Justify.RIGHT in self.justify:
+                pos_y -= (pos_x - width)
+            else:
+                pos_y -= (pos_x - width) / 2
 
-        #            x_bearing, y_bearing, width, height, x_advance, y_advance = \
-        #                self.ctx.text_extents(string)
-        #            x = x - (width + x_bearing)
-        #            #y = y - (height + y_bearing)
-        #        if Justify.TOP in text_effects.justify:
-        #            x_bearing, y_bearing, width, height, x_advance, y_advance = \
-        #                self.ctx.text_extents(string)
-        #            #x = x - (width / 2 + x_bearing)
-        #            y = y - (height + y_bearing)
+            if Justify.TOP in self.justify:
+                pass
+            elif Justify.BOTTOM in self.justify:
+                pos_x += (pos_y - height)
+            else:
+                pos_x += (pos_y - height) / 2
+
 
         ctx.translate(pos_x, pos_y)
+        ctx.set_source_rgba(*rgb(0, 0, 0, 1).get())
 
         layout = PangoCairo.create_layout(ctx)
         pctx = layout.get_context()
-        ctx.rotate(self.rotation * 3.14 / 180)
+        ctx.rotate((270 if self.rotation == 90 else self.rotation) * 3.14 / 180)
 
         # layout.set_width(pango.units_from_double(10))
         desc = Pango.FontDescription()
@@ -222,7 +241,6 @@ class DrawText:
         desc.set_family("Sans") #self.font_face)
         layout.set_font_description(desc)
         layout.set_alignment(Pango.Alignment.CENTER)
-        #layout.set_markup(f'<span font="2">{self.text}</span>')
         fo = cairo.FontOptions()
         fo.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
         PangoCairo.context_set_font_options(pctx, fo)
@@ -231,20 +249,19 @@ class DrawText:
         layout.set_text(self.text)
         PangoCairo.show_layout(ctx, layout)
 
-        #ctx.rotate(self.rotation) # * math.pi / 180.)
-
         # TODO remove draw box around text
-        size = layout.get_size()
-        size_w = float(size[0]) / Pango.SCALE
-        size_h = float(size[1]) / Pango.SCALE
-        size = (size_w, size_h)
-        ctx.set_source_rgba(*rgb(.2, .2, .2, 1).get())
-        ctx.set_line_width(0.1)
-        ctx.move_to(0, 0)
-        ctx.line_to(size[0], 0)
-        ctx.line_to(size[0], size[1])
-        ctx.line_to(0, size[1])
-        ctx.line_to(0, 0)
-        ctx.stroke_preserve()
+#        size = layout.get_size()
+#        size_w = float(size[0]) / Pango.SCALE
+#        size_h = float(size[1]) / Pango.SCALE
+#        size = (size_w, size_h)
+#        ctx.set_source_rgba(*rgb(.2, .2, .2, 1).get())
+#        ctx.set_line_width(0.1)
+#        ctx.move_to(0, 0)
+#        ctx.line_to(size[0], 0)
+#        ctx.line_to(size[0], size[1])
+#        ctx.line_to(0, size[1])
+#        ctx.line_to(0, 0)
+#        ctx.stroke_preserve()
+
         ctx.stroke()
         ctx.restore()

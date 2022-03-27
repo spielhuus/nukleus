@@ -2,10 +2,11 @@ from abc import ABC, abstractmethod
 from io import BytesIO
 from typing import IO, Dict, List, Tuple, Type, cast
 
+import cairo
 import gi
 gi.require_version('Pango', '1.0')
 gi.require_version('PangoCairo', '1.0')
-import cairo
+
 import numpy as np
 from gi.repository import Pango, PangoCairo
 
@@ -23,6 +24,8 @@ from .PlotBase import (DrawArc, DrawCircle, DrawLine, DrawPolyLine, DrawRect,
                        DrawText)
 from .Schema import Schema
 from .Theme import themes
+
+
 
 def check_notebook():
     try:
@@ -118,34 +121,131 @@ class NodeLocalLabel(Node):
     """Plot a LocalLabel."""
 
     def __init__(self, element: LocalLabel, theme: str) -> None:
-        text_effects = _merge_text_effects(
+        self.text_effects = _merge_text_effects(
             element.text_effects, themes[theme]['text_effects'])
-        self.text = DrawText(element.pos, element.text, 0, text_effects)
+        self.element = element
+        self.theme = themes[theme]
 
-    def dimension(self, ctx) -> List[float]:
-        return self.text.dimension(ctx)
+    def dimension(self, ctx) -> List[Tuple[float, float]]:
+        text = DrawText((self.element.pos[0], self.element.pos[1]),
+                        self.element.text, 0, self.text_effects)
+        return text.dimension(ctx)
 
     def draw(self, ctx) -> None:
-        return self.text.draw(ctx)
+        text = DrawText((self.element.pos[0], self.element.pos[1]),
+                        self.element.text, 0, self.text_effects)
+        text_dim = text.dimension(ctx)
+        width = text_dim[1][0] - text_dim[0][0]
+        height = text_dim[1][1] - text_dim[0][1]
+
+        x_pos = self.element.pos[0]
+        y_pos = self.element.pos[1]
+        if self.element.angle == 0:
+            x_pos = self.element.pos[0] + \
+                ((width + self.theme['global_label']['hspacing']) / 2)
+        elif self.element.angle == 90:
+            y_pos = self.element.pos[1] - \
+                ((width + self.theme['global_label']['hspacing']) / 2)
+            x_pos = self.element.pos[0] + \
+                ((height + self.theme['global_label']['vspacing']) / 2)
+        elif self.element.angle == 180:
+            x_pos = self.element.pos[0] - \
+                ((width + self.theme['global_label']['hspacing']) / 2)
+        elif self.element.angle == 270:
+            y_pos = self.element.pos[1] + \
+                ((width + self.theme['global_label']['hspacing']) / 2)
+            x_pos = self.element.pos[0] - \
+                ((height + self.theme['global_label']['vspacing']) / 2)
+
+        text = DrawText((x_pos, y_pos), self.element.text,
+                        self.element.angle, self.text_effects)
+        text.draw(ctx)
 
 
 class NodeGlobalLabel(Node):
     """Plot a global Label"""
 
     def __init__(self, element: GlobalLabel, theme: str) -> None:
-        text_effects = _merge_text_effects(
+        """
+        Create the GlobalLabel object.
+
+        :param element GlobalLabel: GlobalLabel description.
+        :param theme str: Theme name.
+        """
+        self.text_effects = _merge_text_effects(
             element.text_effects, themes[theme]['text_effects'])
-        self.text = DrawText(element.pos, element.text, 0, text_effects)
-        self.box = DrawPolyLine()
+        self.element = element
+        self.theme = themes[theme]
 
     def dimension(self, ctx) -> List[Tuple[float, float]]:
-        return self.text.dimension(ctx)
+        """
+        Get the dimension of this element.
 
-    def draw(self, ctx) -> None:
-        text_dim = self.dimension(ctx)
+        :param ctx cairo.Context: The cairo context.
+        :rtype List[Tuple[float, float]]: absolute dimension.
+        """
+        text = DrawText((self.element.pos[0], self.element.pos[1]),
+                        self.element.text, 0, self.text_effects)
+        text_dim = text.dimension(ctx)
+        width = text_dim[1][0] - text_dim[0][0]
+        height = text_dim[1][1] - text_dim[0][1]
+        box = [
+            (width + 2, - height/2 - 1),
+            (.4, - height/2 - 1),
+            (0, 0),
+            (.4, height/2 + 1),
+            (width + 2, height/2 + 1),
+            (width + 2, - height/2 - 1),
+        ]
+        return transform(self.element, box)
 
-        self.text.draw(ctx)
+    def draw(self, ctx: cairo.Context) -> None:
+        text = DrawText((self.element.pos[0], self.element.pos[1]),
+                        self.element.text, 0, self.text_effects)
+        text_dim = text.dimension(ctx)
+        width = text_dim[1][0] - text_dim[0][0]
+        height = text_dim[1][1] - text_dim[0][1]
+        box = [
+            (width + self.theme['global_label']['hspacing'],
+                -height/2 - self.theme['global_label']['vspacing']),
+            (.6, - height/2 - self.theme['global_label']['vspacing']),
+            (0, 0),
+            (.6, height/2 + self.theme['global_label']['vspacing']),
+            (width + self.theme['global_label']['hspacing'],
+                height/2 + self.theme['global_label']['vspacing']),
+            (width + self.theme['global_label']['hspacing'], -
+                height/2 - self.theme['global_label']['vspacing']),
+        ]
+        box = DrawPolyLine(transform(self.element, box),
+                           self.theme['global_label']['border_width'],
+                           self.theme['global_label']['border_color'],
+                           self.theme['global_label']['border_style'],
+                           self.theme['global_label']['fill_color'])
+        box.draw(ctx)
 
+        x_pos = self.element.pos[0]
+        y_pos = self.element.pos[1]
+        if self.element.angle == 0:
+            x_pos = self.element.pos[0] + \
+                ((width + self.theme['global_label']['hspacing']) / 2)
+        elif self.element.angle == 90:
+            y_pos = self.element.pos[1] - \
+                ((width + self.theme['global_label']['hspacing']) / 2)
+            x_pos = self.element.pos[0] + \
+                ((height + self.theme['global_label']['vspacing']) / 2)
+        elif self.element.angle == 180:
+            x_pos = self.element.pos[0] - \
+                ((width + self.theme['global_label']['hspacing']) / 2)
+        elif self.element.angle == 270:
+            y_pos = self.element.pos[1] + \
+                ((width + self.theme['global_label']['hspacing']) / 2)
+            x_pos = self.element.pos[0] - \
+                ((height + self.theme['global_label']['vspacing']) / 2)
+
+        self.text_effects.justify = []
+        text = DrawText((x_pos, y_pos),
+                        self.element.text, self.element.angle, self.text_effects)
+        text.draw(ctx)
 
 
 class NodeGraphicalText(Node):
@@ -155,7 +255,7 @@ class NodeGraphicalText(Node):
             element.text_effects, themes[theme]['text_effects'])
         self.text = DrawText(element.pos, element.text, 0, text_effects)
 
-    def dimension(self, ctx) -> List[float]:
+    def dimension(self, ctx) -> PTS_T:
         return self.text.dimension(ctx)
 
     def draw(self, ctx) -> None:
@@ -277,34 +377,63 @@ class NodeSymbol(Node):
                             line_type=pin_theme.stroke_type,
                         ))
 
-                    if (
-                        not sym.pin_numbers_hide
-                        and not sym.extends == "power"
-                    ):
+                    if (not sym.pin_numbers_hide
+                            and not sym.extends == "power"):
 
-                        pin_offset = np.array(((0, 0.1), (0.1, 0)))
-                        pin_offset[0] = -abs(pin_offset[0])
-                        pin_offset[1] = abs(pin_offset[1])
+#TODO                        pin_offset = np.array(((0, 0.1), (0.1, 0)))
+#                        pin_offset[0] = -abs(pin_offset[0])
+#                        pin_offset[1] = abs(pin_offset[1])
 
                         pin_pos = transform(element, transform(pin))
+                        t_pos_x = pin_pos[0][0]
+                        t_pos_y = pin_pos[0][1]
+
+                        if pin.angle == 0:
+                            t_pos_x += (pin_pos[1][0] - pin_pos[0][0]) / 2
+                            t_pos_y -= 0.5
+                        elif pin.angle == 90:
+                            t_pos_y += (pin_pos[0][1] - pin_pos[1][1]) / 2
+                            t_pos_x += 0.5
+                        elif pin.angle == 180:
+                            t_pos_x += (pin_pos[1][0] - pin_pos[0][0]) / 2
+                            t_pos_y -= 0.5
+                        elif pin.angle == 270:
+                            t_pos_y += (pin_pos[1][1] - pin_pos[0][1]) / 2
+                            t_pos_x += 0.5
+
                         text_effects = themes[theme]['pin_number']
                         self.texts.append(
-                            DrawText(element.pos, pin.number[0], 0, text_effects))
+                            DrawText((t_pos_x, t_pos_y), pin.number[0], 0, text_effects))
 
-                    if (
-                        pin.name[0] != "~"
+                    if (pin.name[0] != "~"
                         and not pin.hidden
-                        and not sym.extends == "power"
-                    ):
+                        and not sym.extends == "power"):
 
-                        name_position = transform(element,
-                                                  pin.calc_pos(pin.pos, sym.pin_names_offset)[1])
                         pin_pos = transform(element, transform(pin))
-                        name_position = np.array(
-                            pin_pos[1]) + sym.pin_names_offset
+                        t_pos_x = pin_pos[0][0]
+                        t_pos_y = pin_pos[0][1]
+
+                        if pin.angle == 0:
+                            print(f'0 {pin.name[0]} {pin_pos[0][0]} x {pin_pos[1][0]}')
+                            t_pos_x = pin_pos[1][0] + sym.pin_names_offset * 5
+                        elif pin.angle == 90:
+                            print(f'90 {pin.name[0]} {pin_pos[0][1]} x {pin_pos[1][1]}')
+                            t_pos_y = pin_pos[1][1] + sym.pin_names_offset * 5
+                        elif pin.angle == 180:
+                            print(f'180 {pin.name[0]} {pin_pos[0][0]} x {pin_pos[1][0]}')
+                            t_pos_x = pin_pos[0][0] - sym.pin_names_offset * 5
+                        elif pin.angle == 270:
+                            print(f'270 {pin.name[0]} {pin_pos[0][1]} x {pin_pos[1][1]}')
+                            t_pos_y = pin_pos[0][1] - sym.pin_names_offset * 5
+
+#                        name_position = transform(element,
+#                                                  pin.calc_pos(pin.pos, sym.pin_names_offset)[1])
+#                        pin_pos = transform(element, transform(pin))
+#                        name_position = np.array(
+#                            pin_pos[1]) + sym.pin_names_offset
                         text_effects = themes[theme]['pin_name']
                         self.texts.append(
-                            DrawText(name_position, pin.name[0], 0, text_effects))
+                            DrawText((t_pos_x, t_pos_y), pin.name[0], pin.angle, text_effects))
 
         # Add the visible text properties
         for field in element.properties:
@@ -329,13 +458,13 @@ class NodeSymbol(Node):
 
             self.texts.append(
                 DrawText(field.pos, field.value, angle, text_effects))
-            self.graphs.append(DrawCircle(  # TODO remove
-                field.pos,
-                .2,
-                themes[theme]["no_connect"].width,
-                rgb(1, 0, 0, 1),
-                themes[theme]["no_connect"].stroke_type
-            ))
+#            self.graphs.append(DrawCircle(  # TODO remove
+#                field.pos,
+#                .2,
+#                themes[theme]["no_connect"].width,
+#                rgb(1, 0, 0, 1),
+#                themes[theme]["no_connect"].stroke_type
+#            ))
 
     def dimension(self, ctx) -> PTS_T:
         if not self.symbol.on_schema:

@@ -10,10 +10,11 @@ from .LibrarySymbol import LibrarySymbol
 from .Pin import Pin, PinList
 from .Symbol import Symbol
 from .GraphicItem import Polyline, Rectangle
+from .GlobalLabel import GlobalLabel
 from .TextEffects import Justify
 from .SchemaElement import POS_T, PTS_T
 
-def f_coord(arr) -> PTS_T: 
+def f_coord(arr) -> PTS_T:
     arr = np.array(arr)
     return [(np.min(arr[..., 0]), np.min(arr[..., 1])),
             (np.max(arr[..., 0]), np.max(arr[..., 1]))]
@@ -38,7 +39,7 @@ def add(pos: POS_T, add: POS_T) -> POS_T:
 def sub(pos: POS_T, sub: POS_T) -> POS_T:
     return totuple(np.array(pos) - np.array(sub))
 
-def transform(symbol: Symbol|Pin, path=(0, 0)) -> PTS_T:
+def transform(symbol: Symbol|Pin|GlobalLabel, path=(0, 0)) -> PTS_T:
     """
     Transform the coordinates of a Symbol or Pin.
 
@@ -48,7 +49,7 @@ def transform(symbol: Symbol|Pin, path=(0, 0)) -> PTS_T:
     :raises TypeError: When the element is not a Symbol or Pin.
     """
     if isinstance(symbol, Symbol):
-        theta = np.deg2rad(symbol.angle)
+        theta = np.deg2rad(-symbol.angle)
         trans = np.reshape(MIRROR[symbol.mirror], (2, 2)).T
         rot = np.array([[math.cos(theta), -math.sin(theta)],
                         [math.sin(theta), math.cos(theta)]])
@@ -63,6 +64,15 @@ def transform(symbol: Symbol|Pin, path=(0, 0)) -> PTS_T:
         theta = np.deg2rad(symbol.angle)
         rot = np.array([math.cos(theta), math.sin(theta)])
         verts = np.array([symbol.pos, symbol.pos + rot * symbol.length])
+        verts = np.round(verts, 3)
+        return totuple(verts)
+
+    if isinstance(symbol, GlobalLabel):
+        theta = np.deg2rad(symbol.angle)
+        rot = np.array([[math.cos(theta), -math.sin(theta)],
+                        [math.sin(theta), math.cos(theta)]])
+        verts = np.matmul(path, rot)
+        verts = (symbol.pos + verts)
         verts = np.round(verts, 3)
         return totuple(verts)
 
@@ -117,7 +127,7 @@ def symbol_size(symbol: Symbol):
         return np.array([[0, 0], [0, 0]])
     return f_coord(np.array(sizes))
 
-def pinPosition(symbol) -> List[int]: 
+def pinPosition(symbol) -> List[int]:
     res = deque([0, 0, 0, 0])
 
     for pin in get_pins(symbol):

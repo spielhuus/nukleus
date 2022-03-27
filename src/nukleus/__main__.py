@@ -49,7 +49,7 @@ def main() -> int:
             if args.output is None:
                 print('Output file is required for plot schematic.')
                 sys.exit(1)
-            if schema:
+            if not schema:
                 print('No Schema loaded.')
                 sys.exit(1)
             assert schema, "no schema loaded"
