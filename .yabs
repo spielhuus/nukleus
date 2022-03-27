@@ -1,0 +1,26 @@
+return {
+  languages = {
+    python = {
+      tasks = {
+        run = {
+          command = '.venv/bin/python %',
+          output = 'quickfix',
+        },
+        test = {
+          command = '.venv/bin/python -m unittest discover -s src/test',
+          output = 'quickfix',
+        },
+        draw = {
+          command = '.venv/bin/python samples/draw.py',
+          output = 'quickfix',
+        },
+      },
+    },
+  },
+  tasks = {
+    build = {
+      command = 'cargo build',
+      output = 'consolation',
+    },
+  }
+}
