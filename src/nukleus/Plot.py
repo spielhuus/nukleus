@@ -29,7 +29,7 @@ from .Theme import themes
 
 def check_notebook():
     try:
-        __IPYTHON__
+        __IPYTHON__  # type: ignore
         return True
     except NameError:
         return False
@@ -551,7 +551,7 @@ class ElementFactory:
         for element in schema.elements:
             creator = self._creators.get(type(element))
             if creator:
-                self.nodes.append(creator(element, theme))
+                self.nodes.append(creator(element, theme))  # type: ignore
             elif not isinstance(
                     element, (LibrarySymbol, SymbolInstance, HierarchicalSheetInstance)):
                 print(f'element not found {type(element)}')

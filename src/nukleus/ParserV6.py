@@ -4,6 +4,7 @@ import logging
 
 from nukleus.model.BusEntry import BusEntry
 
+from .PCB import PCB
 from .model.Bus import Bus
 from .model.Image import Image
 from .model.GlobalLabel import GlobalLabel
@@ -19,6 +20,8 @@ from .model.NoConnect import NoConnect
 from .model.Symbol import Symbol
 from .model.SymbolInstance import SymbolInstance
 from .model.Wire import Wire
+from .model.General import General
+from .model.Layers import Layers
 from .Schema import Schema
 from .SexpParser import load_tree
 from .SexpParser import SEXP_T
@@ -137,8 +140,7 @@ class ParserV6():
                 elif item[0] != 'version':
                     raise ValueError(f"unknown library element {item}")
 
-    @classmethod
-    def pcb(cls, target, file: str) -> None:
+    def pcb(self, target: PCB, file: str) -> None:
         """
         Open a PCB from the filesystem.
 
@@ -153,5 +155,16 @@ class ParserV6():
                 elif item[0] == 'generator':
                     if item[1] != 'kicad_symbol_editor':
                         logger.warning('generator is %s', item[1])
+                elif item[0] == 'host':
+                    if item[1] != 'pcbnew':
+                        logger.warning('generator is %s %s', item[1], item[2])
+                elif item[0] == 'general':
+                    target.elements.append(General.parse(item))
+                elif item[0] == 'layers':
+                    target.elements.append(Layers.parse(item))
+                elif item[0] == 'page':
+                    target.paper = item[1]
+                elif item[0] == 'title_block':
+                    self._title_block(target, cast(SEXP_T, item))
                 elif item[0] != 'version':
                     raise ValueError(f"unknown library element {item}")

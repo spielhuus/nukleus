@@ -10,7 +10,7 @@ from nukleus.ParserV6 import ParserV6
 
 class TestParserV6(unittest.TestCase):
 
-    def test_parse_summe(self):
+    def test_parse_pcb(self):
         pcb = PCB()
         parser = ParserV6()
         parser.pcb(pcb, "samples/files/produkt/main.kicad_pcb")

@@ -140,8 +140,8 @@ class TestNetlist(unittest.TestCase):
         circuit.models(models)
         netlist.spice(circuit)
         self.assertEqual(4, len(circuit.netlist))
-        self.assertEqual('R3 INPUT 1 100k', circuit.netlist[0].__str__())
-        self.assertEqual('R4 1 IN_1 100k', circuit.netlist[1].__str__())
-        self.assertEqual('R5 OUTPUT IN_1 1k', circuit.netlist[2].__str__())
+        self.assertEqual('R3 1 INPUT 100k', circuit.netlist[0].__str__())
+        self.assertEqual('R4 IN_1 1 100k', circuit.netlist[1].__str__())
+        self.assertEqual('R5 IN_1 OUTPUT 1k', circuit.netlist[2].__str__())
         self.assertEqual('XU1 IN_1 1 GND -15V NC NC NC +15V TL072c',
                          circuit.netlist[3].__str__())
