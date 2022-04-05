@@ -22,6 +22,13 @@ from .model.SymbolInstance import SymbolInstance
 from .model.Wire import Wire
 from .model.General import General
 from .model.Layers import Layers
+from .model.PcbSetup import PcbSetup
+from .model.Footprint import Footprint
+from .model.Net import Net
+from .model.PcbSegment import PcbSegment
+from .model.PcbVia import PcbVia
+from .model.PcbZone import PcbZone
+from .model.PcbGraphicItems import PcbLine, PcbText
 from .Schema import Schema
 from .SexpParser import load_tree
 from .SexpParser import SEXP_T
@@ -162,9 +169,25 @@ class ParserV6():
                     target.elements.append(General.parse(item))
                 elif item[0] == 'layers':
                     target.elements.append(Layers.parse(item))
-                elif item[0] == 'page':
+                elif item[0] == 'page' or item[0] == 'paper':
                     target.paper = item[1]
                 elif item[0] == 'title_block':
                     self._title_block(target, cast(SEXP_T, item))
+                elif item[0] == 'setup':
+                    target.elements.append(PcbSetup.parse(cast(SEXP_T, item)))
+                elif item[0] == 'net':
+                    target.elements.append(Net.parse(cast(SEXP_T, item)))
+                elif item[0] == 'footprint':
+                    target.elements.append(Footprint.parse(cast(SEXP_T, item)))
+                elif item[0] == 'gr_line':
+                    target.elements.append(PcbLine.parse(cast(SEXP_T, item)))
+                elif item[0] == 'gr_text':
+                    target.elements.append(PcbText.parse(cast(SEXP_T, item)))
+                elif item[0] == 'segment':
+                    target.elements.append(PcbSegment.parse(cast(SEXP_T, item)))
+                elif item[0] == 'via':
+                    target.elements.append(PcbVia.parse(cast(SEXP_T, item)))
+                elif item[0] == 'zone':
+                    target.elements.append(PcbZone.parse(cast(SEXP_T, item)))
                 elif item[0] != 'version':
                     raise ValueError(f"unknown library element {item}")
