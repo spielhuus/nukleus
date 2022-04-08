@@ -4,7 +4,7 @@ from collections import deque
 import re
 import math
 import numpy as np
-from nptyping import NDArray, Float
+from nptyping import NDArray, Shape, Float
 
 from .LibrarySymbol import LibrarySymbol
 from .Pin import Pin, PinList
@@ -13,9 +13,11 @@ from .GraphicItem import Polyline, Rectangle
 from .GlobalLabel import GlobalLabel
 from .TextEffects import Justify
 from .SchemaElement import POS_T, PTS_T
+from .Footprint import Footprint
 
 def f_coord(arr) -> PTS_T:
     arr = np.array(arr)
+    print(arr)
     return [(np.min(arr[..., 0]), np.min(arr[..., 1])),
             (np.max(arr[..., 0]), np.max(arr[..., 1]))]
 MIRROR = {
@@ -25,7 +27,7 @@ MIRROR = {
     # 3: np.array((0, -1)),
 }
 
-def totuple(a: NDArray[Float]):
+def totuple(a: NDArray[Shape["2, 2"], Float]):
     if len(a) == 0:
         return a
     if isinstance(a[0], np.ndarray):
@@ -34,10 +36,13 @@ def totuple(a: NDArray[Float]):
 
 
 def add(pos: POS_T, add: POS_T) -> POS_T:
-    return totuple(np.array(pos) + np.array(add))
+    return totuple(np.round(np.array(pos) + np.array(add), 3))
 
 def sub(pos: POS_T, sub: POS_T) -> POS_T:
-    return totuple(np.array(pos) - np.array(sub))
+    return totuple(np.round(np.array(pos) - np.array(sub), 3))
+
+def mul(pos: POS_T, mul: POS_T) -> POS_T:
+    return totuple(np.round(np.array(pos) * np.array(mul), 3))
 
 def transform(symbol: Symbol|Pin|GlobalLabel, path=(0, 0)) -> PTS_T:
     """
@@ -64,6 +69,15 @@ def transform(symbol: Symbol|Pin|GlobalLabel, path=(0, 0)) -> PTS_T:
         theta = np.deg2rad(symbol.angle)
         rot = np.array([math.cos(theta), math.sin(theta)])
         verts = np.array([symbol.pos, symbol.pos + rot * symbol.length])
+        verts = np.round(verts, 3)
+        return totuple(verts)
+
+    if isinstance(symbol, Footprint):
+        theta = np.deg2rad(symbol.angle)
+        rot = np.array([[math.cos(theta), -math.sin(theta)],
+                        [math.sin(theta), math.cos(theta)]])
+        verts = np.matmul(path, rot)
+        verts = (symbol.pos + verts)
         verts = np.round(verts, 3)
         return totuple(verts)
 

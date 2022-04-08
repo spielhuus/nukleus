@@ -6,11 +6,11 @@ from nptyping import NDArray, Float
 from nukleus import Library
 from nukleus.model import SchemaElement, POS_T
 
-def totuple(a: NDArray[Float]) -> POS_T:
-    try:
-        return tuple(totuple(round(i, 2)) for i in a)
-    except TypeError:
-        return a
+#def totuple(a: NDArray[Float]) -> POS_T:
+#    try:
+#        return tuple(totuple(round(i, 2)) for i in a)
+#    except TypeError:
+#        return a
 
 
 class LogicException(Exception):

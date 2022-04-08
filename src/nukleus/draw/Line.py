@@ -4,9 +4,9 @@ import numpy as np
 
 from nukleus import Library
 from nukleus.model import POS_T, PinImpl, PositionalElement, Wire, Symbol
-from ..model.Utils import transform
+from ..model.Utils import transform, add, mul, totuple
 
-from .DrawElement import DrawElement, totuple
+from .DrawElement import DrawElement
 
 ORIENTATION = {
     'left': np.array([1, 0]),
@@ -20,7 +20,7 @@ class Line(DrawElement):
     """Place a connection on the schematic."""
     def __init__(self):
         self.pos: POS_T | None = None
-        self._length = 0
+        self._length: float = 0.0
         self._rel_length_x: float = 0
         self._rel_length_y: float = 0
         self.orientation = 'left'
@@ -30,19 +30,20 @@ class Line(DrawElement):
         _pos: POS_T = self.pos if self.pos is not None else last_pos
         _end_pos: POS_T = (0, 0)
         if self._rel_length_x != 0:
+            print("get from x")
             _end_pos = (self._rel_length_x, _pos[1])
         elif self._rel_length_y != 0:
+            print("get from y")
             _end_pos = (_pos[0], self._rel_length_y)
         else:
             l = unit if self._length == 0 else self._length
-            _end_pos = tuple(totuple(_pos + (ORIENTATION[self.orientation] *
-                                             np.array([l, l]))))
+            _end_pos = add(_pos, mul(ORIENTATION[self.orientation], (l, l)))
 
-        assert isinstance(_pos, Tuple), f'_pos is not a tuble : {type(_pos)}'
+        assert isinstance(_pos, Tuple), f'_pos is not a tuple : {type(_pos)}'
         assert isinstance(
-            _end_pos, Tuple), f'_pos is not a tuble : {type(_end_pos)}'
-        self.element = Wire(pts=(_pos, _end_pos))
-        return (self, self.element, self.element.pts[1])
+            _end_pos, Tuple), f'_pos is not a tuple : {type(_end_pos)}'
+        self.element = Wire(pts=[_pos, _end_pos])
+        return (self, self.element, self.element.pts[1], None)
 
     def at(self, pos: POS_T | PinImpl | DrawElement):
         """

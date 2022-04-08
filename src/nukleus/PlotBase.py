@@ -1,4 +1,5 @@
 from typing import List, Tuple
+import math
 
 import gi
 gi.require_version('Pango', '1.0')
@@ -92,26 +93,40 @@ class DrawRect:
 
 class DrawArc:
     def __init__(self, start: POS_T, mid: POS_T, end: POS_T, width: float, color: rgb, type: str, fill: rgb | None = None) -> None:
-        self.start = start
-        self.med = mid
-        self.end = end
+        self.x0 = mid[0]
+        self.y0 = mid[1]
+        self.x1 = start[0]
+        self.y1 = start[1]
+        self.x2 = end[0]
+        self.y2 = end[1]
+        self.radius = math.hypot(self.x1-self.x0, self.y1 - self.y0)
+        x = self.x0-self.radius
+        y = self.y0-self.radius
+        width = 2*self.radius
+        height = 2*self.radius
+        self.startAngle = (180/math.pi*math.atan2(self.y1-self.y0, self.x1-self.x0))
+        self.endAngle = (180/math.pi*math.atan2(self.y2-self.y0, self.x2-self.x0))
+
         self.width = width
         self.color = color
         self.type = type
         self.fill = fill
 
     def dimension(self, _):
-        return f_coord(np.array(self.start))
+        return f_coord([(self.x0, self.y0)])
+#        return [(self.x0-self.radius, self.y0-self.radius),
+#                (self.x1+self.radius, self.y1+self.radius),
+#                (self.x2+self.radius, self.y2+self.radius)]
 
     def draw(self, ctx):
         ctx.set_source_rgba(*self.color.get())
         ctx.set_line_width(self.width)
-        ctx.move_to(self.start[0], self.start[1])
-        ctx.arc(self.start[0], self.start[1], self.med[0], 0, 100)
+        #ctx.move_to(self.x0, self.x1)
+        ctx.arc(self.x0, self.y0, self.radius, self.startAngle * (math.pi / 180), self.endAngle * (math.pi / 180))
         ctx.stroke_preserve()
-        if self.fill:
-            ctx.set_source_rgba(*self.fill.get())
-            ctx.fill()
+        #if self.fill:
+        #    ctx.set_source_rgba(*self.fill.get())
+        #    ctx.fill()
         ctx.stroke()
 
 
@@ -137,16 +152,60 @@ class DrawCircle:
         self.fill = fill
 
     def dimension(self, _):
-        return [(self.pos[0]-self.radius, self.pos[1]-self.radius),
-                (self.pos[0]+self.radius, self.pos[1]+self.radius)]
+        return f_coord(self.pos)
+#        return [(self.pos[0]-self.radius, self.pos[1]-self.radius),
+#                (self.pos[0]+self.radius, self.pos[1]+self.radius)]
 
     def draw(self, ctx):
         ctx.set_line_width(self.width)
         ctx.set_source_rgba(*self.color.get())
-        ctx.arc(self.pos[0], self.pos[1], self.radius, 0, 100)
+        ctx.arc(self.pos[0], self.pos[1], self.radius, 0, 40)
         ctx.stroke_preserve()
-        ctx.fill()
+        #ctx.fill()
         ctx.stroke()
+
+
+class DrawElipse:
+    """Draw a circle"""
+
+    def __init__(self, pos: POS_T, radius1: float, radius2: float, width: float, color: rgb, type: str, fill: rgb | None = None) -> None:
+        """
+        Initialize a Circle object.
+
+        :param pos POS_T: Center of the circle.
+        :param radius1 float: Radius of the circle.
+        :param radius2 float: Radius of the circle.
+        :param width float: Line width.
+        :param color rgb: Line color.
+        :param type str: Line type.
+        :param fill rgb|None: Fill color, default is no fill.
+        """
+        self.pos = pos
+        self.radius1 = radius1
+        self.radius2 = radius2
+        self.width = width
+        self.color = color
+        self.type = type
+        self.fill = fill
+
+    def dimension(self, _):
+        return f_coord(self.pos)
+
+    def draw(self, ctx):
+        ctx.save()
+        radius = self.radius1
+        if self.radius1 > self.radius2:
+            ctx.scale(self.radius1/self.radius2, 1)
+        else:
+            radius = self.radius2
+            ctx.scale(1, self.radius2/self.radius1)
+        ctx.set_line_width(self.width)
+        ctx.set_source_rgba(*self.color.get())
+        ctx.arc(self.pos[0], self.pos[1], radius, 0, 100)
+        ctx.stroke_preserve()
+        #ctx.fill()
+        ctx.stroke()
+        ctx.restore()
 
 
 class DrawText:
@@ -183,7 +242,7 @@ class DrawText:
         return [(self.pos[0], self.pos[1]), (self.pos[0]+size_w, self.pos[1]+size_h)]
 
     def draw(self, ctx):
-        assert self.rotation in (0, 90), f'self.rotation is {self.rotation}'
+        #assert self.rotation in (0, 90), f'self.rotation is {self.rotation}'
         ctx.save()
 
 #        # TODO Draw pos circle

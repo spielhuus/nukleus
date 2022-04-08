@@ -75,8 +75,8 @@ class FootprintPad:
         pos: POS_T,
         angle: float,
         locked: bool,
-        size: float,
-        drill: str,
+        size: (float, float),
+        drill: float,
         layers: str,
         property: str,
         remove_unused_layer: str,
@@ -106,8 +106,8 @@ class FootprintPad:
         self.pos: POS_T = pos
         self.angle: float = angle
         self.locked: bool = locked
-        self.size: float = size
-        self.drill: str = drill
+        self.size: (float, float) = size
+        self.drill: float = drill
         self.layers: str = layers
         self.property: str = property
         self.remove_unused_layer: str = remove_unused_layer
@@ -142,8 +142,8 @@ class FootprintPad:
         _pos: POS_T = (0, 0)
         _angle: float = 0.0
         _locked: bool = False
-        _size: float = 0.0
-        _drill: str = ''
+        _size: (float, float) = (0, 0)
+        _drill: float = 0.0
         _layers: str = ''
         _property: str = ''
         _remove_unused_layer: str = ''
@@ -180,9 +180,9 @@ class FootprintPad:
             elif token == 'locked':
                 _locked = True
             elif token[0] == 'size':
-                _size = float(token[1])
+                _size = (float(token[1]), float(token[2]))
             elif token[0] == 'drill':
-                _drill = token[1]
+                _drill = float(token[1])
             elif token[0] == 'layers':
                 _layers = token[1]
             elif token[0] == 'property':

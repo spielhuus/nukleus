@@ -53,7 +53,7 @@ class FootprintText(FootprintGraphicsItems):
                 _unlocked = token[1]
             elif token[0] == "layer":
                 _layer = token[1]
-            elif token[0] == "hide":
+            elif token == "hide":
                 _hide = True
             elif token[0] == "effects":
                 _effects = TextEffects.parse(token)
@@ -283,7 +283,7 @@ class FootprintArc(FootprintGraphicsItems):
     def __init__(self, start: POS_T, mid: POS_T, end: POS_T, layer: str, width: float,
             stroke_definition: StrokeDefinition, fill: str, locked: bool, tstamp: str) -> None:
         self.start : POS_T = start
-        self.mid: POS_T = end
+        self.mid: POS_T = mid
         self.end: POS_T = end
         self.layer : str = layer
         self.width: float = width

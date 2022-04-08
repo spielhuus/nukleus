@@ -132,15 +132,15 @@ class Footprint():
             elif token[0] == 'attr':
                 _attributes.append(FootprintAttributes.parse(token))
             elif token[0] == 'fp_text':
-                _attributes.append(FootprintText.parse(token))
+                _graphic_items.append(FootprintText.parse(token))
             elif token[0] == 'fp_line':
-                _attributes.append(FootprintLine.parse(token))
+                _graphic_items.append(FootprintLine.parse(token))
             elif token[0] == 'fp_circle':
-                _attributes.append(FootprintCircle.parse(token))
+                _graphic_items.append(FootprintCircle.parse(token))
             elif token[0] == 'fp_arc':
-                _attributes.append(FootprintArc.parse(token))
+                _graphic_items.append(FootprintArc.parse(token))
             elif token[0] == 'pad':
-                _attributes.append(FootprintPad.parse(token))
+                _pads.append(FootprintPad.parse(token))
 #            elif token[0] == 'ZONES':
 #            elif token[0] == 'GROUPS':
             elif token[0] == 'model':

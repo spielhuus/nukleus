@@ -14,6 +14,7 @@ from ..Plot import plot
 from ..PlotPcb import drc, pcb, pdf
 from ..Reports import combine_reports, report_parser
 from ..Schema import Schema
+from ..Netlist import Netlist
 
 # The Scons bindings
 
@@ -99,9 +100,9 @@ def scons_erc(target, source, env):
     schema = Schema()
     parser = ParserV6()
     parser.schema(schema, source[0].abspath)
-    nodes = netlist(schema)
+    netlist = Netlist(schema)
 
-    res_erc = erc(schema, nodes)
+    res_erc = netlist.erc()
     report = {}
     if 'project_name' in env:
         report = {env['project_name']: {_board_name(source[0].name): res_erc}}

@@ -124,8 +124,8 @@ class Netlist:
             if isinstance(element, NoConnect):
                 self.no_connect.append(element.pos)
 
-    def erc(self):
-        pass
+    def erc(self) -> List:
+        return []
 
     @classmethod
     def _spice_primitive(cls, symbol, name) -> bool:
@@ -148,7 +148,7 @@ class Netlist:
                     net = self.nets.get(coord)
 
                     assert net, "shoul nnot happen"
-# TODO                   if not net:
+#                    if not net:
 #                        net = Net()  # id)
 #                        net.id = "NC"
 #                        net.coords.add(coord)

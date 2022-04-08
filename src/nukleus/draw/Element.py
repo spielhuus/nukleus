@@ -7,8 +7,9 @@ from ..model.Pin import Pin, PinImpl
 from ..model.SchemaElement import POS_T
 from ..model.PositionalElement import PositionalElement
 from ..model.Symbol import Symbol
-from ..model.Utils import placeFields, transform, sub, get_pins
-from .DrawElement import DrawElement, PinNotFoundError, totuple
+from ..model.Utils import placeFields, transform, sub, get_pins, totuple
+from .DrawElement import DrawElement, PinNotFoundError
+from .Line import Line
 
 
 class Element(DrawElement):
@@ -27,6 +28,8 @@ class Element(DrawElement):
         self._mirror = ''
         self.library_symbol: Optional[LibrarySymbol] = None
         self.element: Optional[Symbol] = None
+        self.rel_x: float = 0.0
+        self.rel_y: float = 0.0
 
     def _pin(self, number: int | str) -> Pin:
         _number = number if isinstance(number, str) else str(number)
@@ -55,6 +58,7 @@ class Element(DrawElement):
         self.element = Symbol.new(self.ref, self.lib_name, self.library_symbol)
         self.element.unit = self.unit
         self.element.angle = self._angle
+        extra_elements = []
         self.element.mirror = self._mirror
         self.element.property("Reference").value = self.ref
         if self._value:
@@ -81,25 +85,50 @@ class Element(DrawElement):
         pins = get_pins(self.element)
         _pin_numbers = [x.number[0] for x in pins]
         if self._anchor == '0' and len(pins) > 0:
-            self._anchor = _pin_numbers[-1]
+            self._anchor = _pin_numbers[0]
+
 
         # calculate position
         _pos = self.pos if self.pos is not None else last_pos
-        self.element.pos = sub(_pos, transform(self.element, transform(pins[self._anchor]))[0])
+        self.element.pos = sub(_pos, transform(self.element, transform(pins[self._anchor])))[0]
+        # calculate tox and toy
+
+        if self.rel_x != 0 or self.rel_y != 0:
+            startx = transform(self.element, transform(pins['1']))[0][0]
+            starty = transform(self.element, transform(pins['1']))[0][1]
+            endx = transform(self.element, transform(pins['2']))[0][0]
+            endy = transform(self.element, transform(pins['2']))[0][1]
+            horizontal_length = startx - endx
+            vertical_length = endy - starty
+            print(f'element relative placement: {self.rel_x} {_pos} {horizontal_length}')
+            if self.rel_x != 0:
+                self.element.pos = ( self.element.pos[0] - ((_pos[0] - self.rel_x - horizontal_length) / 2), self.element.pos[1])
+                line = Line().at(_pos).length(((_pos[0] - self.rel_x - horizontal_length) / 2)).right()
+                extra_elements.append(line)
+                endx = transform(self.element, transform(pins['2']))[0][0]
+                endy = transform(self.element, transform(pins['2']))[0][1]
+                line = Line().at((endx, endy)).length(((_pos[0] - self.rel_x - horizontal_length) / 2)).right()
+                extra_elements.append(line)
+            elif self.rel_y != 0:
+                self.pos = (last_pos[0], last_pos[1] + self.rel_y)
+
         # when the anchor pin is found, set the next pos
-        if self._anchor != '0':
-            _last_pos = tuple(totuple(transform(self.element,
-                transform(self._pin(_pin_numbers[0])))[0]))
+        if len(pins) > 1:
+            for pin in _pin_numbers:
+                if str(self._anchor) != str(pin):
+                    _last_pos = transform(self.element,
+                        transform(pins[pin]))[0]
         else:
             _last_pos = tuple(totuple(_pos))
 
         # recalculate the propery positions
+
         placeFields(self.element)
 
         assert isinstance(_last_pos, Tuple), 'last pos is not a Tuple'
         assert isinstance(self.element.pos,
                           Tuple), 'element pos is not a Tuple'
-        return (self, self.element, _last_pos)
+        return (self, self.element, _last_pos, extra_elements)
 
     def anchor(self, number: str | int = 1):
         """
@@ -180,4 +209,43 @@ class Element(DrawElement):
         :param axis str: mirror the symbol by x or y axis.
         """
         self._mirror = axis
+        return self
+
+    def tox(self, pos):
+        """
+        Length of the line.
+        The position can either be the xy coordinates
+        or a DrawElement.
+
+        :param pos POS_T|DrawElement: Position.
+        """
+        if isinstance(pos, PinImpl):
+            pin_impl = cast(PinImpl, pos)
+            pos = transform(cast(Symbol, pin_impl.parent), transform(pin_impl))
+            self.rel_x = tuple(totuple(pos[0]))[0]
+        elif isinstance(pos, DrawElement):
+            assert pos.element and isinstance(pos.element, PositionalElement)
+            self.rel_x = cast(PositionalElement, pos.element).pos[0]
+        else:
+            self.rel_x = tuple(totuple(pos))[0]
+        #self._rel_length_x = pos[0][0]
+        return self
+
+    def toy(self, pos):
+        """
+        Length of the line.
+        The position can either be the xy coordinates
+        or a DrawElement.
+
+        :param pos POS_T|DrawElement: Position.
+        """
+        if isinstance(pos, PinImpl):
+            pin_impl = cast(PinImpl, pos)
+            pos = transform(cast(Symbol, pin_impl.parent), transform(pin_impl))
+            self._rel_length_y = tuple(totuple(pos[0]))[1]
+        elif isinstance(pos, DrawElement):
+            assert pos.element and isinstance(pos.element, PositionalElement)
+            self._rel_length_y = cast(PositionalElement, pos.element).pos[1]
+        else:
+            self._rel_length_y = tuple(totuple(pos))[1]
         return self

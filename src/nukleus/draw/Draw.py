@@ -19,11 +19,15 @@ class Draw(Schema):
 
     def add(self, element: DrawElement):
         """ add an element to this drawing """
-        last_draw, symbol, self.last_pos = element._get(
+        last_draw, symbol, self.last_pos, extra_elements = element._get(
             self.library, self.last_pos, self.unit)
         if isinstance(symbol, model.Symbol):
             self.symbols[symbol.property('Reference').value] = last_draw
             if not self.has_symbol(last_draw.library_symbol.identifier):
                 self.append(last_draw.library_symbol)
         self.append(symbol)
+
+        if extra_elements:
+            for extra_element in extra_elements:
+                self.add(extra_element)
         return self

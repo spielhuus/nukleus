@@ -12,6 +12,7 @@ from .Reports import report_parser
 from .Schema import Schema
 from .Netlist import Netlist
 from .SpiceModel import load_spice_models
+from .PCB import PCB
 
 # SYMBOL_SEARCH_PATH_POSIX = [
 #    '/usr/share/kicad/symbols',
@@ -31,14 +32,20 @@ from .SpiceModel import load_spice_models
 
 #from .Spice import Spice
 
-def load_pcb(filename: str):
-    return PCB(filename)
+#def load_pcb(filename: str):
+#    return PCB(filename)
 
 def load_schema(filename: str):
     schema = Schema()
     parser = ParserV6()
     parser.schema(schema, filename)
     return schema
+
+def load_pcb(filename: str):
+    pcb = PCB()
+    parser = ParserV6()
+    parser.pcb(pcb, filename)
+    return pcb
 
 def spice_path(paths: List[str]):
     return load_spice_models(paths)
