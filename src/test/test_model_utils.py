@@ -6,7 +6,7 @@ sys.path.append("../src")
 
 from nukleus.Library import Library
 from nukleus.model.Symbol import Symbol
-from nukleus.model.Utils import pinPosition, placeFields, is_unit, totuple
+from nukleus.model.Utils import pinByPositions, pinPosition, placeFields, is_unit, totuple
 
 
 class TestUtilsPlaceFields(unittest.TestCase):
@@ -28,6 +28,38 @@ class TestUtilsPlaceFields(unittest.TestCase):
         self.assertTrue(is_unit(lib_sym.units[0], 1))
         self.assertFalse(is_unit(lib_sym.units[1], 1))
         self.assertFalse(is_unit(lib_sym.units[2], 1))
+
+    def test_get_pins_by_pos(self):
+        lib = Library(['samples/files/symbols/'])
+        lib_sym = lib.get('Device:R')
+        symbol = Symbol.new(ref="R1", lib_name="Device:R",
+                            library_symbol=lib_sym)
+        pos = pinByPositions(symbol)
+        self.assertEqual([0,1,0,1], [len(x) for x in pos.values()])
+        self.assertEqual('1', pos['north'][0].number[0])
+        self.assertEqual('2', pos['south'][0].number[0])
+
+    def test_get_pins_by_pos_rotate(self):
+        lib = Library(['samples/files/symbols/'])
+        lib_sym = lib.get('Device:R')
+        symbol = Symbol.new(ref="R1", lib_name="Device:R",
+                            library_symbol=lib_sym)
+        symbol.angle = 270
+        pos = pinByPositions(symbol)
+        self.assertEqual([1,0,1,0], [len(x) for x in pos.values()])
+        self.assertEqual('2', pos['west'][0].number[0])
+        self.assertEqual('1', pos['east'][0].number[0])
+
+    def test_get_pot_pins_by_pos(self):
+        lib = Library(['samples/files/symbols/'])
+        lib_sym = lib.get('Device:R_Potentiometer')
+        symbol = Symbol.new(ref="RV1", lib_name="Device:R_Potentiometer",
+                            library_symbol=lib_sym)
+        pos = pinByPositions(symbol)
+        self.assertEqual([0,1,1,1], [len(x) for x in pos.values()])
+        self.assertEqual('1', pos['north'][0].number[0])
+        self.assertEqual('2', pos['east'][0].number[0])
+        self.assertEqual('3', pos['south'][0].number[0])
 
     def test_get_pin_pos(self):
         lib = Library(['samples/files/symbols/'])

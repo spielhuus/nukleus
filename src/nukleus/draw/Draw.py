@@ -30,4 +30,5 @@ class Draw(Schema):
         if extra_elements:
             for extra_element in extra_elements:
                 self.add(extra_element)
+            #self.last_pos = _last_pos
         return self

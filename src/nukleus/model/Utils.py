@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 
 from collections import deque
 import re
@@ -17,7 +17,6 @@ from .Footprint import Footprint
 
 def f_coord(arr) -> PTS_T:
     arr = np.array(arr)
-    print(arr)
     return [(np.min(arr[..., 0]), np.min(arr[..., 1])),
             (np.max(arr[..., 0]), np.max(arr[..., 1]))]
 MIRROR = {
@@ -162,6 +161,29 @@ def pinPosition(symbol) -> List[int]:
 
     res.rotate(int(symbol.angle/90))
     return list(res)
+
+def pinByPositions(symbol: Symbol) -> Dict[int, List[Pin]]:
+    position = deque([[], [], [], []])
+
+    for pin in get_pins(symbol):
+        assert pin.angle <= 270, "pin angle greater then 270°"
+        position[int(pin.angle / 90)].append(pin)
+
+    if 'x' in symbol.mirror:
+        pos0 = position[0]
+        pos2 = position[2]
+        position[0] = pos2
+        position[2] = pos0
+
+    if 'y' in symbol.mirror:
+        pos1 = position[1]
+        pos3 = position[3]
+        position[1] = pos1
+        position[3] = pos3
+
+    position.rotate(int(symbol.angle/90))
+    return {'west': position[0], 'south': position[1], 'east': position[2], 'north': position[3]}
+
 
 def placeFields(symbol: Symbol) -> None:
     positions = pinPosition(symbol)

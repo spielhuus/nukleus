@@ -141,7 +141,7 @@ class Symbol(PositionalElement):
                 properties.append(sym_property)
 
         for sub in library_symbol.units:
-            _, lib_unit, _ = sub.identifier.split('_')
+            *_, lib_unit, _ = sub.identifier.split('_')
             if lib_unit == '0' or lib_unit == str(unit):
                 for pin in sub.pins:
                     pins.append(PinRef(pin.number[0], "uuid"))
