@@ -19,8 +19,6 @@ logging.getLogger().setLevel(logging.INFO)
 
 spice = nukleus.spice_path(['files/spice'])
 
-spice = nukleus.spice_path(['files/spice'])
-
 draw = Draw(library_path=['/usr/share/kicad/symbols'])
 draw.add(Label("INPUT").rotate(180))
 draw.add(Line())

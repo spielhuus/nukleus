@@ -17,7 +17,7 @@ from nukleus.draw.Line import Line
 
 class TestNetlist(unittest.TestCase):
     def test_nodes(self):
-        draw = Draw(library_path=['/usr/share/kicad/symbols'])
+        draw = Draw(library_path=['samples/files/symbols'])
         draw.add(Line())
         draw.add(Line().up())
         draw.add(Line().left())
@@ -29,7 +29,7 @@ class TestNetlist(unittest.TestCase):
         self.assertTrue(all(first == x for x in iterator))
 
     def test_pins(self):
-        draw = Draw(library_path=['/usr/share/kicad/symbols'])
+        draw = Draw(library_path=['samples/files/symbols'])
         draw.add(Line())
         draw.add(Line().up())
         draw.add(Line().left())
@@ -45,7 +45,7 @@ class TestNetlist(unittest.TestCase):
         self.assertEqual('+15V', net.id)
 
     def test_nodes_power_gnd(self):
-        draw = Draw(library_path=['/usr/share/kicad/symbols'])
+        draw = Draw(library_path=['samples/files/symbols'])
         draw.add(Line())
         draw.add(Line().up())
         draw.add(Line().left())
@@ -61,7 +61,7 @@ class TestNetlist(unittest.TestCase):
         self.assertEqual('GND', net.id)
 
     def test_nodes_named_power(self):
-        draw = Draw(library_path=['/usr/share/kicad/symbols'])
+        draw = Draw(library_path=['samples/files/symbols'])
         draw.add(Line())
         draw.add(Line().up())
         draw.add(Line().left())
@@ -77,7 +77,7 @@ class TestNetlist(unittest.TestCase):
         self.assertEqual('GND', net.id)
 
     def test_nodes_named_label(self):
-        draw = Draw(library_path=['/usr/share/kicad/symbols'])
+        draw = Draw(library_path=['samples/files/symbols'])
         draw.add(Line())
         draw.add(Line().up())
         draw.add(Line().left())
