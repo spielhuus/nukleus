@@ -19,6 +19,8 @@ def _load_model(filename: str) -> spice_model:
         includes = []
         for model in re.findall(r"\.SUBCKT ([a-zA-Z0-9]*) .*", content, re.IGNORECASE):
             keys.append(model)
+        for model in re.findall(r"\.model ([a-zA-Z0-9]*) .*", content, re.IGNORECASE):
+            keys.append(model)
         for model in re.findall(r"\.include (.*)", content, re.IGNORECASE):
             includes.append(model)
 
@@ -63,6 +65,7 @@ def _get_includes(path, includes, models):
 def get_includes(key, includes, models):
     found = False
     for model in models:
+        print(f'match model: {model}')
         if key in model.keys:
             found = True
             if not _contains(model.path, includes):

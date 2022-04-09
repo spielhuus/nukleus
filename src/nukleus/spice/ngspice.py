@@ -307,5 +307,5 @@ class ngspice():
 
     def transient(self):
         # {} {} {} {}'.format(mode, npoints, fstart, fstop))
-        self.cmd('tran 1us 2ms 0')
+        self.cmd('tran 1us 20ms 0')
         return self.vectors()

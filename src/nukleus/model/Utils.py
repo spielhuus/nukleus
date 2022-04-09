@@ -229,7 +229,7 @@ def placeFields(symbol: Symbol) -> None:
 
         elif positions[2] == 0:
             print("fields bottom")
-            assert False, "implement"
+            #assert False, "implement"
         elif positions[3] == 0:
             print("fields left")
             assert False, "implement"

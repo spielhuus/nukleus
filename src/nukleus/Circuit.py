@@ -38,7 +38,7 @@ class Bjt(Element):
 #        super().__init__(ref, nodes, value)
 
     def __str__(self):
-        return "Bjt{} {} {}".format(
+        return "{} {} {}".format(
             str(self.ref), " ".join(map(str, self.nodes)), self.value)
 
 
@@ -128,8 +128,12 @@ class Circuit():
         """
         self.netlist.append(Capacitor(ref, [n0, n1], value))
 
-    def Q(self, ref: str, n0: str, n1: str, value: str) -> None:
-        self.netlist.append(Bjt(ref, [n0, n1], value))
+    def Q(self, ref: str, n0: str, n1: str, n2: str, value: str) -> None:
+        if value in self.subcircuits:
+            pass
+        else:
+            get_includes(value, self.includes, self.spice_models)
+        self.netlist.append(Bjt(ref, [n0, n1, n2], value))
 
     def X(self, ref: str, n: List[str], value: str):
         """

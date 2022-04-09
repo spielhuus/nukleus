@@ -36,8 +36,12 @@ class Netlist:
         self._pins()
         self._no_connect()
 
+
         for _, value in self.nets.items():
-            _id = 1
+            print(f'Netlist Value: {value}')
+
+        _id = 1
+        for _, value in self.nets.items():
             if value.id == "":
                 value.id = str(_id)
                 _id += 1
@@ -208,3 +212,16 @@ class Netlist:
                         value = value[:-1]
                     # value = unit.parse_unit(value)
                     circuit.L(element.reference, nets["1"], nets["2"], value)
+
+                elif self._spice_primitive(element, "Q"):
+                    value = element.property("Value").value
+                    # if value.lower().endswith('ohm'):
+                    #    value = value[:-3]
+                    # value = unit.parse_unit(value)
+                    model = element.property("Spice_Model").value
+                    circuit.Q(
+                        element.property("Reference").value, nets["1"], nets["2"], nets["3"], model
+                    )
+
+                elif element.has_property("Spice_Primitive"):
+                    print(f'unknown spice primitive "{element.property("Spice_Primitive").value}"')
