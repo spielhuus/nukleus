@@ -36,10 +36,6 @@ class Netlist:
         self._pins()
         self._no_connect()
 
-
-        for _, value in self.nets.items():
-            print(f'Netlist Value: {value}')
-
         _id = 1
         for _, value in self.nets.items():
             if value.id == "":

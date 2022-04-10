@@ -61,6 +61,29 @@ class TestUtilsPlaceFields(unittest.TestCase):
         self.assertEqual('2', pos['east'][0].number[0])
         self.assertEqual('3', pos['south'][0].number[0])
 
+    def test_get_transistor_pins_by_pos(self):
+        lib = Library(['samples/files/symbols/'])
+        lib_sym = lib.get('Transistor_BJT:BC547')
+        symbol = Symbol.new(ref="Q1", lib_name="Transistor_BJT:BC547",
+                            library_symbol=lib_sym)
+        pos = pinByPositions(symbol)
+        self.assertEqual([1,1,0,1], [len(x) for x in pos.values()])
+        self.assertEqual('1', pos['north'][0].number[0])
+        self.assertEqual('2', pos['west'][0].number[0])
+        self.assertEqual('3', pos['south'][0].number[0])
+
+    def test_get_transistor_pins_by_pos_mirror(self):
+        lib = Library(['samples/files/symbols/'])
+        lib_sym = lib.get('Transistor_BJT:BC547')
+        symbol = Symbol.new(ref="Q1", lib_name="Transistor_BJT:BC547",
+                            library_symbol=lib_sym)
+        symbol.mirror = 'y'
+        pos = pinByPositions(symbol)
+        self.assertEqual([0,1,1,1], [len(x) for x in pos.values()])
+        self.assertEqual('1', pos['north'][0].number[0])
+        self.assertEqual('2', pos['east'][0].number[0])
+        self.assertEqual('3', pos['south'][0].number[0])
+
     def test_get_pin_pos(self):
         lib = Library(['samples/files/symbols/'])
         lib_sym = lib.get('Device:R')
@@ -102,7 +125,7 @@ class TestUtilsPlaceFields(unittest.TestCase):
                             library_symbol=lib_sym, unit=1)
         symbol.mirror = 'x'
         pos = pinPosition(symbol)
-        self.assertEqual([1,0,2,0], pos)
+        self.assertEqual([2,0,1,0], pos)
 
     def test_get_pin_pos_opamp_mirror_y(self):
         lib = Library(['samples/files/symbols/'])
@@ -111,7 +134,7 @@ class TestUtilsPlaceFields(unittest.TestCase):
                             library_symbol=lib_sym, unit=1)
         symbol.mirror = 'y'
         pos = pinPosition(symbol)
-        self.assertEqual([2,0,1,0], pos)
+        self.assertEqual([1,0,2,0], pos)
 
     def test_get_pin_pos_power(self):
         lib = Library(['samples/files/symbols/'])
@@ -135,8 +158,8 @@ class TestUtilsPlaceFields(unittest.TestCase):
         symbol = Symbol.new(ref="U1", lib_name="Amplifier_Operational:TL072",
                             library_symbol=lib_sym, unit=1)
         placeFields(symbol)
-        self.assertEqual((0, -7.8420000000000005), symbol.properties[0].pos)
-        self.assertEqual((0, -5.8420000000000005), symbol.properties[1].pos)
+        self.assertEqual((0, -8.36), symbol.properties[0].pos)
+        self.assertEqual((0, -6.359999999999999), symbol.properties[1].pos)
 
     def test_place_resistor(self):
         lib = Library(['samples/files/symbols/'])
@@ -154,8 +177,8 @@ class TestUtilsPlaceFields(unittest.TestCase):
                             library_symbol=lib_sym)
         symbol.angle = 90
         placeFields(symbol)
-        self.assertEqual((0, -3.778), symbol.properties[0].pos)
-        self.assertEqual((0, -1.778), symbol.properties[1].pos)
+        self.assertEqual((0, -4.296), symbol.properties[0].pos)
+        self.assertEqual((0, -2.2960000000000003), symbol.properties[1].pos)
 
     def test_place_single_pin_item(self):
         lib = Library(['samples/files/symbols/'])

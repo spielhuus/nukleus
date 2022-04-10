@@ -65,7 +65,6 @@ def _get_includes(path, includes, models):
 def get_includes(key, includes, models):
     found = False
     for model in models:
-        print(f'match model: {model}')
         if key in model.keys:
             found = True
             if not _contains(model.path, includes):

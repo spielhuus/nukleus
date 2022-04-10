@@ -488,8 +488,7 @@ class NodeSymbol(Node):
                             cast(POS_T, transform(element, draw.center)),
                             draw.radius,
                             draw.stroke_definition.width,
-                            # TODO draw.stroke_definition.color,
-                            rgb(1, 0, 0, 1),
+                            draw.stroke_definition.color,
                             draw.stroke_definition.stroke_type
                         ))
                         # TODO pl.circle(dp, draw.r, linewidth, edgecolor, facecolor)
@@ -545,16 +544,12 @@ class NodeSymbol(Node):
                         t_pos_y = pin_pos[0][1]
 
                         if pin.angle == 0:
-                            print(f'0 {pin.name[0]} {pin_pos[0][0]} x {pin_pos[1][0]}')
                             t_pos_x = pin_pos[1][0] + sym.pin_names_offset * 5
                         elif pin.angle == 90:
-                            print(f'90 {pin.name[0]} {pin_pos[0][1]} x {pin_pos[1][1]}')
                             t_pos_y = pin_pos[1][1] + sym.pin_names_offset * 5
                         elif pin.angle == 180:
-                            print(f'180 {pin.name[0]} {pin_pos[0][0]} x {pin_pos[1][0]}')
                             t_pos_x = pin_pos[0][0] - sym.pin_names_offset * 5
                         elif pin.angle == 270:
-                            print(f'270 {pin.name[0]} {pin_pos[0][1]} x {pin_pos[1][1]}')
                             t_pos_y = pin_pos[0][1] - sym.pin_names_offset * 5
 
 #                        name_position = transform(element,

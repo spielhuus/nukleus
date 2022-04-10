@@ -45,5 +45,4 @@ class TestPin(unittest.TestCase):
     def test_sexp_pin(self):
         sexp_str = load_tree(INPUT_STRINGG)
         symbol_instance = Pin.parse(sexp_str)
-        print(f'\n{symbol_instance.sexp()}')
         self.assertEqual(INPUT_STRINGG, symbol_instance.sexp(indent=2))

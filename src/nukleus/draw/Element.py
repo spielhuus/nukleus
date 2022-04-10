@@ -102,7 +102,7 @@ class Element(DrawElement):
             endy = transform(self.element, transform(pins['2']))[0][1]
             horizontal_length = startx - endx
             vertical_length = endy - starty
-            print(f'element relative placement: {self.rel_x} {_pos} {horizontal_length}')
+            # TODO# TODO  print(f'element relative placement: {self.rel_x} {_pos} {horizontal_length}')
             if self.rel_x != 0:
                 self.element.pos = ( self.element.pos[0] - ((_pos[0] - self.rel_x - horizontal_length) / 2), self.element.pos[1])
                 line = Line().at(_pos).length(((_pos[0] - self.rel_x - horizontal_length) / 2)).right()

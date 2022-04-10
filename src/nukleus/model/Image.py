@@ -29,7 +29,6 @@ class Image(SchemaElement):
         strings: List[str] = []
         string = ''
         string += f'{"  " * indent}(image (pts'
-        print(self.pts)
         for p in self.pts:
             string += f' (xy {p[0]:g} {p[1]:g})'
         string += ')'

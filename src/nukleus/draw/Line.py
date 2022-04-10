@@ -30,10 +30,8 @@ class Line(DrawElement):
         _pos: POS_T = self.pos if self.pos is not None else last_pos
         _end_pos: POS_T = (0, 0)
         if self._rel_length_x != 0:
-            print("get from x")
             _end_pos = (self._rel_length_x, _pos[1])
         elif self._rel_length_y != 0:
-            print("get from y")
             _end_pos = (_pos[0], self._rel_length_y)
         else:
             l = unit if self._length == 0 else self._length

@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from copy import deepcopy
 from io import BytesIO
 from typing import IO, Dict, List, Tuple, Type, cast
 
@@ -62,9 +63,23 @@ def _merge_text_effects(text_effects: TextEffects, theme_effects: TextEffects) -
         text_effects.font_thickness = theme_effects.font_thickness
     if len(text_effects.justify) == 0:
         text_effects.justify = theme_effects.justify
-
     return text_effects
 
+def _mergeStrokeDefinition(stroke_definition: StrokeDefinition,
+                           theme_stroke_definition: StrokeDefinition) -> StrokeDefinition:
+    if not stroke_definition:
+        return theme_stroke_definition
+
+    stroke = deepcopy(stroke_definition)
+
+    if stroke_definition.width == 0:
+        stroke.width = theme_stroke_definition.width
+    if stroke_definition.stroke_type == '':
+        stroke.stroke_type = theme_stroke_definition.stroke_type
+    if stroke_definition.color == rgb(0, 0, 0, 0):
+        stroke.color = theme_stroke_definition.color
+
+    return stroke
 
 class Node(ABC):
     """Abstract Class for the Nodes"""
@@ -339,27 +354,27 @@ class NodeSymbol(Node):
                         ))
 
                     elif isinstance(draw, Arc):
+                        stroke = _mergeStrokeDefinition(draw.stroke_definition, themes[theme]['component_outline'])
                         self.graphs.append(DrawArc(
                             cast(POS_T, transform(element, draw.start)),
                             draw.mid,
                             draw.end,
-                            draw.stroke_definition.width,
-                            # TODO draw.stroke_definition.color,
-                            rgb(1, 0, 0, 1),
-                            draw.stroke_definition.stroke_type
+                            stroke.width,
+                            stroke.color,
+                            stroke.stroke_type
                         ))
                         #dp = np.array([draw.x, draw.y])
                         # pl.arc(dp, draw.r, draw.start * 0.1, draw.end * 0.1,
                         #       linewidth, edgecolor, facecolor)
 
                     elif isinstance(draw, Circle):
+                        stroke = _mergeStrokeDefinition(draw.stroke_definition, themes[theme]['component_outline'])
                         self.graphs.append(DrawCircle(
                             cast(POS_T, transform(element, draw.center)),
                             draw.radius,
-                            draw.stroke_definition.width,
-                            # TODO draw.stroke_definition.color,
-                            rgb(1, 0, 0, 1),
-                            draw.stroke_definition.stroke_type
+                            stroke.width,
+                            stroke.color,
+                            stroke.stroke_type
                         ))
                         # TODO pl.circle(dp, draw.r, linewidth, edgecolor, facecolor)
                     else:
@@ -414,16 +429,12 @@ class NodeSymbol(Node):
                         t_pos_y = pin_pos[0][1]
 
                         if pin.angle == 0:
-                            print(f'0 {pin.name[0]} {pin_pos[0][0]} x {pin_pos[1][0]}')
                             t_pos_x = pin_pos[1][0] + sym.pin_names_offset * 5
                         elif pin.angle == 90:
-                            print(f'90 {pin.name[0]} {pin_pos[0][1]} x {pin_pos[1][1]}')
                             t_pos_y = pin_pos[1][1] + sym.pin_names_offset * 5
                         elif pin.angle == 180:
-                            print(f'180 {pin.name[0]} {pin_pos[0][0]} x {pin_pos[1][0]}')
                             t_pos_x = pin_pos[0][0] - sym.pin_names_offset * 5
                         elif pin.angle == 270:
-                            print(f'270 {pin.name[0]} {pin_pos[0][1]} x {pin_pos[1][1]}')
                             t_pos_y = pin_pos[0][1] - sym.pin_names_offset * 5
 
 #                        name_position = transform(element,
@@ -606,7 +617,7 @@ def plot(schema: Schema, out: IO = BytesIO(), border: bool = False, scale: float
             raise FileTypeException(
                 'file type not in (png, svg, pdf)', image_type)
 
-    factory = ElementFactory(schema)
+    factory = ElementFactory(schema, theme=theme)
     # just draw and get the size
     # TODO what is the best size for that
     with PlotContext(BytesIO(), 297, 210, scale, image_type) as outline_ctx:
