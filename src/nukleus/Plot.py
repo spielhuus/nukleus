@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 from io import BytesIO
 from typing import IO, Dict, List, Text, Tuple, Type, cast
+import random
+import string
 
 import gi
 gi.require_version('Pango', '1.0')
@@ -624,6 +626,10 @@ class PlotContext:
         self.sfc.finish()
         self.sfc.flush()
 
+def _clean_svg(svg_string: str) -> str:
+    rand = ''.join(random.choice(string.digits) for i in range(10))
+    res = svg_string.replace('id="glyph', f'id="glyph_{rand}_')
+    return res.replace('href="#glyph', f'href="#glyph_{rand}_')
 
 def plot(schema: Schema, out: IO = BytesIO(), border: bool = False, scale: float = SCALE,
          image_type='svg', theme: str = "kicad2000") -> IO:
@@ -665,13 +671,14 @@ def plot(schema: Schema, out: IO = BytesIO(), border: bool = False, scale: float
                 assert ctx.sfc, 'image cotext is not set.'
                 ctx.sfc.write_to_png(out)
 
+
     if check_notebook():
         try:
             from IPython.display import SVG
             out.flush()
             out.seek(0)
-            print(out.getbuffer())
-            return SVG(data=out.getbuffer())  # type: ignore
+            svg_buffer = _clean_svg(out.read().decode("UTF-8"))
+            return SVG(data=svg_buffer)  # type: ignore
         except BaseException as err:
             print(f'can not display data {err}')
 

@@ -17,6 +17,7 @@ def main():
     args = parser.parse_args()
 
     schema = nukleus.load_schema(args.input)
+
     nukleus.plot(schema, args.output, border=args.border)
 
 if __name__ == "__main__":
