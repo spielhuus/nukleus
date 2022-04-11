@@ -166,13 +166,13 @@ class ParserV6():
                     if item[1] != 'pcbnew':
                         logger.warning('generator is %s %s', item[1], item[2])
                 elif item[0] == 'general':
-                    target.elements.append(General.parse(item))
+                    target.elements.append(General.parse(cast(SEXP_T, item)))
                 elif item[0] == 'layers':
-                    target.elements.append(Layers.parse(item))
+                    target.elements.append(Layers.parse(cast(SEXP_T, item)))
                 elif item[0] == 'page' or item[0] == 'paper':
                     target.paper = item[1]
                 elif item[0] == 'title_block':
-                    self._title_block(target, cast(SEXP_T, item))
+                    self._title_block(target, cast(SEXP_T, cast(SEXP_T, item)))
                 elif item[0] == 'setup':
                     target.elements.append(PcbSetup.parse(cast(SEXP_T, item)))
                 elif item[0] == 'net':

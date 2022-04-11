@@ -27,7 +27,7 @@ from .model.HierarchicalSheetInstance import HierarchicalSheetInstance
 from .model.SchemaElement import PTS_T, POS_T, SchemaElement
 from .PCB import PCB
 from .model.SymbolInstance import SymbolInstance
-from .model.Utils import add, f_coord, is_unit, transform
+from .model.Utils import add, f_coord, isUnit, transform
 from .model.Wire import Wire
 from .PlotBase import (DrawArc, DrawCircle, DrawLine, DrawPolyLine, DrawRect,
                        DrawText, DrawElipse)
@@ -434,7 +434,7 @@ class NodeSymbol(Node):
         assert element.library_symbol, 'library symbol is not set'
         sym = element.library_symbol
         for subsym in sym.units:
-            if is_unit(subsym, element.unit):
+            if isUnit(subsym, element.unit):
                 for draw in subsym.graphics:
                     pin_theme = themes[theme]['component_outline']
 #                        draw.stroke_definition,

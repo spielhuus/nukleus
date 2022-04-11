@@ -1,13 +1,12 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from io import BytesIO
-from typing import IO, Dict, List, Tuple, Type, cast
+from typing import IO, Dict, List, Text, Tuple, Type, cast
 
-import cairo
 import gi
 gi.require_version('Pango', '1.0')
 gi.require_version('PangoCairo', '1.0')
-
+import cairo
 import numpy as np
 from gi.repository import Pango, PangoCairo
 
@@ -19,13 +18,12 @@ from .model.GraphicItem import Arc, Circle, Polyline, Rectangle
 from .model.HierarchicalSheetInstance import HierarchicalSheetInstance
 from .model.SchemaElement import POS_T, PTS_T, SchemaElement
 from .model.SymbolInstance import SymbolInstance
-from .model.Utils import add, f_coord, is_unit, transform
+from .model.Utils import add, f_coord, isUnit, transform
 from .model.Wire import Wire
 from .PlotBase import (DrawArc, DrawCircle, DrawLine, DrawPolyLine, DrawRect,
                        DrawText)
 from .Schema import Schema
 from .Theme import themes
-
 
 
 def check_notebook():
@@ -65,6 +63,7 @@ def _merge_text_effects(text_effects: TextEffects, theme_effects: TextEffects) -
         text_effects.justify = theme_effects.justify
     return text_effects
 
+
 def _mergeStrokeDefinition(stroke_definition: StrokeDefinition,
                            theme_stroke_definition: StrokeDefinition) -> StrokeDefinition:
     if not stroke_definition:
@@ -81,6 +80,7 @@ def _mergeStrokeDefinition(stroke_definition: StrokeDefinition,
 
     return stroke
 
+
 class Node(ABC):
     """Abstract Class for the Nodes"""
 
@@ -89,7 +89,7 @@ class Node(ABC):
         pass
 
     @abstractmethod
-    def dimension(self, ctx) -> List[float]:
+    def dimension(self, ctx) -> PTS_T:
         pass
 
     @abstractmethod
@@ -103,9 +103,9 @@ class NodeWire(Node):
     def __init__(self, element: Wire, theme: str) -> None:
         self.line = DrawLine(
             element.pts,
-            themes[theme]["no_connect"].width,
-            themes[theme]["no_connect"].color,
-            themes[theme]["no_connect"].stroke_type
+            themes[theme]["no_connect"].width,  # type: ignore
+            themes[theme]["no_connect"].color,  # type: ignore
+            themes[theme]["no_connect"].stroke_type  # type: ignore
         )
 
     def dimension(self, ctx) -> PTS_T:
@@ -120,9 +120,9 @@ class NodeJunction(Node):
         self.circle = DrawCircle(
             element.pos,
             .2,
-            themes[theme]["no_connect"].width,
-            themes[theme]["no_connect"].color,
-            themes[theme]["no_connect"].stroke_type
+            themes[theme]["no_connect"].width,  # type: ignore
+            themes[theme]["no_connect"].color,  # type: ignore
+            themes[theme]["no_connect"].stroke_type  # type: ignore
         )
 
     def dimension(self, ctx) -> PTS_T:
@@ -137,7 +137,7 @@ class NodeLocalLabel(Node):
 
     def __init__(self, element: LocalLabel, theme: str) -> None:
         self.text_effects = _merge_text_effects(
-            element.text_effects, themes[theme]['text_effects'])
+            element.text_effects, cast(TextEffects, themes[theme]['text_effects']))
         self.element = element
         self.theme = themes[theme]
 
@@ -157,20 +157,26 @@ class NodeLocalLabel(Node):
         y_pos = self.element.pos[1]
         if self.element.angle == 0:
             x_pos = self.element.pos[0] + \
-                ((width + self.theme['global_label']['hspacing']) / 2)
+                ((width + self.theme['global_label']
+                 ['hspacing']) / 2)  # type: ignore
         elif self.element.angle == 90:
             y_pos = self.element.pos[1] - \
-                ((width + self.theme['global_label']['hspacing']) / 2)
+                ((width + self.theme['global_label']
+                 ['hspacing']) / 2)  # type: ignore
             x_pos = self.element.pos[0] + \
-                ((height + self.theme['global_label']['vspacing']) / 2)
+                ((height + self.theme['global_label']
+                 ['vspacing']) / 2)  # type: ignore
         elif self.element.angle == 180:
             x_pos = self.element.pos[0] - \
-                ((width + self.theme['global_label']['hspacing']) / 2)
+                ((width + self.theme['global_label']
+                 ['hspacing']) / 2)  # type: ignore
         elif self.element.angle == 270:
             y_pos = self.element.pos[1] + \
-                ((width + self.theme['global_label']['hspacing']) / 2)
+                ((width + self.theme['global_label']
+                 ['hspacing']) / 2)  # type: ignore
             x_pos = self.element.pos[0] - \
-                ((height + self.theme['global_label']['vspacing']) / 2)
+                ((height + self.theme['global_label']
+                 ['vspacing']) / 2)  # type: ignore
 
         text = DrawText((x_pos, y_pos), self.element.text,
                         self.element.angle, self.text_effects)
@@ -188,7 +194,7 @@ class NodeGlobalLabel(Node):
         :param theme str: Theme name.
         """
         self.text_effects = _merge_text_effects(
-            element.text_effects, themes[theme]['text_effects'])
+            element.text_effects, themes[theme]['text_effects'])  # type: ignore
         self.element = element
         self.theme = themes[theme]
 
@@ -220,42 +226,53 @@ class NodeGlobalLabel(Node):
         text_dim = text.dimension(ctx)
         width = text_dim[1][0] - text_dim[0][0]
         height = text_dim[1][1] - text_dim[0][1]
-        box = [
-            (width + self.theme['global_label']['hspacing'],
-                -height/2 - self.theme['global_label']['vspacing']),
+        pts = [
+            (width + self.theme['global_label']['hspacing'],  # type: ignore
+                -height/2 - self.theme['global_label']['vspacing']),  # type: ignore
+            # type: ignore
             (.6, - height/2 - self.theme['global_label']['vspacing']),
             (0, 0),
-            (.6, height/2 + self.theme['global_label']['vspacing']),
-            (width + self.theme['global_label']['hspacing'],
-                height/2 + self.theme['global_label']['vspacing']),
-            (width + self.theme['global_label']['hspacing'], -
-                height/2 - self.theme['global_label']['vspacing']),
+            (.6, height/2 + self.theme['global_label']
+             ['vspacing']),  # type: ignore
+            (width + self.theme['global_label']['hspacing'],  # type: ignore
+                height/2 + self.theme['global_label']['vspacing']),  # type: ignore
+            (width + self.theme['global_label']['hspacing'], -  # type: ignore
+                height/2 - self.theme['global_label']['vspacing']),  # type: ignore
         ]
-        box = DrawPolyLine(transform(self.element, box),
+        box = DrawPolyLine(transform(self.element, pts),
+                           # type: ignore
                            self.theme['global_label']['border_width'],
+                           # type: ignore
                            self.theme['global_label']['border_color'],
+                           # type: ignore
                            self.theme['global_label']['border_style'],
-                           self.theme['global_label']['fill_color'])
+                           self.theme['global_label']['fill_color'])  # type: ignore
         box.draw(ctx)
 
         x_pos = self.element.pos[0]
         y_pos = self.element.pos[1]
         if self.element.angle == 0:
             x_pos = self.element.pos[0] + \
-                ((width + self.theme['global_label']['hspacing']) / 2)
+                ((width + self.theme['global_label']
+                 ['hspacing']) / 2)  # type: ignore
         elif self.element.angle == 90:
             y_pos = self.element.pos[1] - \
-                ((width + self.theme['global_label']['hspacing']) / 2)
+                ((width + self.theme['global_label']
+                 ['hspacing']) / 2)  # type: ignore
             x_pos = self.element.pos[0] + \
-                ((height + self.theme['global_label']['vspacing']) / 2)
+                ((height + self.theme['global_label']
+                 ['vspacing']) / 2)  # type: ignore
         elif self.element.angle == 180:
             x_pos = self.element.pos[0] - \
-                ((width + self.theme['global_label']['hspacing']) / 2)
+                ((width + self.theme['global_label']
+                 ['hspacing']) / 2)  # type: ignore
         elif self.element.angle == 270:
             y_pos = self.element.pos[1] + \
-                ((width + self.theme['global_label']['hspacing']) / 2)
+                ((width + self.theme['global_label']
+                 ['hspacing']) / 2)  # type: ignore
             x_pos = self.element.pos[0] - \
-                ((height + self.theme['global_label']['vspacing']) / 2)
+                ((height + self.theme['global_label']
+                 ['vspacing']) / 2)  # type: ignore
 
         self.text_effects.justify = []
         text = DrawText((x_pos, y_pos),
@@ -267,11 +284,11 @@ class NodeGraphicalText(Node):
     def __init__(self, element: GraphicalText, theme: str) -> None:
         """Plot a GraphicalText."""
         text_effects = _merge_text_effects(
-            element.text_effects, themes[theme]['text_effects'])
+            element.text_effects, themes[theme]['text_effects'])   # type: ignore
         self.text = DrawText(element.pos, element.text, 0, text_effects)
 
     def dimension(self, ctx) -> PTS_T:
-        return self.text.dimension(ctx)
+        return cast(PTS_T, self.text.dimension(ctx))
 
     def draw(self, ctx) -> None:
         return self.text.draw(ctx)
@@ -281,8 +298,8 @@ class NodeNoConnect(Node):
     """Plot NoConnect element."""
 
     def __init__(self, element: NoConnect, theme: str) -> None:
-        width = themes[theme]["no_connect"].width
-        color = themes[theme]["no_connect"].color
+        width = themes[theme]["no_connect"].width  # type: ignore
+        color = themes[theme]["no_connect"].color  # type: ignore
         type = themes[theme]["no_connect"].stroke_type
         o: float = 0.5
         self.lines = [
@@ -302,11 +319,12 @@ class NodeNoConnect(Node):
             ),
         ]
 
-    def dimension(self, ctx) -> List[float]:
-        return []  # res
+    def dimension(self, ctx) -> PTS_T:
+        return cast(PTS_T, self.lines[0].dimension(ctx))
 
     def draw(self, ctx):
-        [x.draw(ctx) for x in self.lines]
+        for line in self.lines:
+            line.draw(ctx)
 
 
 class NodeSymbol(Node):
@@ -318,7 +336,7 @@ class NodeSymbol(Node):
         assert element.library_symbol, 'library symbol is not set'
         sym = element.library_symbol
         for subsym in sym.units:
-            if is_unit(subsym, element.unit):
+            if isUnit(subsym, element.unit):
                 for draw in subsym.graphics:
                     pin_theme = themes[theme]['component_outline']
 #                        draw.stroke_definition,
@@ -328,14 +346,15 @@ class NodeSymbol(Node):
                     if draw.fill == FillType.BACKGROUND:
                         fill = themes[theme]["component_body"]
                     elif draw.fill == FillType.FOREGROUND:
+                        # type: ignore
                         fill = themes[theme]["component_outline"].color
                     if isinstance(draw, Polyline):
                         self.graphs.append(DrawPolyLine(
                             transform(element, draw.points),
-                            width=pin_theme.width,
-                            color=pin_theme.color,
-                            type=pin_theme.stroke_type,
-                            fill=fill,
+                            width=pin_theme.width,  # type: ignore
+                            color=pin_theme.color,  # type: ignore
+                            type=pin_theme.stroke_type,  # type: ignore
+                            fill=fill,  # type: ignore
                         ))
                     elif isinstance(draw, Rectangle):
                         verts = [
@@ -347,14 +366,16 @@ class NodeSymbol(Node):
                         ]
                         self.graphs.append(DrawPolyLine(
                             transform(element, verts),
-                            width=pin_theme.width,
-                            color=pin_theme.color,
-                            type=pin_theme.stroke_type,
-                            fill=fill,
+                            width=pin_theme.width,  # type: ignore
+                            color=pin_theme.color,  # type: ignore
+                            type=pin_theme.stroke_type,  # type: ignore
+                            fill=fill,  # type: ignore
                         ))
 
                     elif isinstance(draw, Arc):
-                        stroke = _mergeStrokeDefinition(draw.stroke_definition, themes[theme]['component_outline'])
+                        stroke = _mergeStrokeDefinition(
+                            draw.stroke_definition,
+                            themes[theme]['component_outline'])  # type: ignore
                         self.graphs.append(DrawArc(
                             cast(POS_T, transform(element, draw.start)),
                             draw.mid,
@@ -368,7 +389,8 @@ class NodeSymbol(Node):
                         #       linewidth, edgecolor, facecolor)
 
                     elif isinstance(draw, Circle):
-                        stroke = _mergeStrokeDefinition(draw.stroke_definition, themes[theme]['component_outline'])
+                        stroke = _mergeStrokeDefinition(
+                            draw.stroke_definition, themes[theme]['component_outline'])
                         self.graphs.append(DrawCircle(
                             cast(POS_T, transform(element, draw.center)),
                             draw.radius,
@@ -387,17 +409,17 @@ class NodeSymbol(Node):
                         pin_pos = transform(pin)
                         self.lines.append(DrawLine(
                             transform(element, pin_pos),
-                            width=pin_theme.width,
-                            color=pin_theme.color,
-                            line_type=pin_theme.stroke_type,
+                            width=pin_theme.width,  # type: ignore
+                            color=pin_theme.color,  # type: ignore
+                            line_type=pin_theme.stroke_type,  # type: ignore
                         ))
 
                     if (not sym.pin_numbers_hide
                             and not sym.extends == "power"):
 
-#TODO                        pin_offset = np.array(((0, 0.1), (0.1, 0)))
-#                        pin_offset[0] = -abs(pin_offset[0])
-#                        pin_offset[1] = abs(pin_offset[1])
+                        # TODO                        pin_offset = np.array(((0, 0.1), (0.1, 0)))
+                        #                        pin_offset[0] = -abs(pin_offset[0])
+                        #                        pin_offset[1] = abs(pin_offset[1])
 
                         pin_pos = transform(element, transform(pin))
                         t_pos_x = pin_pos[0][0]
@@ -416,13 +438,14 @@ class NodeSymbol(Node):
                             t_pos_y += (pin_pos[1][1] - pin_pos[0][1]) / 2
                             t_pos_x += 0.5
 
-                        text_effects = themes[theme]['pin_number']
+                        text_effects: TextEffects = cast(
+                            TextEffects, themes[theme]['pin_number'])
                         self.texts.append(
                             DrawText((t_pos_x, t_pos_y), pin.number[0], 0, text_effects))
 
                     if (pin.name[0] != "~"
                         and not pin.hidden
-                        and not sym.extends == "power"):
+                            and not sym.extends == "power"):
 
                         pin_pos = transform(element, transform(pin))
                         t_pos_x = pin_pos[0][0]
@@ -437,11 +460,7 @@ class NodeSymbol(Node):
                         elif pin.angle == 270:
                             t_pos_y = pin_pos[0][1] - sym.pin_names_offset * 5
 
-#                        name_position = transform(element,
-#                                                  pin.calc_pos(pin.pos, sym.pin_names_offset)[1])
-#                        pin_pos = transform(element, transform(pin))
-#                        name_position = np.array(
-#                            pin_pos[1]) + sym.pin_names_offset
+                        # type: ignore
                         text_effects = themes[theme]['pin_name']
                         self.texts.append(
                             DrawText((t_pos_x, t_pos_y), pin.name[0], pin.angle, text_effects))
@@ -460,7 +479,7 @@ class NodeSymbol(Node):
                 angle = 0
 
             text_effects = _merge_text_effects(
-                field.text_effects, themes[theme]['text_effects'])
+                field.text_effects, cast(TextEffects, themes[theme]['text_effects']))
             if element.angle + field.angle == 180:
                 if Justify.LEFT in text_effects.justify:
                     text_effects.justify = [Justify.RIGHT]
@@ -469,13 +488,6 @@ class NodeSymbol(Node):
 
             self.texts.append(
                 DrawText(field.pos, field.value, angle, text_effects))
-#            self.graphs.append(DrawCircle(  # TODO remove
-#                field.pos,
-#                .2,
-#                themes[theme]["no_connect"].width,
-#                rgb(1, 0, 0, 1),
-#                themes[theme]["no_connect"].stroke_type
-#            ))
 
     def dimension(self, ctx) -> PTS_T:
         if not self.symbol.on_schema:
@@ -501,7 +513,7 @@ class NodeBorder(Node):
         #        text_effects = _merge_text_effects(
         #                element.text_effects, themes[theme]['text_effects'])
         border_theme = themes[theme]['border']
-        border = float(border_theme['width'])
+        border = float(border_theme['width'])  # type: ignore
         self.lines = [
             DrawPolyLine([
                 (border, border),
@@ -509,7 +521,9 @@ class NodeBorder(Node):
                 (width-border, height-border),
                 (border, height-border),
                 (border, border)
-            ], border_theme['line'].width, border_theme['line'].color, border_theme['line'].stroke_type),
+            ], border_theme['line'].width,  # type: ignore
+                border_theme['line'].color,  # type: ignore
+                border_theme['line'].stroke_type),  # type: ignore
             DrawPolyLine([
                 (width-border-110., height-border-40),
                 (width-border, height-border-40),
@@ -536,13 +550,15 @@ class NodeBorder(Node):
         ]
         for key, value in schema.comment.items():
             self.lines.append(DrawText(
-                (width-border-100, height-border-35), value, 0, border_theme[f'comment_{key}']))
+                (width-border-100, height-border-35), value, 0,
+                border_theme[f'comment_{key}']))  # type: ignore
 
-    def dimension(self, _) -> List[float]:
+    def dimension(self, _) -> PTS_T:
         return []
 
     def draw(self, ctx):
-        [x.draw(ctx) for x in self.lines]
+        for line in self.lines:
+            line.draw(ctx)
 
 
 class ElementFactory:
@@ -576,14 +592,15 @@ class ElementFactory:
         return f_coord(np.array(coords))
 
     def draw(self, ctx) -> None:
-        [x.draw(ctx) for x in self.nodes]
+        for node in self.nodes:
+            node.draw(ctx)
 
 
 SCALE = 72.0 / 25.4
 
 
 class PlotContext:
-    def __init__(self, buffer, width: int, height: int, scale: float, image_type: str):
+    def __init__(self, buffer, width: float, height: float, scale: float, image_type: str):
         self.sfc = None
         if image_type == 'pdf':
             self.sfc = cairo.PDFSurface(
@@ -608,7 +625,8 @@ class PlotContext:
         self.sfc.flush()
 
 
-def plot(schema: Schema, out: IO = BytesIO(), border: bool = False, scale: float = SCALE, image_type='svg', theme: str = "kicad2000") -> IO:
+def plot(schema: Schema, out: IO = BytesIO(), border: bool = False, scale: float = SCALE,
+         image_type='svg', theme: str = "kicad2000") -> IO:
 
     # get the image type if out is a filename
     if isinstance(out, str):
@@ -652,7 +670,7 @@ def plot(schema: Schema, out: IO = BytesIO(), border: bool = False, scale: float
             from IPython.display import SVG
             out.flush()
             out.seek(0)
-            return SVG(data=out.getbuffer())
+            return SVG(data=out.getbuffer())  # type: ignore
         except BaseException as err:
             print(f'can not display data {err}')
 

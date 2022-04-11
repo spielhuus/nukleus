@@ -4,7 +4,7 @@ from collections import deque
 import re
 import math
 import numpy as np
-from nptyping import NDArray, Shape, Float
+from nptyping import NDArray, Shape, Float  # type: ignore
 
 from .LibrarySymbol import LibrarySymbol
 from .Pin import Pin, PinList
@@ -19,6 +19,7 @@ def f_coord(arr) -> PTS_T:
     arr = np.array(arr)
     return [(np.min(arr[..., 0]), np.min(arr[..., 1])),
             (np.max(arr[..., 0]), np.max(arr[..., 1]))]
+
 MIRROR = {
     '': np.array((1, 0, 0, -1)),
     'x': np.array((1, 0, 0, 1)),
@@ -26,7 +27,7 @@ MIRROR = {
     # 3: np.array((0, -1)),
 }
 
-def totuple(a: NDArray[Shape["2, 2"], Float]):
+def totuple(a: NDArray[Shape["2, 2"], Float]):  # type: ignore
     if len(a) == 0:
         return a
     if isinstance(a[0], np.ndarray):
@@ -44,7 +45,7 @@ def add(pos: POS_T, summand: POS_T) -> POS_T:
     """
     return cast(POS_T, totuple(np.round(np.array(pos) + np.array(summand), 3)))
 
-def sub(pos: POS_T, subtrahend: POS_T) -> POS_T:
+def sub(pos: POS_T, subtrahend: POS_T|PTS_T) -> POS_T:
     """
     Subtract two positions.
 
@@ -52,7 +53,7 @@ def sub(pos: POS_T, subtrahend: POS_T) -> POS_T:
     :param subtrahend POS_T: The position to subtract.
     :rtype POS_T: Difference of the two positions.
     """
-    return cast(POS_T, totuple(np.round(np.array(pos) - np.array(subtrahend), 3)))
+    return cast(POS_T, totuple(np.round(np.array(pos) - np.array(subtrahend), 3)))  # type: ignore
 
 def mul(pos: POS_T, multiplier: POS_T) -> POS_T:
     """
@@ -112,7 +113,7 @@ def transform(symbol: Symbol|Pin|GlobalLabel, path=(0, 0)) -> PTS_T:
 
     raise TypeError(f'unknown type {type(symbol)}')
 
-def is_unit(symbol: LibrarySymbol, unit: int) -> bool:
+def isUnit(symbol: LibrarySymbol, unit: int) -> bool:
     """
     Test if LibrarySymbol is the given unit.
 
@@ -127,14 +128,16 @@ def is_unit(symbol: LibrarySymbol, unit: int) -> bool:
     return False
 
 def get_pins(symbol: Symbol) -> PinList:
+    """
+    Get the pins of a symbol.
+
+    :param symbol Symbol: The symbol.
+    :rtype PinList: The pins.
+    """
     _pins = PinList()
-#        single_unit = False
     assert symbol.library_symbol, 'library symbol is not set'
     for subsym in symbol.library_symbol.units:
-        if is_unit(subsym, symbol.unit):
-#            unit = int(subsym.identifier.split('_')[-2])
-#            single_unit = True if unit == 0 else single_unit
-#            if unit == 0 or unit == self.unit or single_unit:
+        if isUnit(subsym, symbol.unit):
             _pins.extend(symbol, subsym.pins)
     return _pins
 
@@ -146,7 +149,7 @@ def symbol_size(symbol: Symbol):
     """
     sizes = []
     for unit in symbol.library_symbol.units:
-        if is_unit(unit, symbol.unit):
+        if isUnit(unit, symbol.unit):
             for graph in unit.graphics:
                 if isinstance(graph, Polyline):
                     sizes.append(f_coord(np.array(graph.points)))
@@ -173,8 +176,13 @@ def pinPosition(symbol) -> List[int]:
     return [len(positions['west']), len(positions['south']),
             len(positions['east']), len(positions['north'])]
 
-def pinByPositions(symbol: Symbol) -> Dict[int, List[Pin]]:
-    position = deque([[], [], [], []])
+def pinByPositions(symbol: Symbol) -> Dict[str, List[Pin]]:
+    """
+    Get a Dictionary with the Pins sorted by position.
+
+    :param
+    """
+    position: deque[List[Pin]] = deque([[], [], [], []])
 
     for pin in get_pins(symbol):
         assert pin.angle <= 270, "pin angle greater then 270°"
@@ -199,7 +207,7 @@ def pinByPositions(symbol: Symbol) -> Dict[int, List[Pin]]:
 def placeFields(symbol: Symbol) -> None:
     positions = pinPosition(symbol)
     # TODO print(f'placeFields: {symbol.angle} {symbol.property("Reference").value} {positions}')
-    vis_fields = [x for x in symbol.properties if x.text_effects.hidden == False]
+    vis_fields = [x for x in symbol.properties if not x.text_effects.hidden]
     _size = f_coord(transform(symbol, symbol_size(symbol)))
     if len(get_pins(symbol)) == 1:
         if positions[0] == 1:

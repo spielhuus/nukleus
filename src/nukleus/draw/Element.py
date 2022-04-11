@@ -10,7 +10,6 @@ from ..model.Symbol import Symbol
 from ..model.Utils import pinByPositions, placeFields, transform, sub, get_pins, totuple
 from .DrawElement import DrawElement, PinNotFoundError
 from .Line import Line
-from .Dot import Dot
 
 
 class Element(DrawElement):
@@ -173,7 +172,7 @@ class Element(DrawElement):
             pin_impl = cast(PinImpl, pos)
             _parent = pin_impl.parent
             _pos = transform(cast(Symbol, _parent), transform(pin_impl))
-            self.pos = tuple(totuple(_pos[0]))
+            self.pos = _pos[0]  # TODO totuple(_pos[0])
         elif isinstance(pos, DrawElement):
             draw_element = cast(DrawElement, pos)
             assert draw_element.element, 'element is None'

@@ -5,13 +5,18 @@ from .SpiceModel import get_includes, spice_model
 
 
 class Element:
+    """Circuit element."""
     def __init__(self, ref: str, nodes: List[str], value: str):
         self.ref = ref
+        """Reference of the element."""
         self.nodes = nodes
+        """Nodes of the element."""
         self.value = value
+        """Value of the element."""
 
 
 class Resistor(Element):
+    """Resistor element."""
     def __init__(self, ref: str, nodes: List[str], value: str):
         if not ref.startswith('R'):
             ref = f"R{ref}"
@@ -23,6 +28,7 @@ class Resistor(Element):
 
 
 class Capacitor(Element):
+    """Capacitor element."""
     def __init__(self, ref: str, nodes: List[str], value: str):
         if not ref.startswith('C'):
             ref = f"C{ref}"
@@ -34,6 +40,7 @@ class Capacitor(Element):
 
 
 class Bjt(Element):
+    """BJT element."""
 #    def __init__(self, ref: str, nodes: List[str], value: str):
 #        super().__init__(ref, nodes, value)
 
@@ -43,6 +50,7 @@ class Bjt(Element):
 
 
 class X(Element):
+    """Subcircuit element."""
 #    def __init__(self, ref: str, nodes: List[str], value: str):
 #        super().__init__(ref, nodes, value)
 
@@ -52,6 +60,7 @@ class X(Element):
 
 
 class V(Element):
+    """Voltage source element."""
 #    def __init__(self, ref: str, nodes: List[str], value: str):
 #        super().__init__(ref, nodes, value)
 
@@ -67,7 +76,7 @@ class Circuit():
     __name__: str = ""
 
     def __init__(self):
-        self.includes: List[str] = []
+        self.includes: List[spice_model] = []
         self.netlist: List[Element] = []
         self.subcircuits: Dict[str, Circuit] = {}
         self.spice_models: List[spice_model] = []

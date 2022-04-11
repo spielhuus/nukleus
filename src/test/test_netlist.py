@@ -42,7 +42,7 @@ class TestNetlist(unittest.TestCase):
         netlist = Netlist(draw)
         self.assertEqual(6, len(netlist.nets))
         net = netlist.nets[(25.08, 17.46)]
-        self.assertEqual('+15V', net.id)
+        self.assertEqual('+15V', net.identifier)
 
     def test_nodes_power_gnd(self):
         draw = Draw(library_path=['samples/files/symbols'])
@@ -58,7 +58,7 @@ class TestNetlist(unittest.TestCase):
         netlist = Netlist(draw)
         self.assertEqual(6, len(netlist.nets))
         net = netlist.nets[(25.08, 17.46)]
-        self.assertEqual('GND', net.id)
+        self.assertEqual('GND', net.identifier)
 
     def test_nodes_named_power(self):
         draw = Draw(library_path=['samples/files/symbols'])
@@ -74,7 +74,7 @@ class TestNetlist(unittest.TestCase):
 
         self.assertEqual(6, len(netlist.nets))
         net = netlist.nets[(25.08, 17.46)]
-        self.assertEqual('GND', net.id)
+        self.assertEqual('GND', net.identifier)
 
     def test_nodes_named_label(self):
         draw = Draw(library_path=['samples/files/symbols'])
@@ -90,7 +90,7 @@ class TestNetlist(unittest.TestCase):
 
         self.assertEqual(6, len(netlist.nets))
         net = netlist.nets[(25.08, 17.46)]
-        self.assertEqual('OUTPUT', net.id)
+        self.assertEqual('OUTPUT', net.identifier)
 
     def test_netlist(self):
         schema = Schema()
@@ -101,9 +101,9 @@ class TestNetlist(unittest.TestCase):
 
         self.assertEqual(28, len(netlist.nets))
         net = netlist.nets[(96.52, 45.72)]
-        self.assertEqual('IN_1', net.id)
+        self.assertEqual('IN_1', net.identifier)
         net = netlist.nets[(80.01, 50.8)]
-        self.assertEqual('GND', net.id)
+        self.assertEqual('GND', net.identifier)
 
         #subax1 = plt.subplot(121)
         #nx.draw(netlist.graph, with_labels=True, font_weight='bold')

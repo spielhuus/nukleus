@@ -1,10 +1,11 @@
 from typing import Dict, List, cast
 
-from nukleus.model.SchemaElement import POS_T, PTS_T
 from nukleus.model.GlobalLabel import GlobalLabel
 from nukleus.model.LibrarySymbol import LibrarySymbol
 from nukleus.model.LocalLabel import LocalLabel
 from nukleus.model.NoConnect import NoConnect
+from nukleus.model.Pin import Pin
+from nukleus.model.SchemaElement import POS_T, PTS_T
 from nukleus.model.Symbol import Symbol
 from nukleus.model.Utils import get_pins, transform
 from nukleus.model.Wire import Wire
@@ -15,20 +16,25 @@ from .Schema import Schema
 
 class Net:
     """Netlist elemenet."""
+
     def __init__(self):
-        self.id: str = str()
+        self.identifier: str = str()
+        """Netlist identifier."""
         self.coords = set()
-        self.pins = []
+        """Coordinates of the netlist."""
+        self.pins: List[Pin] = []
+        """Pins of the netlist."""
 
     def __str__(self) -> str:
-        return f"Net: {self.id}, coords: {self.coords}, pins: {self.pins}"
+        return f"Net: {self.identifier}, coords: {self.coords}, pins: {self.pins}"
 
 
 class Netlist:
     """Calculate netlists for the schema."""
+
     def __init__(self, schema: Schema) -> None:
         self.schema = schema
-        self.nets: Dict[POS_T, Net]  = {}
+        self.nets: Dict[POS_T, Net] = {}
         self.no_connect: List[POS_T] = []
 
         self._wires()
@@ -38,8 +44,8 @@ class Netlist:
 
         _id = 1
         for _, value in self.nets.items():
-            if value.id == "":
-                value.id = str(_id)
+            if value.identifier == "":
+                value.identifier = str(_id)
                 _id += 1
 
     def _wires(self):
@@ -85,11 +91,11 @@ class Netlist:
                         net = net0
                     else:
                         net = Net()
-                        net.id = "NC"
+                        net.identifier = "NC"
                         self.nets[pin_pos] = net
 
                     if element.library_identifier.startswith("power:"):
-                        net.id = element.property("Value").value
+                        net.identifier = element.property("Value").value
                     assert net, "net is not set"
                     net.coords.add(pin_pos)
                     net.pins.append(pin)
@@ -110,7 +116,7 @@ class Netlist:
                     net = Net()
                     self.nets[label_pos] = net
 
-                net.id = element.text
+                net.identifier = element.text
                 assert net, "net is not set"
                 net.coords.add(label_pos)
 
@@ -135,11 +141,17 @@ class Netlist:
         ) or symbol.library_identifier == f"Device:{name}"
 
     def spice(self, circuit: Circuit):
+        """
+        Write the netlist to the circuit
+
+        :param circuit Circuit: The circuit object.
+        """
         power = {}
         for ref in self.schema.references():
-            nets = {}
+            nets: Dict[str, str] = {}
             for comp in getattr(self.schema, ref):
-                sym = self.schema.getSymbol(comp.library_identifier, LibrarySymbol)
+                sym = self.schema.getSymbol(
+                    comp.library_identifier, LibrarySymbol)
                 if sym.extends == "power":
                     continue
                 for pin in get_pins(comp):
@@ -147,20 +159,13 @@ class Netlist:
                     coord: POS_T = cast(POS_T, (verts[0], verts[1]))
                     net = self.nets.get(coord)
 
-                    assert net, "shoul nnot happen"
-#                    if not net:
-#                        net = Net()  # id)
-#                        net.id = "NC"
-#                        net.coords.add(coord)
-#                        # id += 1
-#                        nets[coord] = net
-
-                    nets[pin.number[0]] = net.id
+                    assert net, "net must be found."
+                    nets[pin.number[0]] = net.identifier
 
             element = getattr(self.schema, ref)[0]
             sym = self.schema.getSymbol(
                 element.library_identifier, LibrarySymbol
-            )  # TODO loaded twice
+            )
             if sym.extends == "power":
                 power[element.property("Value").value] = element
             elif (
@@ -172,7 +177,8 @@ class Netlist:
                     # get the pin numbers/names
                     seq = [str(_) for _ in range(1, len(nets) + 1)]
                     if element.has_property("Spice_Node_Sequence"):
-                        seq_field = element.property("Spice_Node_Sequence").value
+                        seq_field = element.property(
+                            "Spice_Node_Sequence").value
                         seq = seq_field.text.split()
                     elif not all(name in seq for name in nets.keys()):
                         # not all parts have numbered pins, get the pin names TODO
@@ -183,7 +189,8 @@ class Netlist:
                         nodes.append(str(nets[str(arg)]))
 
                     model = element.property("Spice_Model").value
-                    circuit.X(element.property("Reference").value, nodes, model)
+                    circuit.X(element.property(
+                        "Reference").value, nodes, model)
 
                 elif self._spice_primitive(element, "R"):
                     value = element.property("Value").value
@@ -191,7 +198,8 @@ class Netlist:
                         value = value[:-3]
                     # value = unit.parse_unit(value)
                     circuit.R(
-                        element.property("Reference").value, nets["1"], nets["2"], value
+                        element.property(
+                            "Reference").value, nets["1"], nets["2"], value
                     )
 
                 elif self._spice_primitive(element, "C"):
@@ -200,7 +208,8 @@ class Netlist:
                     #    value = value[:-3]
                     # value = unit.parse_unit(value)
                     circuit.C(
-                        element.property("Reference").value, nets["1"], nets["2"], value
+                        element.property(
+                            "Reference").value, nets["1"], nets["2"], value
                     )
 
                 elif self._spice_primitive(element, "L"):
@@ -216,8 +225,10 @@ class Netlist:
                     # value = unit.parse_unit(value)
                     model = element.property("Spice_Model").value
                     circuit.Q(
-                        element.property("Reference").value, nets["1"], nets["2"], nets["3"], model
+                        element.property(
+                            "Reference").value, nets["1"], nets["2"], nets["3"], model
                     )
 
                 elif element.has_property("Spice_Primitive"):
-                    print(f'unknown spice primitive "{element.property("Spice_Primitive").value}"')
+                    print(
+                        f'unknown spice primitive "{element.property("Spice_Primitive").value}"')

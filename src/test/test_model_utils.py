@@ -6,7 +6,7 @@ sys.path.append("../src")
 
 from nukleus.Library import Library
 from nukleus.model.Symbol import Symbol
-from nukleus.model.Utils import pinByPositions, pinPosition, placeFields, is_unit, totuple
+from nukleus.model.Utils import pinByPositions, pinPosition, placeFields, isUnit, totuple
 
 
 class TestUtilsPlaceFields(unittest.TestCase):
@@ -17,17 +17,17 @@ class TestUtilsPlaceFields(unittest.TestCase):
     def test_is_unit(self):
         lib = Library(['samples/files/symbols/'])
         lib_sym = lib.get('Device:R')
-        self.assertFalse(is_unit(lib_sym, 1))
-        self.assertTrue(is_unit(lib_sym.units[0], 1))
-        self.assertTrue(is_unit(lib_sym.units[1], 1))
+        self.assertFalse(isUnit(lib_sym, 1))
+        self.assertTrue(isUnit(lib_sym.units[0], 1))
+        self.assertTrue(isUnit(lib_sym.units[1], 1))
 
     def test_is_unit_opamp(self):
         lib = Library(['samples/files/symbols/'])
         lib_sym = lib.get('Amplifier_Operational:TL072')
-        self.assertFalse(is_unit(lib_sym, 1))
-        self.assertTrue(is_unit(lib_sym.units[0], 1))
-        self.assertFalse(is_unit(lib_sym.units[1], 1))
-        self.assertFalse(is_unit(lib_sym.units[2], 1))
+        self.assertFalse(isUnit(lib_sym, 1))
+        self.assertTrue(isUnit(lib_sym.units[0], 1))
+        self.assertFalse(isUnit(lib_sym.units[1], 1))
+        self.assertFalse(isUnit(lib_sym.units[2], 1))
 
     def test_get_pins_by_pos(self):
         lib = Library(['samples/files/symbols/'])
