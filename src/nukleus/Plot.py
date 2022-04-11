@@ -670,6 +670,7 @@ def plot(schema: Schema, out: IO = BytesIO(), border: bool = False, scale: float
             from IPython.display import SVG
             out.flush()
             out.seek(0)
+            print(out.getbuffer())
             return SVG(data=out.getbuffer())  # type: ignore
         except BaseException as err:
             print(f'can not display data {err}')
