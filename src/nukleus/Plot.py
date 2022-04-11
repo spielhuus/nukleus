@@ -675,14 +675,13 @@ def plot(schema: Schema, out: IO = BytesIO(), border: bool = False, scale: float
                 ctx.sfc.write_to_png(out)
 
 
-
     if check_notebook():
         try:
             from IPython.display import SVG
             out.flush()
             out.seek(0)
             svg_buffer = _clean_svg(out.read())
-            return SVG(data=svg_buffer)  # type: ignore
+            return SVG(data=str(svg_buffer, 'utf-8'))  # type: ignore
         except BaseException as err:
             print(f'can not display data {err}')
 
