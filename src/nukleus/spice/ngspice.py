@@ -1,3 +1,4 @@
+from typing import List, Dict
 import os
 import platform
 import logging
@@ -183,7 +184,6 @@ class ngspice():
         ii = 0
         while True:
             if not veclist[ii]:
-                print(names)
                 return names
             names.append(veclist[ii].decode('ascii'))
             ii += 1
@@ -298,14 +298,29 @@ class ngspice():
         netlist_lines = netlist
         if issubclass(type(netlist), str):
             netlist_lines = netlist.split('\n')
-        print(len(netlist_lines))
         netlist_lines = [line.encode('ascii') for line in netlist_lines]
         netlist_lines.append(None)
         array = (c_char_p * len(netlist_lines))(*netlist_lines)
-        print(len(array))
         return self.spice.ngSpice_Circ(array)
 
-    def transient(self):
-        # {} {} {} {}'.format(mode, npoints, fstart, fstop))
-        self.cmd('tran 1us 20ms 0')
+    def transient(self, tstep: str, tstop: str,  tstart: str = '0') -> Dict[str, List[float]]:
+        """
+        Run a transient analysis
+
+        Parameters
+        ----------
+        tstep : str
+            Time step
+        tstop : str
+            Stop time
+        tstart : str, optional
+            Start time. Defaults to '0'.
+
+        Returns
+        -------
+        Dict[str, List[float]]
+            Dictionary of vectors.  Keys are vector names and values are Numpy
+            arrays containing the data.
+        """
+        self.cmd(f'tran {tstep} {tstop} {tstart}')
         return self.vectors()
