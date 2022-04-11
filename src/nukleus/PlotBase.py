@@ -93,19 +93,23 @@ class DrawRect:
 
 class DrawArc:
     def __init__(self, start: POS_T, mid: POS_T, end: POS_T, width: float, color: rgb, type: str, fill: rgb | None = None) -> None:
-        self.x0 = mid[0]
-        self.y0 = mid[1]
-        self.x1 = start[0]
-        self.y1 = start[1]
-        self.x2 = end[0]
-        self.y2 = end[1]
-        self.radius = math.hypot(self.x1-self.x0, self.y1 - self.y0)
-        x = self.x0-self.radius
-        y = self.y0-self.radius
-        width = 2*self.radius
-        height = 2*self.radius
-        self.startAngle = (180/math.pi*math.atan2(self.y1-self.y0, self.x1-self.x0))
-        self.endAngle = (180/math.pi*math.atan2(self.y2-self.y0, self.x2-self.x0))
+        point_a = np.array(start)
+        point_b = np.array(mid)
+        point_c = np.array(end)
+        a = np.linalg.norm(point_c - point_b)
+        b = np.linalg.norm(point_c - point_a)
+        c = np.linalg.norm(point_b - point_a)
+        s = (a + b + c) / 2
+        self.radius = a*b*c / 4 / np.sqrt(s * (s - a) * (s - b) * (s - c))
+        b1 = a*a * (b*b + c*c - a*a)
+        b2 = b*b * (a*a + c*c - b*b)
+        b3 = c*c * (a*a + b*b - c*c)
+        self.pos = np.column_stack((point_a, point_b, point_c)).dot(np.hstack((b1, b2, b3)))
+        self.pos /= b1 + b2 + b3
+        self.start_pos = start
+
+        self.startAngle = (180/math.pi*math.atan2(start[1]-self.pos[1], start[0]-self.pos[0]))
+        self.endAngle = (180/math.pi*math.atan2(end[1]-self.pos[1], end[0]-self.pos[0]))
 
         self.width = width
         self.color = color
@@ -113,27 +117,24 @@ class DrawArc:
         self.fill = fill
 
     def dimension(self, _):
-        return f_coord([(self.x0, self.y0)])
-#        return [(self.x0-self.radius, self.y0-self.radius),
-#                (self.x1+self.radius, self.y1+self.radius),
-#                (self.x2+self.radius, self.y2+self.radius)]
+        return [(self.pos[0]-self.radius, self.pos[1]-self.radius),
+                (self.pos[0]+self.radius, self.pos[1]+self.radius)]
 
     def draw(self, ctx):
         ctx.set_source_rgba(*self.color.get())
         ctx.set_line_width(self.width)
-        #ctx.move_to(self.x0, self.x1)
-        ctx.arc(self.x0, self.y0, self.radius, self.startAngle * (math.pi / 180), self.endAngle * (math.pi / 180))
-        ctx.stroke_preserve()
-        #if self.fill:
-        #    ctx.set_source_rgba(*self.fill.get())
-        #    ctx.fill()
+        ctx.move_to(self.start_pos[0], self.start_pos[1])
+        ctx.arc(self.pos[0], self.pos[1], self.radius,
+                self.startAngle * (math.pi / 180),
+                self.endAngle * (math.pi / 180))
         ctx.stroke()
 
 
 class DrawCircle:
     """Draw a circle"""
 
-    def __init__(self, pos: POS_T, radius: float, width: float, color: rgb, type: str, fill: rgb | None = None) -> None:
+    def __init__(self, pos: POS_T, radius: float, width: float, color: rgb,
+                 type: str, fill: rgb | None = None) -> None:
         """
         Initialize a Circle object.
 
@@ -152,9 +153,8 @@ class DrawCircle:
         self.fill = fill
 
     def dimension(self, _):
-        return f_coord(self.pos)
-#        return [(self.pos[0]-self.radius, self.pos[1]-self.radius),
-#                (self.pos[0]+self.radius, self.pos[1]+self.radius)]
+        return [(self.pos[0]-self.radius, self.pos[1]-self.radius),
+                (self.pos[0]+self.radius, self.pos[1]+self.radius)]
 
     def draw(self, ctx):
         ctx.set_line_width(self.width)
@@ -242,16 +242,7 @@ class DrawText:
         return [(self.pos[0], self.pos[1]), (self.pos[0]+size_w, self.pos[1]+size_h)]
 
     def draw(self, ctx):
-        #assert self.rotation in (0, 90), f'self.rotation is {self.rotation}'
         ctx.save()
-
-#        # TODO Draw pos circle
-#        ctx.set_line_width(0.1)
-#        ctx.set_source_rgba(*rgb(1, 0, 0, 1).get())
-#        ctx.arc(self.pos[0], self.pos[1], .1, 0, 100)
-#        ctx.stroke_preserve()
-#        ctx.fill()
-#        ctx.stroke()
 
         pos_x, pos_y = (self.pos[0], self.pos[1])
         dim = self.dimension(ctx)

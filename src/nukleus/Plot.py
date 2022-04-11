@@ -378,8 +378,8 @@ class NodeSymbol(Node):
                             themes[theme]['component_outline'])  # type: ignore
                         self.graphs.append(DrawArc(
                             cast(POS_T, transform(element, draw.start)),
-                            draw.mid,
-                            draw.end,
+                            cast(POS_T, transform(element, draw.mid)),
+                            cast(POS_T, transform(element, draw.end)),
                             stroke.width,
                             stroke.color,
                             stroke.stroke_type
