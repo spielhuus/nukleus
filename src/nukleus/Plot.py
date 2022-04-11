@@ -4,6 +4,7 @@ from io import BytesIO
 from typing import IO, Dict, List, Text, Tuple, Type, cast
 import random
 import string
+import re
 
 import gi
 gi.require_version('Pango', '1.0')
@@ -628,8 +629,10 @@ class PlotContext:
 
 def _clean_svg(svg_string: str) -> str:
     rand = ''.join(random.choice(string.digits) for i in range(10))
-    res = svg_string.replace('id="glyph', f'id="glyph_{rand}_')
-    return res.replace('href="#glyph', f'href="#glyph_{rand}_')
+    #res = svg_string.replace('id="glyph', f'id="glyph_{rand}_')
+    res = re.sub(b'id="glyph', bytes(f'id="glyph_{rand}_', 'utf-8'), svg_string)
+    res = re.sub(b'href="#glyph', bytes(f'href="#glyph_{rand}_', 'utf-8'), res)
+    return res
 
 def plot(schema: Schema, out: IO = BytesIO(), border: bool = False, scale: float = SCALE,
          image_type='svg', theme: str = "kicad2000") -> IO:
@@ -671,6 +674,11 @@ def plot(schema: Schema, out: IO = BytesIO(), border: bool = False, scale: float
                 assert ctx.sfc, 'image cotext is not set.'
                 ctx.sfc.write_to_png(out)
 
+
+    out.flush()
+    out.seek(0)
+    svg_buffer = _clean_svg(out.read())
+    print(svg_buffer)
 
     if check_notebook():
         try:
