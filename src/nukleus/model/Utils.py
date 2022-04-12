@@ -211,7 +211,9 @@ def placeFields(symbol: Symbol) -> None:
     _size = f_coord(transform(symbol, symbol_size(symbol)))
     if len(get_pins(symbol)) == 1:
         if positions[0] == 1:
-            assert False, "implement, single pin, fields right"
+            vis_fields[0].pos = (_size[1][0]+1,28, symbol.pos[1])
+            assert vis_fields[0].text_effects, "pin has no text_effects"
+            vis_fields[0].text_effects.justify = [Justify.LEFT]
 
         elif positions[1] == 1:
             vis_fields[0].pos = (symbol.pos[0], _size[0][1]-1.28)
@@ -219,9 +221,9 @@ def placeFields(symbol: Symbol) -> None:
             vis_fields[0].text_effects.justify = [Justify.CENTER]
 
         elif positions[2] == 1:
-            vis_fields[0].pos = (0, 2.54)
+            vis_fields[0].pos = (_size[0][0]-1,28, symbol.pos[1])
             assert vis_fields[0].text_effects, "pin has no text_effects"
-            vis_fields[0].text_effects.justify = [Justify.CENTER]
+            vis_fields[0].text_effects.justify = [Justify.RIGHT]
 
         elif positions[3] == 1:
             vis_fields[0].pos = (symbol.pos[0], _size[1][1]+1.28)

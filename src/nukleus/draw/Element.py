@@ -92,7 +92,6 @@ class Element(DrawElement):
         _pos = self.pos if self.pos is not None else last_pos
         self.element.pos = sub(_pos, transform(self.element, transform(pins[self._anchor])))[0]
 
-
         # calculate tox and toy
         if self.rel_x != 0 or self.rel_y != 0:
             startx = transform(self.element, transform(pins['1']))[0][0]
@@ -209,7 +208,6 @@ class Element(DrawElement):
     def up(self):
         """
         Orietation of the symbol.
-
         """
         self._angle = 0
         return self

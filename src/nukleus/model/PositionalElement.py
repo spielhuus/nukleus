@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .SchemaElement import SchemaElement
+from .SchemaElement import SchemaElement, POS_T
 
 def ffmt(number: float) -> int|float:
     """
@@ -16,8 +16,8 @@ def ffmt(number: float) -> int|float:
 class PositionalElement(SchemaElement):
     """ Positional element for the schema items """
     def __init__(self, identifier, pos, angle) -> None:
-        self.pos = pos
+        self.pos: POS_T = pos
         """The POSITION_IDENTIFIER defines the X and Y coordinates of the element in the sheet."""
-        self.angle = angle
+        self.angle: float = angle
         """The POSITION_IDENTIFIER defines the angle of rotation of the element in the sheet."""
         super().__init__(identifier)

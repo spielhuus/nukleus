@@ -679,7 +679,6 @@ def plot(schema: Schema, out: IO|None = None, border: bool = False, scale: float
     if check_notebook():
         try:
             from IPython.display import SVG
-            print("output svg")
             out.flush()
             out.seek(0)
             svg_buffer = _clean_svg(str(out.read(), 'utf-8'))
