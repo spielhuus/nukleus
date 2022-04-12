@@ -683,7 +683,7 @@ def plot(schema: Schema, out: IO|None = None, border: bool = False, scale: float
             out.flush()
             out.seek(0)
             svg_buffer = _clean_svg(str(out.read(), 'utf-8'))
-            return SVG(data=str(svg_buffer, 'utf-8'))  # type: ignore
+            return SVG(data=svg_buffer)  # type: ignore
         except BaseException as err:
             print(f'can not display data {err}')
 
