@@ -40,8 +40,8 @@ class TestNetlist(unittest.TestCase):
         draw.add(Line().left())
 
         netlist = Netlist(draw)
-        self.assertEqual(6, len(netlist.nets))
-        net = netlist.nets[(25.08, 17.46)]
+        self.assertEqual(5, len(netlist.nets))
+        net = netlist.nets[(17.46, 20.0)]
         self.assertEqual('+15V', net.identifier)
 
     def test_nodes_power_gnd(self):
@@ -56,8 +56,8 @@ class TestNetlist(unittest.TestCase):
         draw.add(Line().left())
 
         netlist = Netlist(draw)
-        self.assertEqual(6, len(netlist.nets))
-        net = netlist.nets[(25.08, 17.46)]
+        self.assertEqual(5, len(netlist.nets))
+        net = netlist.nets[(20.0, 17.46)]
         self.assertEqual('GND', net.identifier)
 
     def test_nodes_named_power(self):
@@ -72,8 +72,8 @@ class TestNetlist(unittest.TestCase):
 
         netlist = Netlist(draw)
 
-        self.assertEqual(6, len(netlist.nets))
-        net = netlist.nets[(25.08, 17.46)]
+        self.assertEqual(5, len(netlist.nets))
+        net = netlist.nets[(17.46, 20.0)]
         self.assertEqual('GND', net.identifier)
 
     def test_nodes_named_label(self):
@@ -87,9 +87,8 @@ class TestNetlist(unittest.TestCase):
         draw.add(Line().left())
 
         netlist = Netlist(draw)
-
-        self.assertEqual(6, len(netlist.nets))
-        net = netlist.nets[(25.08, 17.46)]
+        self.assertEqual(5, len(netlist.nets))
+        net = netlist.nets[(17.46, 20.0)]
         self.assertEqual('OUTPUT', net.identifier)
 
     def test_netlist(self):

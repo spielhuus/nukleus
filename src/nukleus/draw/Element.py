@@ -105,12 +105,12 @@ class Element(DrawElement):
                 self.element.pos = ( self.element.pos[0] -
                         ((_pos[0] - self.rel_x - horizontal_length) / 2), self.element.pos[1])
                 line = Line().at(_pos).length((
-                    (_pos[0] - self.rel_x - horizontal_length) / 2)).right()
+                    (_pos[0] - self.rel_x - horizontal_length) / 2)).left()
                 extra_elements.append(line)
                 endx = transform(self.element, transform(pins['2']))[0][0]
                 endy = transform(self.element, transform(pins['2']))[0][1]
                 line = Line().at((endx, endy)).length(
-                        ((_pos[0] - self.rel_x - horizontal_length) / 2)).right()
+                        ((_pos[0] - self.rel_x - horizontal_length) / 2)).left()
                 extra_elements.append(line)
 
             elif self.rel_y != 0:

@@ -60,7 +60,7 @@ draw.add(Line().toy(get_pins(draw.U1[1])['2']))
 draw.add(Line().tox(get_pins(draw.U1[1])['2']))
 draw.add(Dot())
 
-draw.add(Line().at(get_pins(draw.U1[1])['3']).right())
+draw.add(Line().at(get_pins(draw.U1[1])['3']).left())
 draw.add(Line().toy(dot3))
 draw.add(Line().tox(dot3))
 
