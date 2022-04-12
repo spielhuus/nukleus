@@ -15,6 +15,8 @@ from nukleus.model.Utils import get_pins
 from nukleus.Netlist import Netlist
 from nukleus.spice.Potentiometer import Potentiometer
 
+import numpy as np
+
 # initialize the logger
 logging.basicConfig(format='%(levelname)s:%(message)s', encoding='utf-8', level=logging.ERROR)
 logging.getLogger().setLevel(logging.ERROR)
@@ -75,7 +77,7 @@ models = nukleus.SpiceModel.load_spice_models([cwd])
 
 circuit = nukleus.Circuit()
 circuit.models(models)
-pot = Potentiometer("Potentiometer", 100000, 1)
+pot = Potentiometer("Potentiometer", 100000, 0.3)
 circuit.subcircuit(pot)
 netlist = Netlist(draw)
 netlist.spice(circuit)
@@ -85,16 +87,20 @@ circuit.V("3", "INPUT", "GND", "DC 5V AC 5 SIN(0 5V 1k)")
 
 print(circuit)
 
-spice = nukleus.spice.ngspice()
-spice.circuit(circuit.__str__())
-vectors = spice.transient('10u', '20m', '0m')
+for s in np.arange( 1, 0, -0.01 ):
+    pot.wiper(s)
+    spice = nukleus.spice.ngspice()
+    spice.circuit(circuit.__str__())
+#vectors = spice.transient('10u', '20m', '0m')
+    vectors = spice.op()
 
+    print(vectors['output'])
 
-fig, ax = plt.subplots(figsize=(8, 6))
-# Add a bit of margin since matplotlib chops off the text otherwise
-ax.set_xmargin(0.1)
-ax.set_ymargin(0.1)
-#ax.plot(vectors['time']*1000, vectors['input'])
-ax.plot(vectors['time']*1000, vectors['output'])
-#ax.plot(vectors['time']*1000, vectors['input'])
-plt.show()
+#fig, ax = plt.subplots(figsize=(8, 6))
+## Add a bit of margin since matplotlib chops off the text otherwise
+#ax.set_xmargin(0.1)
+#ax.set_ymargin(0.1)
+##ax.plot(vectors['time']*1000, vectors['input'])
+#ax.plot(vectors['time']*1000, vectors['output'])
+##ax.plot(vectors['time']*1000, vectors['input'])
+#plt.show()

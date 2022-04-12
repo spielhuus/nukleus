@@ -189,6 +189,12 @@ class Circuit():
             res += ".end\n"
         return res
 
+    def __getattr__(self, name) -> Element:
+        for netlist in self.netlist:
+            if netlist.ref == name:
+                return netlist
+
+        raise AttributeError(f"No attribute {name}")
 
 class SubCircuit(Circuit):
     """
