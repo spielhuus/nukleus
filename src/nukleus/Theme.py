@@ -48,6 +48,11 @@ themes = {'kicad2000': {
         font_thickness='', font_style='',
         justify=[], hidden=False
     ),
+    'netname': TextEffects(
+        face='osifont', font_width=1.27, font_height=1.27,
+        font_thickness='', font_style='12',
+        justify=[], hidden=False
+    ),
     'wire': StrokeDefinition(
         width=0.12, type='solid', color=rgb(0, 150.0 / 255.0, 0, 1)),
     'pin': StrokeDefinition(

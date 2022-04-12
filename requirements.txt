@@ -19,3 +19,4 @@ tox
 debugpy
 schemdraw
 sympy
+nbformat

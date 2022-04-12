@@ -10,8 +10,8 @@ from ..model.Wire import Wire
 from .DrawElement import DrawElement
 
 ORIENTATION = {
-    'left': [1.0, 0.0],
-    'right': [-1.0, 0.0],
+    'left': [-1.0, 0.0],
+    'right': [1.0, 0.0],
     'up': [0.0, -1.0],
     'down': [0.0, 1.0]
 }

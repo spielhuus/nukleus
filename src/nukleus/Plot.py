@@ -27,6 +27,7 @@ from .PlotBase import (BaseElement, DrawArc, DrawCircle, DrawLine, DrawPolyLine,
                        DrawRect, DrawText)
 from .Schema import Schema
 from .Theme import themes
+from .Netlist import Netlist
 
 
 def check_notebook():
@@ -617,6 +618,22 @@ class PlotContext:
         self.sfc.finish()
         self.sfc.flush()
 
+def drawNetlists(netlist: Netlist, ctx, theme='kicad2000') -> None:
+    net_names = {}
+    for coord, net in netlist.nets.items():
+        if net.identifier not in net_names:
+            net_names[net.identifier] = [coord]
+        else:
+            net_names[net.identifier].append(coord)
+
+    for name, coords in net_names.items():
+        if name.isnumeric():
+            print(f'{name} {coords}')
+            pos = add(coords[0], (-1.0, -1.0))
+            DrawCircle(pos, 1, 0.1, rgb(1, 0, 0, 1), '', rgb(1, 0, 0, 1)).draw(ctx)
+            DrawText(pos, name, 0, themes[theme]['pin_number']).draw(ctx)
+
+
 def _clean_svg(svg_string: str) -> str:
     rand = ''.join(random.choice(string.digits) for i in range(10))
     res = re.sub('id="glyph', f'id="glyph_{rand}_', svg_string)
@@ -624,7 +641,7 @@ def _clean_svg(svg_string: str) -> str:
     return res
 
 def plot(schema: Schema, out: IO|None = None, border: bool = False, scale: float = SCALE,
-         image_type='svg', theme: str = "kicad2000") -> IO:
+        image_type='svg', theme: str = "kicad2000", netlist: Netlist|None = None) -> IO:
 
     # get the image type if out is a filename
     if not out:
@@ -659,6 +676,8 @@ def plot(schema: Schema, out: IO|None = None, border: bool = False, scale: float
                 factory.nodes.append(NodeBorder(schema, width, height, theme))
 
             factory.draw(ctx.ctx)
+            if netlist:
+                drawNetlists(netlist, ctx.ctx)
 
             if image_type == 'png':
                 out = BytesIO()

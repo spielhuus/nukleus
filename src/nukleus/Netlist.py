@@ -4,7 +4,7 @@ from nukleus.model.GlobalLabel import GlobalLabel
 from nukleus.model.LibrarySymbol import LibrarySymbol
 from nukleus.model.LocalLabel import LocalLabel
 from nukleus.model.NoConnect import NoConnect
-from nukleus.model.Pin import Pin
+from nukleus.model.Pin import Pin, PinImpl
 from nukleus.model.SchemaElement import POS_T, PTS_T
 from nukleus.model.Symbol import Symbol
 from nukleus.model.Utils import get_pins, transform
@@ -26,7 +26,13 @@ class Net:
         """Pins of the netlist."""
 
     def __str__(self) -> str:
-        return f"Net: {self.identifier}, coords: {self.coords}, pins: {self.pins}"
+        pins_string = []
+        for pin in self.pins:
+            ref_str = 'UNKNOWN'
+            if isinstance(pin, PinImpl):
+                ref_str = pin.parent.property('Reference').value
+            pins_string.append(f'{ref_str} ({pin.number[0]})')
+        return f"Net: {self.identifier}, coords: {self.coords}, pins: {pins_string}"
 
 
 class Netlist:
@@ -45,8 +51,11 @@ class Netlist:
         _id = 1
         for _, value in self.nets.items():
             if value.identifier == "":
-                value.identifier = str(_id)
-                _id += 1
+                if len(value.pins) > 1:
+                    value.identifier = str(_id)
+                    _id += 1
+                else:
+                    value.identifier = "NC"
 
     def _wires(self):
         """
@@ -67,7 +76,6 @@ class Netlist:
                     net = net1
                 else:
                     net = Net()
-                    # id += 1
 
                 net.coords.add(element.pts[0])
                 net.coords.add(element.pts[1])
@@ -91,7 +99,7 @@ class Netlist:
                         net = net0
                     else:
                         net = Net()
-                        net.identifier = "NC"
+                        # TODO net.identifier = "NC"
                         self.nets[pin_pos] = net
 
                     if element.library_identifier.startswith("power:"):
