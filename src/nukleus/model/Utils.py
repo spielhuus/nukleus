@@ -211,24 +211,31 @@ def placeFields(symbol: Symbol) -> None:
     _size = f_coord(transform(symbol, symbol_size(symbol)))
     if len(get_pins(symbol)) == 1:
         if positions[0] == 1:
+            # left
             vis_fields[0].pos = (_size[1][0]+1.28, symbol.pos[1])
             assert vis_fields[0].text_effects, "pin has no text_effects"
             vis_fields[0].text_effects.justify = [Justify.LEFT]
+            vis_fields[0].angle = 360 - symbol.angle
 
         elif positions[1] == 1:
+            # bottom
             vis_fields[0].pos = (symbol.pos[0], _size[0][1]-1.28)
             assert vis_fields[0].text_effects, "pin has no text_effects"
             vis_fields[0].text_effects.justify = [Justify.CENTER]
 
         elif positions[2] == 1:
+            # right
             vis_fields[0].pos = (_size[0][0]-1.28, symbol.pos[1])
             assert vis_fields[0].text_effects, "pin has no text_effects"
             vis_fields[0].text_effects.justify = [Justify.RIGHT]
+            vis_fields[0].angle = 360 - symbol.angle
 
         elif positions[3] == 1:
+            # up
             vis_fields[0].pos = (symbol.pos[0], _size[1][1]+1.28)
             assert vis_fields[0].text_effects, "pin has no text_effects"
             vis_fields[0].text_effects.justify = [Justify.CENTER]
+
     else:
         if positions[1] == 0:
             #fields top
@@ -237,7 +244,7 @@ def placeFields(symbol: Symbol) -> None:
                 pin.pos = (symbol.pos[0], top_pos)
                 assert pin.text_effects, "pin has no text_effects"
                 pin.text_effects.justify = [Justify.CENTER]
-                pin.angle = 90
+                pin.angle = 360 - symbol.angle
                 top_pos += 2
 
         elif positions[2] == 0:

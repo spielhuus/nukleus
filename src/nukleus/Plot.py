@@ -399,8 +399,7 @@ class NodeSymbol(Node):
                         ))
                     else:
                         print(f"unknown graph type: {draw}")
-#                #
-#        self.pos = element.pos
+
                 for pin in subsym.pins:
                     if pin.length:
                         pin_theme = themes[theme]["pin"]
