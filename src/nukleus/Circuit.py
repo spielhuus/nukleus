@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Dict
+from typing import List, Dict, cast
 
 from .SpiceModel import get_includes, spice_model
 
@@ -73,7 +73,6 @@ class Circuit():
     """
     Circuit class for creating netlist.
     """
-    __name__: str = ""
 
     def __init__(self):
         self.includes: List[spice_model] = []
@@ -195,8 +194,10 @@ class SubCircuit(Circuit):
     """
     Subcircuit
     """
-    __name__: str = ""
-    __nodes__: List[str] = []
+    def __init__(self, name: str, nodes: List[str]):
+        super().__init__()
+        self.__name__: str = name
+        self.__nodes__: List[str] = nodes
 
     def __str__(self):
         """Return the formatted subcircuit definition."""
