@@ -1,6 +1,8 @@
 from typing import List, Tuple
 import math
 
+from abc import ABC, abstractmethod
+
 import gi
 gi.require_version('Pango', '1.0')
 gi.require_version('PangoCairo', '1.0')
@@ -13,7 +15,19 @@ from .model.SchemaElement import POS_T, PTS_T
 from .model.Utils import f_coord
 from .model.TextEffects import TextEffects, Justify
 
-class DrawLine:
+class BaseElement(ABC):
+    pass
+
+    @abstractmethod
+    def dimension(self, _) -> PTS_T:
+        pass
+
+    @abstractmethod
+    def draw(self, ctx):
+        pass
+
+
+class DrawLine(BaseElement):
     def __init__(self, pts: PTS_T, width: float, color: rgb, line_type: str) -> None:
         self.pts = pts
         self.width = width
@@ -32,7 +46,7 @@ class DrawLine:
         ctx.stroke()
 
 
-class DrawPolyLine:
+class DrawPolyLine(BaseElement):
     """Draw a polyline"""
 
     def __init__(self, pts: PTS_T, width: float, color: rgb, type: str, fill: rgb | None = None) -> None:
@@ -67,7 +81,7 @@ class DrawPolyLine:
         ctx.stroke()
 
 
-class DrawRect:
+class DrawRect(BaseElement):
     def __init__(self, pts: PTS_T, width: float, color: rgb, type: str, fill: rgb | None = None) -> None:
         self.pts = pts
         self.width = width
@@ -91,14 +105,14 @@ class DrawRect:
         ctx.stroke()
 
 
-class DrawArc:
+class DrawArc(BaseElement):
     def __init__(self, start: POS_T, mid: POS_T, end: POS_T, width: float, color: rgb, type: str, fill: rgb | None = None) -> None:
         point_a = np.array(start)
         point_b = np.array(mid)
         point_c = np.array(end)
-        a = np.linalg.norm(point_c - point_b)
-        b = np.linalg.norm(point_c - point_a)
-        c = np.linalg.norm(point_b - point_a)
+        a = np.linalg.norm(point_c - point_b)  # type: ignore
+        b = np.linalg.norm(point_c - point_a)  # type: ignore
+        c = np.linalg.norm(point_b - point_a)  # type: ignore
         s = (a + b + c) / 2
         self.radius = a*b*c / 4 / np.sqrt(s * (s - a) * (s - b) * (s - c))
         b1 = a*a * (b*b + c*c - a*a)
@@ -130,7 +144,7 @@ class DrawArc:
         ctx.stroke()
 
 
-class DrawCircle:
+class DrawCircle(BaseElement):
     """Draw a circle"""
 
     def __init__(self, pos: POS_T, radius: float, width: float, color: rgb,
@@ -165,7 +179,7 @@ class DrawCircle:
         ctx.stroke()
 
 
-class DrawElipse:
+class DrawElipse(BaseElement):
     """Draw a circle"""
 
     def __init__(self, pos: POS_T, radius1: float, radius2: float, width: float, color: rgb, type: str, fill: rgb | None = None) -> None:
@@ -208,7 +222,7 @@ class DrawElipse:
         ctx.restore()
 
 
-class DrawText:
+class DrawText(BaseElement):
     """Draw a text to the context."""
     def __init__(self, pos: POS_T, text: str, rotation, text_effects: TextEffects) -> None:
         self.pos = pos

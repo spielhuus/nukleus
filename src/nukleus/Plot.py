@@ -23,8 +23,8 @@ from .model.SchemaElement import POS_T, PTS_T, SchemaElement
 from .model.SymbolInstance import SymbolInstance
 from .model.Utils import add, f_coord, isUnit, transform
 from .model.Wire import Wire
-from .PlotBase import (DrawArc, DrawCircle, DrawLine, DrawPolyLine, DrawRect,
-                       DrawText)
+from .PlotBase import (BaseElement, DrawArc, DrawCircle, DrawLine, DrawPolyLine,
+                       DrawRect, DrawText)
 from .Schema import Schema
 from .Theme import themes
 
@@ -232,8 +232,7 @@ class NodeGlobalLabel(Node):
         pts = [
             (width + self.theme['global_label']['hspacing'],  # type: ignore
                 -height/2 - self.theme['global_label']['vspacing']),  # type: ignore
-            # type: ignore
-            (.6, - height/2 - self.theme['global_label']['vspacing']),
+            (.6, - height/2 - self.theme['global_label']['vspacing']), # type: ignore
             (0, 0),
             (.6, height/2 + self.theme['global_label']
              ['vspacing']),  # type: ignore
@@ -243,12 +242,9 @@ class NodeGlobalLabel(Node):
                 height/2 - self.theme['global_label']['vspacing']),  # type: ignore
         ]
         box = DrawPolyLine(transform(self.element, pts),
-                           # type: ignore
-                           self.theme['global_label']['border_width'],
-                           # type: ignore
-                           self.theme['global_label']['border_color'],
-                           # type: ignore
-                           self.theme['global_label']['border_style'],
+                           self.theme['global_label']['border_width'], # type: ignore
+                           self.theme['global_label']['border_color'], # type: ignore
+                           self.theme['global_label']['border_style'], # type: ignore
                            self.theme['global_label']['fill_color'])  # type: ignore
         box.draw(ctx)
 
@@ -332,8 +328,8 @@ class NodeNoConnect(Node):
 
 class NodeSymbol(Node):
     def __init__(self, element: Symbol, theme: str) -> None:
-        self.symbol = element
-        self.graphs = []
+        self.symbol: Symbol = element
+        self.graphs: List[BaseElement] = []
         self.lines = []
         self.texts = []
         assert element.library_symbol, 'library symbol is not set'
@@ -349,8 +345,7 @@ class NodeSymbol(Node):
                     if draw.fill == FillType.BACKGROUND:
                         fill = themes[theme]["component_body"]
                     elif draw.fill == FillType.FOREGROUND:
-                        # type: ignore
-                        fill = themes[theme]["component_outline"].color
+                        fill = themes[theme]["component_outline"].color # type: ignore
                     if isinstance(draw, Polyline):
                         self.graphs.append(DrawPolyLine(
                             transform(element, draw.points),
@@ -393,7 +388,8 @@ class NodeSymbol(Node):
 
                     elif isinstance(draw, Circle):
                         stroke = _mergeStrokeDefinition(
-                            draw.stroke_definition, themes[theme]['component_outline'])
+                            draw.stroke_definition,
+                            themes[theme]['component_outline']) # type: ignore
                         self.graphs.append(DrawCircle(
                             cast(POS_T, transform(element, draw.center)),
                             draw.radius,
@@ -401,7 +397,6 @@ class NodeSymbol(Node):
                             stroke.color,
                             stroke.stroke_type
                         ))
-                        # TODO pl.circle(dp, draw.r, linewidth, edgecolor, facecolor)
                     else:
                         print(f"unknown graph type: {draw}")
 #                #
@@ -419,10 +414,6 @@ class NodeSymbol(Node):
 
                     if (not sym.pin_numbers_hide
                             and not sym.extends == "power"):
-
-                        # TODO                        pin_offset = np.array(((0, 0.1), (0.1, 0)))
-                        #                        pin_offset[0] = -abs(pin_offset[0])
-                        #                        pin_offset[1] = abs(pin_offset[1])
 
                         pin_pos = transform(element, transform(pin))
                         t_pos_x = pin_pos[0][0]
@@ -464,7 +455,7 @@ class NodeSymbol(Node):
                             t_pos_y = pin_pos[0][1] - sym.pin_names_offset * 5
 
                         # type: ignore
-                        text_effects = themes[theme]['pin_name']
+                        text_effects = themes[theme]['pin_name'] # type: ignore
                         self.texts.append(
                             DrawText((t_pos_x, t_pos_y), pin.name[0], pin.angle, text_effects))
 

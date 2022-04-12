@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, cast
+from typing import Optional, cast
 
 from ..Library import Library
 from ..model.LibrarySymbol import LibrarySymbol
@@ -90,7 +90,8 @@ class Element(DrawElement):
 
         # calculate position
         _pos = self.pos if self.pos is not None else last_pos
-        self.element.pos = sub(_pos, transform(self.element, transform(pins[self._anchor])))[0]
+        pin_pos = transform(self.element, transform(pins[self._anchor]))
+        self.element.pos = sub(_pos, pin_pos[0])
 
         # calculate tox and toy
         if self.rel_x != 0 or self.rel_y != 0:
@@ -100,15 +101,18 @@ class Element(DrawElement):
             endy = transform(self.element, transform(pins['2']))[0][1]
             horizontal_length = startx - endx
             vertical_length = endy - starty
-            # TODO# TODO  print(f'element relative placement: {self.rel_x} {_pos} {horizontal_length}')
             if self.rel_x != 0:
-                self.element.pos = ( self.element.pos[0] - ((_pos[0] - self.rel_x - horizontal_length) / 2), self.element.pos[1])
-                line = Line().at(_pos).length(((_pos[0] - self.rel_x - horizontal_length) / 2)).right()
+                self.element.pos = ( self.element.pos[0] -
+                        ((_pos[0] - self.rel_x - horizontal_length) / 2), self.element.pos[1])
+                line = Line().at(_pos).length((
+                    (_pos[0] - self.rel_x - horizontal_length) / 2)).right()
                 extra_elements.append(line)
                 endx = transform(self.element, transform(pins['2']))[0][0]
                 endy = transform(self.element, transform(pins['2']))[0][1]
-                line = Line().at((endx, endy)).length(((_pos[0] - self.rel_x - horizontal_length) / 2)).right()
+                line = Line().at((endx, endy)).length(
+                        ((_pos[0] - self.rel_x - horizontal_length) / 2)).right()
                 extra_elements.append(line)
+
             elif self.rel_y != 0:
                 # get the vertical pins
                 pin_pos = pinByPositions(self.element)
@@ -119,9 +123,9 @@ class Element(DrawElement):
                 endy = transform(self.element, transform(south_pin))[0][1]
                 vertical_length = endy - starty
 
+                assert self.pos, "Element position not set"
                 if self.pos[1] > self.rel_y:
                     print("draw up")
-                    pass
 
                 else:
                     print("draw down")
@@ -129,24 +133,27 @@ class Element(DrawElement):
                     self.element.pos = (self.element.pos[0], self.element.pos[1] + line_length)
                     line = Line().at(_pos).length(line_length).down()
                     extra_elements.append(line)
-                    line = Line().at((self.element.pos[0], endy+line_length)).length(line_length).down()
+                    line = Line().at((self.element.pos[0], endy +
+                        line_length)).length(line_length).down()
                     extra_elements.append(line)
 
         # when the anchor pin is found, set the next pos
+        _last_pos: POS_T|None = None
         if len(pins) > 1:
             for pin in _pin_numbers:
                 if str(self._anchor) != str(pin):
                     _last_pos = transform(self.element,
                         transform(pins[pin]))[0]
         else:
-            _last_pos = tuple(totuple(_pos))
+            _last_pos = _pos
 
         # recalculate the propery positions
         placeFields(self.element)
 
-        assert isinstance(_last_pos, Tuple), 'last pos is not a Tuple'
+        assert _last_pos, 'last_pos is not set'
+        assert isinstance(_last_pos, tuple), 'last pos is not a Tuple'
         assert isinstance(self.element.pos,
-                          Tuple), 'element pos is not a Tuple'
+                          tuple), 'element pos is not a Tuple'
         return (self, self.element, _last_pos, extra_elements)
 
     def anchor(self, number: str | int = 1):
@@ -171,7 +178,7 @@ class Element(DrawElement):
             pin_impl = cast(PinImpl, pos)
             _parent = pin_impl.parent
             _pos = transform(cast(Symbol, _parent), transform(pin_impl))
-            self.pos = _pos[0]  # TODO totuple(_pos[0])
+            self.pos = _pos[0]
         elif isinstance(pos, DrawElement):
             draw_element = cast(DrawElement, pos)
             assert draw_element.element, 'element is None'
@@ -231,7 +238,7 @@ class Element(DrawElement):
 
     def tox(self, pos):
         """
-        Length of the line.
+        Draw the line to the x position.
         The position can either be the xy coordinates
         or a DrawElement.
 
@@ -240,7 +247,7 @@ class Element(DrawElement):
         if isinstance(pos, PinImpl):
             pin_impl = cast(PinImpl, pos)
             pos = transform(cast(Symbol, pin_impl.parent), transform(pin_impl))
-            self.rel_x = tuple(totuple(pos[0]))[0]
+            self.rel_x = pos[0][0]
         elif isinstance(pos, DrawElement):
             assert pos.element and isinstance(pos.element, PositionalElement)
             self.rel_x = cast(PositionalElement, pos.element).pos[0]
@@ -251,7 +258,7 @@ class Element(DrawElement):
 
     def toy(self, pos):
         """
-        Length of the line.
+        Draw the line to the y position.
         The position can either be the xy coordinates
         or a DrawElement.
 
