@@ -629,16 +629,17 @@ class PlotContext:
 
 def _clean_svg(svg_string: str) -> str:
     rand = ''.join(random.choice(string.digits) for i in range(10))
-    #res = svg_string.replace('id="glyph', f'id="glyph_{rand}_')
-    res = re.sub(b'id="glyph', bytes(f'id="glyph_{rand}_', 'utf-8'), svg_string)
-    res = re.sub(b'href="#glyph', bytes(f'href="#glyph_{rand}_', 'utf-8'), res)
+    res = re.sub('id="glyph', f'id="glyph_{rand}_', svg_string)
+    res = re.sub('href="#glyph', f'href="#glyph_{rand}_', res)
     return res
 
-def plot(schema: Schema, out: IO = BytesIO(), border: bool = False, scale: float = SCALE,
+def plot(schema: Schema, out: IO|None = None, border: bool = False, scale: float = SCALE,
          image_type='svg', theme: str = "kicad2000") -> IO:
 
     # get the image type if out is a filename
-    if isinstance(out, str):
+    if not out:
+        out = BytesIO()
+    elif isinstance(out, str):
         image_type = out.split('.')[-1]
         if image_type not in ['png', 'svg', 'pdf']:
             raise FileTypeException(
@@ -678,10 +679,10 @@ def plot(schema: Schema, out: IO = BytesIO(), border: bool = False, scale: float
     if check_notebook():
         try:
             from IPython.display import SVG
+            print("output svg")
             out.flush()
             out.seek(0)
-            svg_buffer = _clean_svg(out.read())
-            print(svg_buffer)
+            svg_buffer = _clean_svg(str(out.read(), 'utf-8'))
             return SVG(data=str(svg_buffer, 'utf-8'))  # type: ignore
         except BaseException as err:
             print(f'can not display data {err}')
