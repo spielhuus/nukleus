@@ -61,8 +61,11 @@ class X(Element):
 
 class V(Element):
     """Voltage source element."""
-#    def __init__(self, ref: str, nodes: List[str], value: str):
-#        super().__init__(ref, nodes, value)
+
+    def __init__(self, ref: str, nodes: List[str], value: str):
+        if not ref.startswith('V'):
+            ref = f"V{ref}"
+        super().__init__(ref, nodes, value)
 
     def __str__(self):
         return "V{} {} {}".format(
