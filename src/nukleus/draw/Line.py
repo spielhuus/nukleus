@@ -9,12 +9,12 @@ from ..model.Utils import add, mul, totuple, transform
 from ..model.Wire import Wire
 from .DrawElement import DrawElement
 
-ORIENTATION = {
-    'left': [-1.0, 0.0],
-    'right': [1.0, 0.0],
-    'up': [0.0, -1.0],
-    'down': [0.0, 1.0]
-}
+#ORIENTATION = {
+#    'left': [1.0, 0.0],
+#    'right': [-1.0, 0.0],
+#    'up': [0.0, -1.0],
+#    'down': [0.0, 1.0]
+#}
 
 
 class Line(DrawElement):
@@ -37,9 +37,18 @@ class Line(DrawElement):
             _end_pos = (_pos[0], self._rel_length_y)
         else:
             length = unit if self._length == 0 else self._length
-            _end_pos = add(_pos, mul(
-                cast(POS_T, ORIENTATION[self.orientation]),
-                cast(POS_T, (length, length))))
+            _end_pos = (0.0, 0.0)
+            if self.orientation == 'left':
+                _end_pos = (_pos[0] - length, _pos[1])
+            elif self.orientation == 'right':
+                _end_pos = (_pos[0] + length, _pos[1])
+            elif self.orientation == 'up':
+                _end_pos = (_pos[0], _pos[1] - length)
+            elif self.orientation == 'down':
+                _end_pos = (_pos[0], _pos[1] + length)
+# TODO               add(_pos, mul(
+#                cast(POS_T, ORIENTATION[self.orientation]),
+#                cast(POS_T, (length, length))))
 
         assert isinstance(_pos, tuple), f'_pos is not a tuple : {type(_pos)}'
         assert isinstance(
