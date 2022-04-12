@@ -303,6 +303,10 @@ class ngspice():
         array = (c_char_p * len(netlist_lines))(*netlist_lines)
         return self.spice.ngSpice_Circ(array)
 
+    def op(self) -> Dict[str, List[float]]:
+        self.cmd('op')
+        return self.vectors()
+
     def transient(self, tstep: str, tstop: str,  tstart: str = '0') -> Dict[str, List[float]]:
         """
         Run a transient analysis
