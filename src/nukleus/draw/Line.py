@@ -2,22 +2,33 @@ from typing import Optional, Tuple, cast
 
 import numpy as np
 
-from nukleus import Library
-from nukleus.model import POS_T, PinImpl, PositionalElement, Wire, Symbol
-from ..model.Utils import transform, add, mul, totuple
-
+from ..Library import Library
+from ..model.Pin import PinImpl
+from ..model.PositionalElement import PositionalElement
+from ..model.SchemaElement import POS_T
+from ..model.Symbol import Symbol
+from ..model.Utils import add, mul, totuple, transform
+from ..model.Wire import Wire
 from .DrawElement import DrawElement
 
+# ORIENTATION = {
+#    'left': np.array([1, 0]),
+#    'right': np.array([-1, 0]),
+#    'up': np.array([0, -1]),
+#    'down': np.array([0, 1])
+# }
+
 ORIENTATION = {
-    'left': np.array([1, 0]),
-    'right': np.array([-1, 0]),
-    'up': np.array([0, -1]),
-    'down': np.array([0, 1])
+    'left': [1, 0],
+    'right': [-1, 0],
+    'up': [0, -1],
+    'down': [0, 1]
 }
 
 
 class Line(DrawElement):
     """Place a connection on the schematic."""
+
     def __init__(self):
         self.pos: POS_T | None = None
         self._length: float = 0.0
@@ -37,9 +48,9 @@ class Line(DrawElement):
             l = unit if self._length == 0 else self._length
             _end_pos = add(_pos, mul(ORIENTATION[self.orientation], (l, l)))
 
-        assert isinstance(_pos, Tuple), f'_pos is not a tuple : {type(_pos)}'
+        assert isinstance(_pos, tuple), f'_pos is not a tuple : {type(_pos)}'
         assert isinstance(
-            _end_pos, Tuple), f'_pos is not a tuple : {type(_end_pos)}'
+            _end_pos, tuple), f'_pos is not a tuple : {type(_end_pos)}'
         self.element = Wire(pts=[_pos, _end_pos])
         return (self, self.element, self.element.pts[1], None)
 
@@ -53,18 +64,19 @@ class Line(DrawElement):
         """
         if isinstance(pos, PinImpl):
             pin_impl = cast(PinImpl, pos)
-            _pos = transform(cast(Symbol, pin_impl.parent), transform(pin_impl))
-            self.pos = tuple(totuple(_pos[0]))
+            _pos = transform(cast(Symbol, pin_impl.parent),
+                             transform(pin_impl))
+            self.pos = _pos[0]  # TODO tuple(totuple(_pos[0]))
         elif isinstance(pos, DrawElement):
             assert pos.element and isinstance(pos.element, PositionalElement)
             self.pos = cast(PositionalElement, pos.element).pos
         else:
-            self.pos = tuple(totuple(pos))
+            self.pos = pos  # TODO tuple(totuple(pos))
         return self
 
     def tox(self, pos):
         """
-        Length of the line.
+        Draw the line to the x position.
         The position can either be the xy coordinates
         or a DrawElement.
 
@@ -73,18 +85,17 @@ class Line(DrawElement):
         if isinstance(pos, PinImpl):
             pin_impl = cast(PinImpl, pos)
             pos = transform(cast(Symbol, pin_impl.parent), transform(pin_impl))
-            self._rel_length_x = tuple(totuple(pos[0]))[0]
+            self._rel_length_x = pos[0][0] # TODO tuple(totuple(pos[0]))[0]
         elif isinstance(pos, DrawElement):
             assert pos.element and isinstance(pos.element, PositionalElement)
             self._rel_length_x = cast(PositionalElement, pos.element).pos[0]
         else:
             self._rel_length_x = tuple(totuple(pos))[0]
-        #self._rel_length_x = pos[0][0]
         return self
 
     def toy(self, pos):
         """
-        Length of the line.
+        Draw the line to the y position.
         The position can either be the xy coordinates
         or a DrawElement.
 
@@ -93,7 +104,7 @@ class Line(DrawElement):
         if isinstance(pos, PinImpl):
             pin_impl = cast(PinImpl, pos)
             pos = transform(cast(Symbol, pin_impl.parent), transform(pin_impl))
-            self._rel_length_y = tuple(totuple(pos[0]))[1]
+            self._rel_length_y = pos[0][1] # TODO tuple(totuple(pos[0]))[1]
         elif isinstance(pos, DrawElement):
             assert pos.element and isinstance(pos.element, PositionalElement)
             self._rel_length_y = cast(PositionalElement, pos.element).pos[1]

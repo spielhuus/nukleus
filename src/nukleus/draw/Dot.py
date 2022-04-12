@@ -1,13 +1,14 @@
 from typing import Optional
 
 from ..Library import Library
-from ..model import Junction, POS_T
-
+from ..model.Junction import Junction
+from ..model.SchemaElement import POS_T
 from .DrawElement import DrawElement
 
 
 class Dot(DrawElement):
     """Place a junction in the schematic"""
+
     def __init__(self):
         self.pos = None
         self.element: Optional[Junction] = None

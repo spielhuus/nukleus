@@ -1,12 +1,13 @@
 from typing import Optional
 
-from nukleus import Library
-from nukleus.model import NoConnect, POS_T
-
+from ..Library import Library
+from ..model.NoConnect import NoConnect
+from ..model.SchemaElement import POS_T
 from .DrawElement import DrawElement
 
 
 class NC(DrawElement):
+    """Place a no connect marker in the schematic"""
     def __init__(self):
         self.pos = None
         self.element: Optional[NoConnect] = None
