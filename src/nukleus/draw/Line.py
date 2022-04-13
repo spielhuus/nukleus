@@ -31,13 +31,13 @@ class Line(DrawElement):
         else:
             length = unit if self._length == 0 else self._length
             if self.orientation == 'left':
-                _end_pos = (_pos[0] - length, _pos[1])
+                _end_pos = (round(_pos[0] - length, 2), _pos[1])
             elif self.orientation == 'right':
-                _end_pos = (_pos[0] + length, _pos[1])
+                _end_pos = (round(_pos[0] + length, 2), _pos[1])
             elif self.orientation == 'up':
-                _end_pos = (_pos[0], _pos[1] - length)
+                _end_pos = (_pos[0], round(_pos[1] - length, 2))
             elif self.orientation == 'down':
-                _end_pos = (_pos[0], _pos[1] + length)
+                _end_pos = (_pos[0], round(_pos[1] + length, 2))
 
         assert isinstance(_pos, tuple), f'_pos is not a tuple : {type(_pos)}'
         assert isinstance(
@@ -103,13 +103,13 @@ class Line(DrawElement):
             self._rel_length_y = tuple(totuple(pos))[1]
         return self
 
-    def length(self, length: float):
+    def length(self, line_length: float):
         """
         Length of the line.
 
         :param pos float: Length of the line.
         """
-        self._length = length
+        self._length = line_length
         return self
 
     def right(self):

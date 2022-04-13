@@ -80,6 +80,7 @@ class Netlist:
                 net.coords.add(element.pts[0])
                 net.coords.add(element.pts[1])
 
+                print(f'Wire: {element.pts[0]} - {element.pts[1]}')
                 assert net, "net is not set"
                 for coord in net.coords:
                     self.nets[coord] = net
@@ -98,6 +99,7 @@ class Netlist:
                     if net0:
                         net = net0
                     else:
+                        print(f'{element.property("Reference").value}:{element.unit} ({pin_pos}) net not found for pin: {pin.sexp()}')
                         net = Net()
                         # TODO net.identifier = "NC"
                         self.nets[pin_pos] = net

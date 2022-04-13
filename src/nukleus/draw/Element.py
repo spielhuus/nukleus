@@ -2,12 +2,13 @@ from typing import Optional, cast
 
 from ..Library import Library
 from ..model.LibrarySymbol import LibrarySymbol
-from ..model.Property import Property
 from ..model.Pin import Pin, PinImpl
-from ..model.SchemaElement import POS_T
 from ..model.PositionalElement import PositionalElement
+from ..model.Property import Property
+from ..model.SchemaElement import POS_T
 from ..model.Symbol import Symbol
-from ..model.Utils import pinByPositions, placeFields, transform, sub, get_pins, totuple
+from ..model.Utils import (get_pins, pinByPositions, placeFields, sub, totuple,
+                           transform)
 from .DrawElement import DrawElement, PinNotFoundError
 from .Line import Line
 
@@ -22,7 +23,7 @@ class Element(DrawElement):
         self.unit = unit
         self.properties = kwargs
 
-        self.pos: POS_T|None = None
+        self.pos: POS_T | None = None
         self._anchor: str = '0'
         self._angle = 0
         self._mirror = ''
@@ -87,7 +88,6 @@ class Element(DrawElement):
         if self._anchor == '0' and len(pins) > 0:
             self._anchor = _pin_numbers[0]
 
-
         # calculate position
         _pos = self.pos if self.pos is not None else last_pos
         pin_pos = transform(self.element, transform(pins[self._anchor]))
@@ -102,15 +102,15 @@ class Element(DrawElement):
             horizontal_length = startx - endx
             vertical_length = endy - starty
             if self.rel_x != 0:
-                self.element.pos = ( self.element.pos[0] -
-                        ((_pos[0] - self.rel_x - horizontal_length) / 2), self.element.pos[1])
+                self.element.pos = (self.element.pos[0] -
+                                    ((_pos[0] - self.rel_x - horizontal_length) / 2), self.element.pos[1])
                 line = Line().at(_pos).length((
                     (_pos[0] - self.rel_x - horizontal_length) / 2)).left()
                 extra_elements.append(line)
                 endx = transform(self.element, transform(pins['2']))[0][0]
                 endy = transform(self.element, transform(pins['2']))[0][1]
                 line = Line().at((endx, endy)).length(
-                        ((_pos[0] - self.rel_x - horizontal_length) / 2)).left()
+                    ((_pos[0] - self.rel_x - horizontal_length) / 2)).left()
                 extra_elements.append(line)
 
             elif self.rel_y != 0:
@@ -128,22 +128,23 @@ class Element(DrawElement):
                     print("draw up")
 
                 else:
-                    print("draw down")
-                    line_length = ((self.rel_y - _pos[1] - vertical_length) / 2)
-                    self.element.pos = (self.element.pos[0], self.element.pos[1] + line_length)
+                    line_length = (
+                        (self.rel_y - _pos[1] - vertical_length) / 2)
+                    self.element.pos = (
+                        self.element.pos[0], self.element.pos[1] + line_length)
                     line = Line().at(_pos).length(line_length).down()
                     extra_elements.append(line)
                     line = Line().at((self.element.pos[0], endy +
-                        line_length)).length(line_length).down()
+                                      line_length)).length(line_length).down()
                     extra_elements.append(line)
 
         # when the anchor pin is found, set the next pos
-        _last_pos: POS_T|None = None
+        _last_pos: POS_T | None = None
         if len(pins) > 1:
             for pin in _pin_numbers:
                 if str(self._anchor) != str(pin):
                     _last_pos = transform(self.element,
-                        transform(pins[pin]))[0]
+                                          transform(pins[pin]))[0]
         else:
             _last_pos = _pos
 

@@ -71,6 +71,7 @@ draw.add(Element("-15V", "power:-15V", on_schema=False).at(get_pins(draw.U1[3])[
 
 plot(draw, 'attenuverter.pdf', scale=20)
 
+print(draw.sexp())
 
 cwd = os.getcwd() + "/files/spice"
 models = nukleus.SpiceModel.load_spice_models([cwd])
@@ -80,6 +81,9 @@ circuit.models(models)
 pot = Potentiometer("Potentiometer", 100000, 0.3)
 circuit.subcircuit(pot)
 netlist = Netlist(draw)
+for cord, net in netlist.nets.items():
+    print(f'{cord} {net}')
+
 netlist.spice(circuit)
 circuit.V("1", "+15V", "GND", "DC 15V")
 circuit.V("2", "-15V", "GND", "DC -15V")
@@ -94,7 +98,7 @@ for s in np.arange( 1, 0, -0.01 ):
 #vectors = spice.transient('10u', '20m', '0m')
     vectors = spice.op()
 
-    print(vectors['output'])
+    #print(vectors['output'])
 
 #fig, ax = plt.subplots(figsize=(8, 6))
 ## Add a bit of margin since matplotlib chops off the text otherwise
