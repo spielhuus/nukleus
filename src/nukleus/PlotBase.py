@@ -241,16 +241,10 @@ class DrawText(BaseElement):
 
     def dimension(self, ctx: cairo.Context) -> List[Tuple[float, float]]:
         layout = PangoCairo.create_layout(ctx)
-        pctx = layout.get_context()
-        desc = Pango.FontDescription()
-        desc.set_size(self.font_height*Pango.SCALE)
-        desc.set_family(self.font_face)
+        desc = Pango.FontDescription.from_string(f"{self.font_face} {self.font_width}")
         layout.set_font_description(desc)
-        layout.set_alignment(Pango.Alignment.CENTER)
-        font_options = cairo.FontOptions()
-        font_options.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
-        PangoCairo.context_set_font_options(pctx, font_options)
         layout.set_text(self.text)
+
         size = layout.get_size()
         size_w = float(size[0]) / Pango.SCALE
         size_h = float(size[1]) / Pango.SCALE
@@ -298,36 +292,13 @@ class DrawText(BaseElement):
         ctx.set_source_rgba(*rgb(0, 0, 0, 1).get())
 
         layout = PangoCairo.create_layout(ctx)
-        pctx = layout.get_context()
         ctx.rotate((270 if self.rotation == 90 else self.rotation) * 3.14 / 180)
 
-        # layout.set_width(pango.units_from_double(10))
-        desc = Pango.FontDescription()
-        desc.set_size(self.font_height*1024)
-        desc.set_family("Sans") #self.font_face)
+        desc = Pango.FontDescription.from_string(f"{self.font_face} {self.font_width}")
         layout.set_font_description(desc)
-        layout.set_alignment(Pango.Alignment.CENTER)
-        fo = cairo.FontOptions()
-        fo.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
-        PangoCairo.context_set_font_options(pctx, fo)
-
 
         layout.set_text(self.text)
         PangoCairo.show_layout(ctx, layout)
-
-        # TODO remove draw box around text
-#        size = layout.get_size()
-#        size_w = float(size[0]) / Pango.SCALE
-#        size_h = float(size[1]) / Pango.SCALE
-#        size = (size_w, size_h)
-#        ctx.set_source_rgba(*rgb(.2, .2, .2, 1).get())
-#        ctx.set_line_width(0.1)
-#        ctx.move_to(0, 0)
-#        ctx.line_to(size[0], 0)
-#        ctx.line_to(size[0], size[1])
-#        ctx.line_to(0, size[1])
-#        ctx.line_to(0, 0)
-#        ctx.stroke_preserve()
 
         ctx.stroke()
         ctx.restore()

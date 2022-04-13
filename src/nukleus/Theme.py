@@ -66,7 +66,7 @@ themes = {'kicad2000': {
             'border_color': rgb(0, 0, 0, 1),
             'border_width': 0.1,
             'border_style': 'solid',
-            'fill_color': rgb(0.8, 0.8, 0.8, 1),
+            'fill_color': rgb(1, 1, 1, 1),
             'hspacing': 2,
             'vspacing': 0.35
         }

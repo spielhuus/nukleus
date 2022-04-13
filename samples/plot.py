@@ -18,8 +18,7 @@ def main():
 
     schema = nukleus.load_schema(args.input)
 
-    #nukleus.plot(schema, args.output, border=args.border)
-    nukleus.plot(schema, border=args.border)
+    nukleus.plot(schema, args.output, border=args.border)
 
 if __name__ == "__main__":
     main()

@@ -107,9 +107,9 @@ class NodeWire(Node):
     def __init__(self, element: Wire, theme: str) -> None:
         self.line = DrawLine(
             element.pts,
-            themes[theme]["no_connect"].width,  # type: ignore
-            themes[theme]["no_connect"].color,  # type: ignore
-            themes[theme]["no_connect"].stroke_type  # type: ignore
+            themes[theme]["wire"].width,  # type: ignore
+            themes[theme]["wire"].color,  # type: ignore
+            themes[theme]["wire"].stroke_type  # type: ignore
         )
 
     def dimension(self, ctx) -> PTS_T:
@@ -123,10 +123,11 @@ class NodeJunction(Node):
     def __init__(self, element: Junction, theme: str) -> None:
         self.circle = DrawCircle(
             element.pos,
-            .2,
-            themes[theme]["no_connect"].width,  # type: ignore
-            themes[theme]["no_connect"].color,  # type: ignore
-            themes[theme]["no_connect"].stroke_type  # type: ignore
+            .3,
+            themes[theme]["wire"].width,  # type: ignore
+            themes[theme]["wire"].color,  # type: ignore
+            themes[theme]["wire"].stroke_type,  # type: ignore
+            themes[theme]["wire"].color,  # type: ignore
         )
 
     def dimension(self, ctx) -> PTS_T:
@@ -259,9 +260,8 @@ class NodeGlobalLabel(Node):
             y_pos = self.element.pos[1] - \
                 ((width + self.theme['global_label']
                  ['hspacing']) / 2)  # type: ignore
-            x_pos = self.element.pos[0] + \
-                ((height + self.theme['global_label']
-                 ['vspacing']) / 2)  # type: ignore
+            x_pos = self.element.pos[0] - \
+                ((height) / 2)  # type: ignore
         elif self.element.angle == 180:
             x_pos = self.element.pos[0] - \
                 ((width + self.theme['global_label']
@@ -271,8 +271,7 @@ class NodeGlobalLabel(Node):
                 ((width + self.theme['global_label']
                  ['hspacing']) / 2)  # type: ignore
             x_pos = self.element.pos[0] - \
-                ((height + self.theme['global_label']
-                 ['vspacing']) / 2)  # type: ignore
+                ((height) / 2)  # type: ignore
 
         self.text_effects.justify = []
         text = DrawText((x_pos, y_pos),
@@ -383,9 +382,6 @@ class NodeSymbol(Node):
                             stroke.color,
                             stroke.stroke_type
                         ))
-                        #dp = np.array([draw.x, draw.y])
-                        # pl.arc(dp, draw.r, draw.start * 0.1, draw.end * 0.1,
-                        #       linewidth, edgecolor, facecolor)
 
                     elif isinstance(draw, Circle):
                         stroke = _mergeStrokeDefinition(
@@ -413,24 +409,29 @@ class NodeSymbol(Node):
                         ))
 
                     if (not sym.pin_numbers_hide
-                            and not sym.extends == "power"):
+                        and not sym.extends == "power"):
 
                         pin_pos = transform(element, transform(pin))
                         t_pos_x = pin_pos[0][0]
                         t_pos_y = pin_pos[0][1]
 
-                        if pin.angle == 0:
-                            t_pos_x += (pin_pos[1][0] - pin_pos[0][0]) / 2
-                            t_pos_y -= 0.5
-                        elif pin.angle == 90:
-                            t_pos_y += (pin_pos[0][1] - pin_pos[1][1]) / 2
-                            t_pos_x += 0.5
-                        elif pin.angle == 180:
-                            t_pos_x += (pin_pos[1][0] - pin_pos[0][0]) / 2
-                            t_pos_y -= 0.5
-                        elif pin.angle == 270:
-                            t_pos_y += (pin_pos[1][1] - pin_pos[0][1]) / 2
-                            t_pos_x += 0.5
+                        angle = element.angle + pin.angle
+                        if angle > 270:
+                            angle -= 360
+                        if angle == 0:
+                            t_pos_x += abs(pin_pos[1][0] - pin_pos[0][0]) / 2
+                            t_pos_y -= 0.6
+                        elif angle == 90:
+                            t_pos_y -= abs(pin_pos[0][1] - pin_pos[1][1]) / 2
+                            t_pos_x += 0.6
+                        elif angle == 180:
+                            t_pos_x -= abs(pin_pos[1][0] - pin_pos[0][0]) / 2
+                            t_pos_y -= 0.6
+                        elif angle == 270:
+                            t_pos_y += abs(pin_pos[1][1] - pin_pos[0][1]) / 2
+                            t_pos_x += 0.6
+                        else:
+                            print(f'unknown angle: {angle}')
 
                         text_effects: TextEffects = cast(
                             TextEffects, themes[theme]['pin_number'])
@@ -438,7 +439,7 @@ class NodeSymbol(Node):
                             DrawText((t_pos_x, t_pos_y), pin.number[0], 0, text_effects))
 
                     if (pin.name[0] != "~"
-                        and not pin.hidden
+                        #and not pin.hidden
                             and not sym.extends == "power"):
 
                         pin_pos = transform(element, transform(pin))
@@ -446,13 +447,17 @@ class NodeSymbol(Node):
                         t_pos_y = pin_pos[0][1]
 
                         if pin.angle == 0:
-                            t_pos_x = pin_pos[1][0] + sym.pin_names_offset * 5
+                            #print(f'{pin.name[0]} pin angle: {pin.angle}')
+                            t_pos_x = pin_pos[1][0] + sym.pin_names_offset * 6
                         elif pin.angle == 90:
-                            t_pos_y = pin_pos[1][1] + sym.pin_names_offset * 5
+                            #print(f'{pin.name[0]} pin angle: {pin.angle}')
+                            t_pos_y = pin_pos[1][1] - sym.pin_names_offset * 6
                         elif pin.angle == 180:
-                            t_pos_x = pin_pos[0][0] - sym.pin_names_offset * 5
+                            #print(f'{pin.name[0]} pin angle: {pin.angle}')
+                            t_pos_x = pin_pos[0][0] - sym.pin_names_offset * 6
                         elif pin.angle == 270:
-                            t_pos_y = pin_pos[0][1] - sym.pin_names_offset * 5
+                            #print(f'{pin.name[0]} pin angle: {pin.angle}')
+                            t_pos_y = pin_pos[1][1] + sym.pin_names_offset * 6
 
                         # type: ignore
                         text_effects = themes[theme]['pin_name'] # type: ignore
@@ -605,9 +610,6 @@ class PlotContext:
 
         self.ctx = cairo.Context(self.sfc)
         self.ctx.scale(scale, scale)
-        self.ctx.select_font_face(
-            "Sans", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL
-        )
 
     def __enter__(self):
         return self
