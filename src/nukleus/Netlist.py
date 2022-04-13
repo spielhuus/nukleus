@@ -238,8 +238,21 @@ class Netlist:
                     )
 
                 elif self._spice_primitive(element, "D"):
+                    seq = [str(_) for _ in range(1, len(nets) + 1)]
+                    if element.has_property("Spice_Node_Sequence"):
+                        seq_field = element.property(
+                            "Spice_Node_Sequence").value
+                        seq = seq_field.text.split()
+                    elif not all(name in seq for name in nets.keys()):
+                        # not all parts have numbered pins, get the pin names TODO
+                        seq = nets.keys()
+
+                    nodes = []
+                    for arg in seq:
+                        nodes.append(str(nets[str(arg)]))
+
                     model = element.property("Spice_Model").value
-                    circuit.D(element.property("Reference").value, nets['1'], nets['2'], model)
+                    circuit.D(element.property("Reference").value, nodes[0], nodes[1], model)
 
                 elif element.has_property("Spice_Primitive"):
                     print(
