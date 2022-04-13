@@ -628,7 +628,6 @@ def drawNetlists(netlist: Netlist, ctx, theme='kicad2000') -> None:
 
     for name, coords in net_names.items():
         if name.isnumeric():
-            print(f'{name} {coords}')
             pos = add(coords[0], (-1.0, -1.0))
             DrawCircle(pos, 1, 0.1, rgb(1, 0, 0, 1), '', rgb(1, 0, 0, 1)).draw(ctx)
             DrawText(pos, name, 0, themes[theme]['pin_number']).draw(ctx)

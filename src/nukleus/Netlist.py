@@ -187,7 +187,7 @@ class Netlist:
                     if element.has_property("Spice_Node_Sequence"):
                         seq_field = element.property(
                             "Spice_Node_Sequence").value
-                        seq = seq_field.text.split()
+                        seq = seq_field.split()
                     elif not all(name in seq for name in nets.keys()):
                         # not all parts have numbered pins, get the pin names TODO
                         seq = nets.keys()
@@ -242,7 +242,7 @@ class Netlist:
                     if element.has_property("Spice_Node_Sequence"):
                         seq_field = element.property(
                             "Spice_Node_Sequence").value
-                        seq = seq_field.text.split()
+                        seq = seq_field.split()
                     elif not all(name in seq for name in nets.keys()):
                         # not all parts have numbered pins, get the pin names TODO
                         seq = nets.keys()
