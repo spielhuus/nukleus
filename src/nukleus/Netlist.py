@@ -239,6 +239,10 @@ class Netlist:
                             "Reference").value, nets["1"], nets["2"], nets["3"], model
                     )
 
+                elif self._spice_primitive(element, "D"):
+                    model = element.property("Spice_Model").value
+                    circuit.D(element.property("Reference").value, nets['1'], nets['2'], model)
+
                 elif element.has_property("Spice_Primitive"):
                     print(
                         f'unknown spice primitive "{element.property("Spice_Primitive").value}"')

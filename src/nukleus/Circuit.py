@@ -27,6 +27,18 @@ class Resistor(Element):
             str(self.ref), " ".join(map(str, self.nodes)), self.value)
 
 
+class Diode(Element):
+    """Diode element."""
+    def __init__(self, ref: str, nodes: List[str], value: str):
+        if not ref.startswith('D'):
+            ref = f"D{ref}"
+        super().__init__(ref, nodes, value)
+
+    def __str__(self):
+        return "{} {} model={}".format(
+            str(self.ref), " ".join(map(str, self.nodes)), self.value)
+
+
 class Capacitor(Element):
     """Capacitor element."""
     def __init__(self, ref: str, nodes: List[str], value: str):
@@ -138,6 +150,27 @@ class Circuit():
         :rtype: None
         """
         self.netlist.append(Capacitor(ref, [n0, n1], value))
+
+    def D(self, ref: str, n0: str, n1: str, value: str) -> None:
+        """
+        Add a Diode
+
+        :param ref: Node Reference
+        :type ref: str
+        :param n0: Node Name
+        :type n0: str
+        :param n1: Node Name
+        :type n1: str
+        :param value: Capacitance
+        :type value: str
+        :return: None
+        :rtype: None
+        """
+        if value in self.subcircuits:
+            pass
+        else:
+            get_includes(value, self.includes, self.spice_models)
+        self.netlist.append(Diode(ref, [n0, n1], value))
 
     def Q(self, ref: str, n0: str, n1: str, n2: str, value: str) -> None:
         if value in self.subcircuits:
