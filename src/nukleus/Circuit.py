@@ -35,7 +35,7 @@ class Diode(Element):
         super().__init__(ref, nodes, value)
 
     def __str__(self):
-        return "{} {} model={}".format(
+        return "{} {} model='{}'".format(
             str(self.ref), " ".join(map(str, self.nodes)), self.value)
 
 
