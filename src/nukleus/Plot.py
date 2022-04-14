@@ -547,10 +547,24 @@ class NodeBorder(Node):
                 (width-border, height-border-15),
             ], border_theme['line'].width, border_theme['line'].color, border_theme['line'].stroke_type)
         ]
+        y_dist = 0
         for key, value in schema.comment.items():
             self.lines.append(DrawText(
-                (width-border-100, height-border-35), value, 0,
+                (width-border-108, height-border-36 - y_dist), value, 0,
                 border_theme[f'comment_{key}']))  # type: ignore
+            y_dist -= 7
+        self.lines.append(DrawText(
+            (width-border-108, height-border-12.5), schema.title, 0,
+            border_theme['title']))  # type: ignore
+        self.lines.append(DrawText(
+            (width-border-108, height-border-7.5), f'Size: {schema.paper}', 0,
+            border_theme['text']))  # type: ignore
+        self.lines.append(DrawText(
+            (width-border-65, height-border-7.5), f'Date: {schema.date}', 0,
+            border_theme['text']))  # type: ignore
+        self.lines.append(DrawText(
+            (width-border-14, height-border-7.5), f'Rev: {schema.version}', 0,
+            border_theme['text']))  # type: ignore
 
     def dimension(self, _) -> PTS_T:
         return []

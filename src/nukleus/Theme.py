@@ -10,27 +10,37 @@ themes = {'kicad2000': {
         'comment_1': TextEffects(
             face='osifont', font_width=2.54, font_height=2.54,
             font_thickness='', font_style='',
-            justify=[], hidden=False
+            justify=[Justify.LEFT], hidden=False
         ),
         'comment_2': TextEffects(
             face='osifont', font_width=2.54, font_height=2.54,
             font_thickness='', font_style='',
-            justify=[], hidden=False
+            justify=[Justify.LEFT], hidden=False
         ),
         'comment_3': TextEffects(
             face='osifont', font_width=2.54, font_height=2.54,
             font_thickness='', font_style='',
-            justify=[], hidden=False
+            justify=[Justify.LEFT], hidden=False
         ),
         'comment_4': TextEffects(
             face='osifont', font_width=1.27, font_height=1.27,
             font_thickness='', font_style='',
-            justify=[], hidden=False
+            justify=[Justify.LEFT], hidden=False
         ),
         'comment_5': TextEffects(
             face='osifont', font_width=1.27, font_height=1.27,
             font_thickness='', font_style='',
-            justify=[], hidden=False
+            justify=[Justify.LEFT], hidden=False
+        ),
+        'title': TextEffects(
+            face='osifont', font_width=2.54, font_height=1.27,
+            font_thickness='', font_style='',
+            justify=[Justify.LEFT], hidden=False
+        ),
+        'text': TextEffects(
+            face='osifont', font_width=1.27, font_height=1.27,
+            font_thickness='', font_style='',
+            justify=[Justify.LEFT], hidden=False
         ),
     },
     'text_effects': TextEffects(
@@ -79,27 +89,37 @@ themes = {'kicad2000': {
         'comment_1': TextEffects(
             face='osifont', font_width=2.54, font_height=2.54,
             font_thickness='', font_style='',
-            justify=[], hidden=False
+            justify=[Justify.LEFT], hidden=False
         ),
         'comment_2': TextEffects(
             face='osifont', font_width=2.54, font_height=2.54,
             font_thickness='', font_style='',
-            justify=[], hidden=False
+            justify=[Justify.LEFT], hidden=False
         ),
         'comment_3': TextEffects(
             face='osifont', font_width=2.54, font_height=2.54,
             font_thickness='', font_style='',
-            justify=[], hidden=False
+            justify=[Justify.LEFT], hidden=False
         ),
         'comment_4': TextEffects(
             face='osifont', font_width=1.27, font_height=1.27,
             font_thickness='', font_style='',
-            justify=[], hidden=False
+            justify=[Justify.LEFT], hidden=False
         ),
         'comment_5': TextEffects(
             face='osifont', font_width=1.27, font_height=1.27,
             font_thickness='', font_style='',
-            justify=[], hidden=False
+            justify=[Justify.LEFT], hidden=False
+        ),
+        'title': TextEffects(
+            face='osifont', font_width=2.54, font_height=1.27,
+            font_thickness='', font_style='',
+            justify=[Justify.LEFT], hidden=False
+        ),
+        'text': TextEffects(
+            face='osifont', font_width=1.27, font_height=1.27,
+            font_thickness='', font_style='',
+            justify=[Justify.LEFT], hidden=False
         ),
     },
     'text_effects': TextEffects(
