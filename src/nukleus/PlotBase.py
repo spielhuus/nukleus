@@ -173,7 +173,7 @@ class DrawCircle(BaseElement):
     def draw(self, ctx):
         ctx.set_line_width(self.width)
         ctx.set_source_rgba(*self.color.get())
-        ctx.arc(self.pos[0], self.pos[1], self.radius, 0, 40)
+        ctx.arc(self.pos[0], self.pos[1], self.radius, 0, 2*math.pi)
         ctx.stroke_preserve()
         if self.fill:
             ctx.set_source_rgba(*self.fill.get())
