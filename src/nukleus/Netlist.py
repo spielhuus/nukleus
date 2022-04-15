@@ -170,7 +170,7 @@ class Netlist:
                     assert net, "net must be found."
                     nets[pin.number[0]] = net.identifier
 
-            element = getattr(self.schema, ref)[0]
+            element: Symbol = getattr(self.schema, ref)[0]
             sym = self.schema.getSymbol(
                 element.library_identifier, LibrarySymbol
             )

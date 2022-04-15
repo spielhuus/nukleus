@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import cast
+from typing import List, cast
 
 from nukleus.model.FootprintAttributes import FootprintAttributes
 from nukleus.model.FootprintGraphicsItems import (FootprintArc, FootprintGraphicsItems,
@@ -130,17 +130,17 @@ class Footprint():
             elif token[0] == 'thermal_gap':
                 _thermal_gap = str(token[1])
             elif token[0] == 'attr':
-                _attributes.append(FootprintAttributes.parse(token))
+                _attributes.append(FootprintAttributes.parse(cast(SEXP_T, token)))
             elif token[0] == 'fp_text':
-                _graphic_items.append(FootprintText.parse(token))
+                _graphic_items.append(FootprintText.parse(cast(SEXP_T, token)))
             elif token[0] == 'fp_line':
-                _graphic_items.append(FootprintLine.parse(token))
+                _graphic_items.append(FootprintLine.parse(cast(SEXP_T, token)))
             elif token[0] == 'fp_circle':
-                _graphic_items.append(FootprintCircle.parse(token))
+                _graphic_items.append(FootprintCircle.parse(cast(SEXP_T, token)))
             elif token[0] == 'fp_arc':
-                _graphic_items.append(FootprintArc.parse(token))
+                _graphic_items.append(FootprintArc.parse(cast(SEXP_T, token)))
             elif token[0] == 'pad':
-                _pads.append(FootprintPad.parse(token))
+                _pads.append(FootprintPad.parse(cast(SEXP_T, token)))
 #            elif token[0] == 'ZONES':
 #            elif token[0] == 'GROUPS':
             elif token[0] == 'model':

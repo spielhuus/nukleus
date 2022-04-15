@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List
+from typing import List, cast
 
 from ..SexpParser import SEXP_T
 from .SchemaElement import POS_T
@@ -57,7 +57,7 @@ class TrackVia:
             elif token[0] == 'drill':
                 _drill = float(token[1])
             elif token[0] == 'layers':
-                _layers = token[1:]
+                _layers = cast(List[str], token[1:])
             elif token[0] == 'remove_unused_layers':
                 _remove_unused_layers = True
             elif token[0] == 'keep_end_layers':

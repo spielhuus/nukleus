@@ -74,7 +74,7 @@ class ParserV6():
         self.library_symbols: List[LibrarySymbol] = []
 
     @classmethod
-    def _title_block(cls, schema: Schema, sexp: SEXP_T) -> None:
+    def _title_block(cls, schema: Schema|PCB, sexp: SEXP_T) -> None:
         for token in sexp[1:]:
             if token[0] == 'title':
                 schema.title = token[1]

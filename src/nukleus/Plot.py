@@ -646,11 +646,11 @@ def drawNetlists(netlist: Netlist, ctx, theme='kicad2000') -> None:
         if name.isnumeric():
             pos = add(coords[0], (-1.0, -1.0))
             DrawCircle(pos, 1, 0.1, rgb(1, 0, 0, 1), '', rgb(1, 0, 0, 1)).draw(ctx)
-            DrawText(pos, name, 0, themes[theme]['pin_number']).draw(ctx)
+            DrawText(pos, name, 0, themes[theme]['pin_number']).draw(ctx) # type: ignore
 
 
 def _clean_svg(svg_string: str) -> str:
-    rand = ''.join(random.choice(string.digits) for i in range(10))
+    rand = ''.join(random.choice(string.digits) for _ in range(10))
     res = re.sub('id="glyph', f'id="glyph_{rand}_', svg_string)
     res = re.sub('href="#glyph', f'href="#glyph_{rand}_', res)
     return res

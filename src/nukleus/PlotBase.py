@@ -4,6 +4,7 @@ import math
 from abc import ABC, abstractmethod
 
 import gi
+from pcbnew import ENDPOINT_START
 gi.require_version('Pango', '1.0')
 gi.require_version('PangoCairo', '1.0')
 import cairo
@@ -295,6 +296,81 @@ class DrawText(BaseElement):
         ctx.rotate((270 if self.rotation == 90 else self.rotation) * 3.14 / 180)
 
         desc = Pango.FontDescription.from_string(f"{self.font_face} {self.font_width}")
+        layout.set_font_description(desc)
+
+        layout.set_text(self.text)
+        PangoCairo.show_layout(ctx, layout)
+
+        ctx.stroke()
+        ctx.restore()
+
+
+class DrawDimension(BaseElement):
+    """Draw a dimension to the context."""
+    def __init__(self, pts: PTS_T, height: float, angle: float, leader: float, text: str,
+                 width: float, color: rgb, text_effects: TextEffects) -> None:
+        self.pts = pts
+        self.height = height
+        self.angle = angle
+        self.leader = leader
+        self.text = text
+        self.width = width
+        self.color = color
+        self.text_effects = text_effects
+
+    def dimension(self, ctx: cairo.Context) -> List[Tuple[float, float]]:
+#        layout = PangoCairo.create_layout(ctx)
+#        desc = Pango.FontDescription.from_string(f"{self.font_face} {self.font_width}")
+#        layout.set_font_description(desc)
+#        layout.set_text(self.text)
+#
+#        size = layout.get_size()
+#        size_w = float(size[0]) / Pango.SCALE
+#        size_h = float(size[1]) / Pango.SCALE
+#
+#        return [(self.pos[0], self.pos[1]), (self.pos[0]+size_w, self.pos[1]+size_h)]
+        return  [0, 0]
+
+    def draw(self, ctx):
+        ctx.save()
+
+        #calculate the dimension line ends
+        v = np.array(self.pts[1]) - np.array(self.pts[0])
+        dist =  np.array((-v[1], v[0])) / math.sqrt(v[0]**2 + v[1]**2) * self.height
+        leader =  np.array((-v[1], v[0])) / math.sqrt(v[0]**2 + v[1]**2) * (self.height + self.leader)
+        mid_x = self.pts[0][0] + (self.pts[1][0] - self.pts[0][0]) / 2;
+        mid_y = self.pts[0][1] + (self.pts[1][1] - self.pts[0][1]) / 2;
+
+        # Draw dimension line
+        ctx.set_line_width(self.width)
+        ctx.set_source_rgba(*self.color.get())
+
+        ctx.move_to(self.pts[0][0], self.pts[0][1])
+        ctx.line_to(self.pts[0][0] + leader[0], self.pts[0][1] + leader[1])
+
+        ctx.move_to(self.pts[1][0], self.pts[1][1])
+        ctx.line_to(self.pts[1][0] + leader[0], self.pts[1][1] + leader[1])
+
+        ctx.move_to(self.pts[0][0] + dist[0], self.pts[0][1] + dist[1])
+        ctx.line_to(self.pts[1][0] + dist[0], self.pts[1][1] + dist[1])
+
+        ctx.arc(self.pts[0][0] + dist[0], self.pts[0][1] + dist[1], 0.3, 0, 2*math.pi)
+        ctx.arc(self.pts[1][0] + dist[0], self.pts[1][1] + dist[1], 0.3, 0, 2*math.pi)
+
+        # Draw dimension text
+        #ctx.translate(*self.pts[1])
+        #ctx.move_to(self.pts[0][0], self.pts[0][1] + leader[1])
+        ctx.move_to(mid_x, mid_y + leader[1])
+        ctx.set_source_rgba(*rgb(0, 0, 0, 1).get())
+
+        layout = PangoCairo.create_layout(ctx)
+        print(f'with: {self.pts[1][0] - self.pts[0][0]}')
+        layout.set_width(self.pts[1][0] - self.pts[0][0])
+        layout.set_height(self.leader)
+        layout.set_alignment(Pango.Alignment.CENTER)
+
+        #desc = Pango.FontDescription.from_string(f"{self.font_face} {self.font_width}")
+        desc = Pango.FontDescription.from_string(f'osifont 2')
         layout.set_font_description(desc)
 
         layout.set_text(self.text)

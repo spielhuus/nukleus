@@ -168,6 +168,7 @@ class PcbZone:
         _filled_areas_thickness: str = ''
         _polygon: PTS_T = []
         _fill_settings: PcbZoneFillSettings | None = None
+        _filled_polygon: PcbFilledPolygon | None = None
 
         for token in sexp[1:]:
             if token[0] == 'net':
@@ -194,9 +195,9 @@ class PcbZone:
                 for pt in token[1][1:]:
                     _polygon.append((float(pt[1]), float(pt[2])))
             elif token[0] == 'fill':
-                _fill_settings = PcbZoneFillSettings.parse(token)
+                _fill_settings = PcbZoneFillSettings.parse(cast(SEXP_T, token))
             elif token[0] == 'filled_polygon':
-                _filled_polygon = PcbFilledPolygon.parse(token)
+                _filled_polygon = PcbFilledPolygon.parse(cast(SEXP_T, token))
             else:
                 raise ValueError(f"Unexpected item: {token}")
 

@@ -83,7 +83,7 @@ class Node(ABC):
         pass
 
     @abstractmethod
-    def dimension(self, ctx) -> List[float]:
+    def dimension(self, ctx) -> PTS_T:
         pass
 
     @abstractmethod
@@ -97,9 +97,9 @@ class NodeLine(Node):
     def __init__(self, element: PcbLine, theme: str) -> None:
         self.line = DrawLine(
             [element.start, element.end],
-            themes[theme]["no_connect"].width,
-            themes[theme]["no_connect"].color,
-            themes[theme]["no_connect"].stroke_type
+            themes[theme]["no_connect"].width, # type: ignore
+            themes[theme]["no_connect"].color, # type: ignore
+            themes[theme]["no_connect"].stroke_type # type: ignore
         )
 
     def dimension(self, ctx) -> PTS_T:
@@ -116,8 +116,8 @@ class NodeSegment(Node):
         self.line = DrawLine(
             [element.start, element.end],
             element.width,
-            themes[theme]["no_connect"].color,
-            themes[theme]["no_connect"].stroke_type
+            themes[theme]["no_connect"].color, # type: ignore
+            themes[theme]["no_connect"].stroke_type # type: ignore
         )
 
     def dimension(self, ctx) -> PTS_T:
@@ -131,14 +131,14 @@ class NodeFootprint(Node):
     """Draw a Segment"""
 
     def __init__(self, element: Footprint, theme: str) -> None:
-        self.line = []
+        self.line: List[Node] = []
         for graph in element.GRAPHIC_ITEMS:
             if isinstance(graph, FootprintLine):
                 self.line.append(DrawLine(
                     transform(element, [graph.start, graph.end]),
                     graph.width,
-                    themes[theme]["no_connect"].color,
-                    themes[theme]["no_connect"].stroke_type
+                    themes[theme]["no_connect"].color, # type: ignore
+                    themes[theme]["no_connect"].stroke_type # type: ignore
                 ))
             elif isinstance(graph, FootprintText):
                 if not graph.hide:
