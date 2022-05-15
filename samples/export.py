@@ -3,8 +3,10 @@ import sys
 sys.path.append('src')
 sys.path.append('../src')
 
-import nukleus
+import nukleus as nl
 
 filename = 'files/summe_v6/main.kicad_sch'
-schema = nukleus.load_schema(filename)
-print(schema.sexp())
+sexp = nl.SexpWriter()
+with nl.schema(filename, sexp) as _:
+    pass
+print(sexp)

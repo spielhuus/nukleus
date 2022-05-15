@@ -1,6 +1,7 @@
 import glob
 import os
 import re
+import logging
 from typing import List
 
 
@@ -78,13 +79,11 @@ def get_includes(key: str, includes: List[spice_model], models: List[spice_model
     :param includes List[spice_model]: The target list.
     :param models List[spice_model]: Models to search in.
     """
-    found = False
     for model in models:
         if key in model.keys:
-            found = True
             if not _contains(model.path, includes):
                 includes.append(model)
                 for i in model.includes:
                     _get_includes(i, includes, models)
 
-    assert found, f"Model not found {key}"
+    logging.warning("Model not found %s", key)

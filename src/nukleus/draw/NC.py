@@ -1,8 +1,8 @@
 from typing import Optional
 
 from ..Library import Library
-from ..model.NoConnect import NoConnect
-from ..model.SchemaElement import POS_T
+from ..ModelSchema import NoConnect
+from ..Typing import POS_T
 from .DrawElement import DrawElement
 
 

@@ -1,7 +1,9 @@
 from __future__ import annotations
-from typing import List, Dict, cast
+from typing import List, Dict
 
-from .SpiceModel import get_includes, spice_model
+from nukleus.Registry import Registry
+
+from .SpiceModel import get_includes, load_spice_models, spice_model
 
 
 class Element:
@@ -93,7 +95,7 @@ class Circuit():
         self.includes: List[spice_model] = []
         self.netlist: List[Element] = []
         self.subcircuits: Dict[str, Circuit] = {}
-        self.spice_models: List[spice_model] = []
+        self.spice_models: List[spice_model] = load_spice_models(Registry().spice_path)
 
     def models(self, spice_models: List[spice_model]) -> None:
         """
@@ -106,7 +108,7 @@ class Circuit():
         """
         self.spice_models = spice_models
 
-    def subcircuit(self, circuit: Circuit) -> None:
+    def subcircuit(self, circuit: SubCircuit) -> None:
         """
         Add a subcircuit.
 
@@ -115,7 +117,7 @@ class Circuit():
         :return: None
         :rtype: None
         """
-        self.subcircuits[circuit.__name__] = circuit
+        self.subcircuits[circuit.name] = circuit
 
     def R(self, ref: str, n0: str, n1: str, value: str) -> None:
         """
@@ -191,9 +193,7 @@ class Circuit():
         :type value: str
         """
         x = X(ref, n, value)
-        if x.value in self.subcircuits:
-            pass
-        else:
+        if x.value not in self.subcircuits:
             get_includes(x.value, self.includes, self.spice_models)
 
         self.netlist.append(x)
@@ -219,10 +219,9 @@ class Circuit():
             res += f".include {i.path}\n"
         for i in self.subcircuits.values():
             res += f"{i}\n"
-        for n in self.netlist:
-            res += f"{n}\n"
-        if not isinstance(self, SubCircuit):
-            res += ".end\n"
+        for netlist in self.netlist:
+            res += f"{netlist}\n"
+        res += ".end\n"
         return res
 
     def __getattr__(self, name) -> Element:
@@ -238,14 +237,17 @@ class SubCircuit(Circuit):
     """
     def __init__(self, name: str, nodes: List[str]):
         super().__init__()
-        self.__name__: str = name
-        self.__nodes__: List[str] = nodes
+        self.name: str = name
+        self.nodes: List[str] = nodes
 
     def __str__(self):
         """Return the formatted subcircuit definition."""
 
-        nodes = " ".join(self.__nodes__)
-        netlist = f".subckt {self.__name__} {nodes}\n"
-        netlist += super().__str__()
-        netlist += f".ends {self.__name__}\n"
-        return netlist
+        nodes = " ".join(self.nodes)
+        strings: List[str] = []
+        strings.append(f".subckt {self.name} {nodes}")
+        #strings.append(super().__str__())
+        for netlist in self.netlist:
+            strings.append(str(netlist))
+        strings.append(f".ends {self.name}")
+        return "\n".join(strings)

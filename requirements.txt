@@ -1,6 +1,9 @@
 pycairo
 PyGObject
 matplotlib
+shapely
+descartes
+svgwrite
 ipython
 numpy
 nptyping
@@ -20,3 +23,7 @@ debugpy
 schemdraw
 sympy
 nbformat
+rich
+Pillow
+matplotlib-backend-kitty
+opencv-python

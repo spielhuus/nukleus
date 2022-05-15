@@ -1,14 +1,11 @@
 from typing import Optional, cast
 
 from ..Library import Library
-from ..model.LibrarySymbol import LibrarySymbol
-from ..model.Pin import Pin, PinImpl
-from ..model.PositionalElement import PositionalElement
-from ..model.Property import Property
-from ..model.SchemaElement import POS_T
-from ..model.Symbol import Symbol
-from ..model.Utils import (get_pins, pinByPositions, placeFields, sub, totuple,
-                           transform)
+from ..ModelSchema import (LibrarySymbol, Pin, PinImpl, PositionalElement,
+                           Property, Symbol)
+from ..transform import (get_pins, pinByPositions, placeFields, sub, totuple,
+                         transform)
+from ..Typing import POS_T
 from .DrawElement import DrawElement, PinNotFoundError
 from .Line import Line
 
@@ -56,7 +53,9 @@ class Element(DrawElement):
     def _get(self, library: Library, last_pos: POS_T, _: float):
         self.library_symbol = library.get(self.lib_name)
         self.library_symbol.identifier = self.lib_name
-        self.element = Symbol.new(self.ref, self.lib_name, self.library_symbol)
+        self.element = Symbol.new(
+            self.ref, self.lib_name,
+            library_symbol=self.library_symbol)
         self.element.unit = self.unit
         self.element.angle = self._angle
         extra_elements = []
@@ -125,8 +124,8 @@ class Element(DrawElement):
 
                 assert self.pos, "Element position not set"
                 if self.pos[1] > self.rel_y:
-                    print("draw up")
-
+                    # TODO draw up
+                    pass
                 else:
                     line_length = (
                         (self.rel_y - _pos[1] - vertical_length) / 2)

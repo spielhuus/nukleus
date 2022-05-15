@@ -2,7 +2,8 @@ from abc import ABC, abstractmethod
 from typing import List
 
 from ..Library import Library
-from ..model.SchemaElement import POS_T, SchemaElement
+from ..ModelSchema import SchemaElement
+from ..Typing import POS_T
 
 
 class LogicException(Exception):

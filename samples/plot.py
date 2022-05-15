@@ -1,10 +1,11 @@
 import sys
 import argparse
 
+
 sys.path.append('src')
 sys.path.append('../src')
 
-import nukleus
+import nukleus as nl
 
 def main():
     parser = argparse.ArgumentParser(description='plot a kicad schema file.')
@@ -16,9 +17,9 @@ def main():
                         help='draw the border.')
     args = parser.parse_args()
 
-    schema = nukleus.load_schema(args.input)
-
-    nukleus.plot(schema, args.output, border=args.border)
+    plot = nl.SchemaPlot(args.output, 297, 210, 600)
+    with nl.schema(args.input, plot) as _:
+        pass
 
 if __name__ == "__main__":
     main()

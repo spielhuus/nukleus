@@ -46,8 +46,8 @@ coverage: $(VENV)/bin/activate
 	$(CMD_COVERAGE_RUN)
 	$(COVERAGE) report -m
 
-type: 
-	 $(VENV)/bin/pyright $(SOURCES)
+type:
+	 $(VENV)/bin/pyright -p pyrightconfig.json $(SOURCES)
 
 
 install: $(TARGET)

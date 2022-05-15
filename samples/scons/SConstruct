@@ -8,7 +8,8 @@ from SCons.Node import NodeList
 
 env = Environment(ENV=os.environ,
                   tools=['default', nukleus.generate],
-                  NUKLEUS_ENVIRONMENT_VARS={'pcb': {
+                  NUKLEUS_ENVIRONMENT_VARS={'pcb': {}},
+                  NUKLEUS_TARGETS={'pcb': {
                         'layers': [
                             'F.Cu',
                             'B.Cu',
@@ -24,7 +25,11 @@ env = Environment(ENV=os.environ,
                             'B.Mask',
                             'Edge.Cuts',
                         ],
-                      }},
+                      },
+                      'schema': {},
+                      'bom': {},
+                      'gerbers': {},
+                      },
                   NBCONVERT_ENVIRONMENT_VARS={'flags': ['execute', 'no-input'],
                                               'to': 'html',
                                               'log-level': 'CRITICAL',
@@ -38,11 +43,12 @@ env = Environment(ENV=os.environ,
 
 REPORTS = NodeList()
 
-env.schema('main_schema.pdf', 'main.kicad_sch')
-REPORTS += env.bom('main.bom', 'main.kicad_sch', project_name="summe")
-REPORTS += env.drc('main_drc.json', 'main.kicad_pcb', project_name="summe")
-REPORTS += env.erc('main_erc.json', 'main.kicad_sch', project_name="summe")
-env.gerbers('main_pcb.zip', 'main.kicad_pcb')
-env.pcb('main_pcb.pdf', 'main.kicad_pcb')
-env.reports('report.json', REPORTS)
+env.nukleus('target/main', 'main.kicad_pro')
+#env.schema('main_schema.pdf', 'main.kicad_sch')
+#REPORTS += env.bom('main.bom', 'main.kicad_sch', project_name="summe")
+#REPORTS += env.drc('main_drc.json', 'main.kicad_pcb', project_name="summe")
+#REPORTS += env.erc('main_erc.json', 'main.kicad_sch', project_name="summe")
+#env.gerbers('main_pcb.zip', 'main.kicad_pcb')
+#env.pcb('main_pcb.pdf', 'main.kicad_pcb')
+#env.reports('report.json', REPORTS)
 #env.report2xunit('content/report.xml', 'content/report.json')

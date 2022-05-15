@@ -1,8 +1,8 @@
 from typing import Optional
 
 from ..Library import Library
-from ..model.LocalLabel import LocalLabel
-from ..model.SchemaElement import POS_T
+from ..ModelSchema import LocalLabel
+from ..Typing import POS_T
 from .DrawElement import DrawElement
 
 

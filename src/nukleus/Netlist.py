@@ -1,18 +1,11 @@
 from typing import Dict, List, cast
 
-from nukleus.model.GlobalLabel import GlobalLabel
-from nukleus.model.LibrarySymbol import LibrarySymbol
-from nukleus.model.LocalLabel import LocalLabel
-from nukleus.model.NoConnect import NoConnect
-from nukleus.model.Pin import Pin, PinImpl
-from nukleus.model.SchemaElement import POS_T, PTS_T
-from nukleus.model.Symbol import Symbol
-from nukleus.model.Utils import get_pins, transform
-from nukleus.model.Wire import Wire
+from nukleus.AbstractParser import AbstractParser
 
+from .ModelSchema import Pin, PinImpl, Symbol, NoConnect, LocalLabel, GlobalLabel, Wire
+from .transform import get_pins, transform
 from .Circuit import Circuit
-from .Schema import Schema
-
+from .Typing import POS_T, PTS_T
 
 class Net:
     """Netlist elemenet."""
@@ -35,108 +28,14 @@ class Net:
         return f"Net: {self.identifier}, coords: {self.coords}, pins: {pins_string}"
 
 
-class Netlist:
+class Netlist(AbstractParser):
     """Calculate netlists for the schema."""
 
-    def __init__(self, schema: Schema) -> None:
-        self.schema = schema
+    def __init__(self, child: AbstractParser|None = None) -> None:
+        super().__init__(child)
         self.nets: Dict[POS_T, Net] = {}
         self.no_connect: List[POS_T] = []
-
-        self._wires()
-        self._labels()
-        self._pins()
-        self._no_connect()
-
-        _id = 1
-        for _, value in self.nets.items():
-            if value.identifier == "":
-                if len(value.pins) > 1:
-                    value.identifier = str(_id)
-                    _id += 1
-                else:
-                    value.identifier = "NC"
-
-    def _wires(self):
-        """
-        collect all the wires and create netlist.
-
-        :param schema Schema: Schema Object.
-        """
-        for element in self.schema.elements:
-            if isinstance(element, Wire):
-                net0 = self.nets.get(element.pts[0])
-                net1 = self.nets.get(element.pts[1])
-                if net0 and net1:
-                    net = net0
-                    net.coords = net0.coords.union(net1.coords)
-                elif net0:
-                    net = net0
-                elif net1:
-                    net = net1
-                else:
-                    net = Net()
-
-                net.coords.add(element.pts[0])
-                net.coords.add(element.pts[1])
-
-                assert net, "net is not set"
-                for coord in net.coords:
-                    self.nets[coord] = net
-
-    def _pins(self):
-        """
-        Collect all the pins and store positions.
-
-        :param schema Schema: Schema Object.
-        """
-        for element in self.schema.elements:
-            if isinstance(element, Symbol):
-                for pin in get_pins(element):
-                    pin_pos = transform(element, transform(pin))[0]
-                    net0 = self.nets.get(pin_pos)
-                    if net0:
-                        net = net0
-                    else:
-                        net = Net()
-                        # TODO net.identifier = "NC"
-                        self.nets[pin_pos] = net
-
-                    if element.library_identifier.startswith("power:"):
-                        net.identifier = element.property("Value").value
-                    assert net, "net is not set"
-                    net.coords.add(pin_pos)
-                    net.pins.append(pin)
-
-    def _labels(self):
-        """
-        Collect all the labels and name the netlists.
-
-        :param schema Schema: Schema Object.
-        """
-        for element in self.schema.elements:
-            if isinstance(element, (LocalLabel, GlobalLabel)):
-                label_pos = element.pos
-                net0 = self.nets.get(label_pos)
-                if net0:
-                    net = net0
-                else:
-                    net = Net()
-                    self.nets[label_pos] = net
-
-                net.identifier = element.text
-                assert net, "net is not set"
-                net.coords.add(label_pos)
-
-    def _no_connect(self):
-        """
-        Collect all the NoConnect coordinates.
-
-        :param schema Schema: Schema Object.
-        """
-        for element in self.schema.elements:
-            if isinstance(element, NoConnect):
-                self.no_connect.append(element.pos)
+        self.references: Dict[str, List[Symbol]] = {}
 
     def erc(self) -> List:
         return []
@@ -154,13 +53,22 @@ class Netlist:
 
         :param circuit Circuit: The circuit object.
         """
+        _id = 1
+        for _, value in self.nets.items():
+            if value.identifier == "":
+                if len(value.pins) > 1:
+                    value.identifier = str(_id)
+                    _id += 1
+                else:
+                    value.identifier = "NC"
         power = {}
-        for ref in self.schema.references():
+        for ref in self.references.values():
             nets: Dict[str, str] = {}
-            for comp in getattr(self.schema, ref):
-                sym = self.schema.getSymbol(
-                    comp.library_identifier, LibrarySymbol)
-                if sym.extends == "power":
+
+            #collect the pins of all symbols
+            for comp in ref:
+                assert comp.library_symbol, 'Library Symbol not set.'
+                if comp.library_symbol.extends == "power":
                     continue
                 for pin in get_pins(comp):
                     verts: PTS_T = transform(comp, transform(pin)[0])
@@ -170,16 +78,13 @@ class Netlist:
                     assert net, "net must be found."
                     nets[pin.number[0]] = net.identifier
 
-            element: Symbol = getattr(self.schema, ref)[0]
-            sym = self.schema.getSymbol(
-                element.library_identifier, LibrarySymbol
-            )
+            element: Symbol = ref[0]
+            sym = element.library_symbol
+            assert sym, 'Library Symbol not set.'
             if sym.extends == "power":
                 power[element.property("Value").value] = element
-            elif (
-                not element.has_property("Spice_Netlist_Enabled")
-                or element.property("Spice_Netlist_Enabled").value == "Y"
-            ):
+            elif (not element.has_property("Spice_Netlist_Enabled")
+                  or element.property("Spice_Netlist_Enabled").value == "Y"):
 
                 if self._spice_primitive(element, "X"):
                     # get the pin numbers/names
@@ -188,9 +93,9 @@ class Netlist:
                         seq_field = element.property(
                             "Spice_Node_Sequence").value
                         seq = seq_field.split()
-                    elif not all(name in seq for name in nets.keys()):
+                    elif not all(name in seq for name in nets):
                         # not all parts have numbered pins, get the pin names TODO
-                        seq = nets.keys()
+                        seq = list(nets.keys())
 
                     nodes = []
                     for arg in seq:
@@ -201,36 +106,32 @@ class Netlist:
                         "Reference").value, nodes, model)
 
                 elif self._spice_primitive(element, "R"):
-                    value = element.property("Value").value
-                    if value.lower().endswith("ohm"):
-                        value = value[:-3]
+                    res_value: str = element.property("Value").value
+                    if res_value.lower().endswith("ohm"):
+                        res_value = res_value[:-3]
                     # value = unit.parse_unit(value)
                     circuit.R(
                         element.property(
-                            "Reference").value, nets["1"], nets["2"], value
+                            "Reference").value, nets["1"], nets["2"], res_value
                     )
 
                 elif self._spice_primitive(element, "C"):
-                    value = element.property("Value").value
+                    c_value = element.property("Value").value
                     # if value.lower().endswith('ohm'):
                     #    value = value[:-3]
                     # value = unit.parse_unit(value)
                     circuit.C(
                         element.property(
-                            "Reference").value, nets["1"], nets["2"], value
+                            "Reference").value, nets["1"], nets["2"], c_value
                     )
-
-                elif self._spice_primitive(element, "L"):
-                    if value.endswith("H"):
-                        value = value[:-1]
-                    # value = unit.parse_unit(value)
-                    circuit.L(element.reference, nets["1"], nets["2"], value)
+#TODO
+#                elif self._spice_primitive(element, "L"):
+#                    if value.endswith("H"):
+#                        value = value[:-1]
+#                    # value = unit.parse_unit(value)
+#                    circuit.L(element.reference, nets["1"], nets["2"], value)
 
                 elif self._spice_primitive(element, "Q"):
-                    value = element.property("Value").value
-                    # if value.lower().endswith('ohm'):
-                    #    value = value[:-3]
-                    # value = unit.parse_unit(value)
                     model = element.property("Spice_Model").value
                     circuit.Q(
                         element.property(
@@ -243,9 +144,9 @@ class Netlist:
                         seq_field = element.property(
                             "Spice_Node_Sequence").value
                         seq = seq_field.split()
-                    elif not all(name in seq for name in nets.keys()):
-                        # not all parts have numbered pins, get the pin names TODO
-                        seq = nets.keys()
+                    elif not all(name in seq for name in nets):
+                        # not all parts have numbered pins, get the pin names
+                        seq = list(nets.keys())
 
                     nodes = []
                     for arg in seq:
@@ -257,3 +158,86 @@ class Netlist:
                 elif element.has_property("Spice_Primitive"):
                     print(
                         f'unknown spice primitive "{element.property("Spice_Primitive").value}"')
+
+    def visitWire(self, wire: Wire):
+        """Wire Symbol"""
+        net0 = self.nets.get(wire.pts[0])
+        net1 = self.nets.get(wire.pts[1])
+        if net0 and net1:
+            net = net0
+            net.coords = net0.coords.union(net1.coords)
+        elif net0:
+            net = net0
+        elif net1:
+            net = net1
+        else:
+            net = Net()
+
+        net.coords.add(wire.pts[0])
+        net.coords.add(wire.pts[1])
+
+        assert net, "net is not set"
+        for coord in net.coords:
+            self.nets[coord] = net
+        super().visitWire(wire)
+
+    def visitNoConnect(self, no_connect: NoConnect):
+        """No Connect Symbol"""
+        self.no_connect.append(no_connect.pos)
+        super().visitNoConnect(no_connect)
+
+    def visitLocalLabel(self, local_label: LocalLabel):
+        """Local Label"""
+        label_pos = local_label.pos
+        net0 = self.nets.get(label_pos)
+        if net0:
+            net = net0
+        else:
+            net = Net()
+            self.nets[label_pos] = net
+
+        net.identifier = local_label.text
+        assert net, "net is not set"
+        net.coords.add(label_pos)
+        super().visitLocalLabel(local_label)
+
+    def visitGlobalLabel(self, global_label: GlobalLabel):
+        """Global Label"""
+        label_pos = global_label.pos
+        net0 = self.nets.get(label_pos)
+        if net0:
+            net = net0
+        else:
+            net = Net()
+            self.nets[label_pos] = net
+
+        net.identifier = global_label.text
+        assert net, "net is not set"
+        net.coords.add(label_pos)
+        super().visitGlobalLabel(global_label)
+
+    def visitSymbol(self, symbol: Symbol):
+        """Symbol"""
+
+        ref = symbol.property('Reference').value
+        if ref in self.references:
+            self.references[ref].append(symbol)
+        else:
+            self.references[ref] = [symbol]
+
+        for pin in get_pins(symbol):
+            pin_pos = transform(symbol, transform(pin))[0]
+            net0 = self.nets.get(pin_pos)
+            if net0:
+                net = net0
+            else:
+                net = Net()
+                # TODO net.identifier = "NC"
+                self.nets[pin_pos] = net
+
+            if symbol.library_identifier.startswith("power:"):
+                net.identifier = symbol.property("Value").value
+            assert net, "net is not set"
+            net.coords.add(pin_pos)
+            net.pins.append(pin)
+        super().visitSymbol(symbol)

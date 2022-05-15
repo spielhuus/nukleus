@@ -2,12 +2,13 @@
   "include": [
     "src/nukleus"
   ],
-  
+
   "exclude": [
     "**/node_modules",
     "**/__pycache__",
     "src/experimental",
-    "src/typestubs"
+    "src/typestubs",
+    "src/nukleus/model/**"
   ],
 
   "ignore": [

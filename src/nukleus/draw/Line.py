@@ -1,14 +1,10 @@
-from typing import Optional, Tuple, cast
+from typing import Optional, cast
 
 from ..Library import Library
-from ..model.Pin import PinImpl
-from ..model.PositionalElement import PositionalElement
-from ..model.SchemaElement import POS_T
-from ..model.Symbol import Symbol
-from ..model.Utils import add, mul, totuple, transform
-from ..model.Wire import Wire
+from ..ModelSchema import PinImpl, PositionalElement, Symbol, Wire
+from ..Typing import POS_T
 from .DrawElement import DrawElement
-
+from ..transform import transform, totuple
 
 class Line(DrawElement):
     """Place a connection on the schematic."""
