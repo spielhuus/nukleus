@@ -295,9 +295,10 @@ class ParserVisitor(SexpVisitor):
         elif name == 'title_block':
             values: Dict[str, Any] = {}
             values['title'] = sexp['title'][0].get(1, '')
-            values['date'] = sexp['date'][0].get(1, '')
-            values['rev'] = '' if 'rev' not in sexp else sexp['rev'][0].get(
-                1, '')
+            if 'date' in sexp:
+                values['date'] = sexp['date'][0].get(1, '')
+            if 'rev' in sexp:
+                values['rev'] = sexp['rev'][0].get(1, '')
             if 'company' in sexp:
                 values['company'] = sexp['company'][0].get(1, '')
             comment = {}
