@@ -19,6 +19,17 @@ from ..Schema import Schema
 from ..Netlist import Netlist
 from ..AbstractParser import AbstractParser
 
+def get_schema_name(filename):
+    if not filename.endswith('.kicad_pro'):
+        raise ValueError(f'not a kicad project file: {filename}')
+    return f'{filename.rstrip(".kicad_pro")}.kicad_sch'
+
+def get_pcb_name(filename):
+    if not filename.endswith('.kicad_pro'):
+        raise ValueError(f'not a kicad project file: {filename}')
+    return f'{filename.rstrip(".kicad_pro")}.kicad_pcb'
+
+
 # The Scons bindings
 
 #def scons_pcb(target, source, env):
@@ -37,18 +48,21 @@ from ..AbstractParser import AbstractParser
 #        shutil.rmtree(temp_dir, ignore_errors=True)
 
 
-def gerbers(target, source, env):
+def scons_gerbers(target, source, env):
     temp_dir = os.path.join(target[0].dir.abspath, 'temp')
     shutil.rmtree(temp_dir, ignore_errors=True)
     try:
         os.makedirs(temp_dir)
         pcb_object = PCB(source[0].abspath)
-        layer_names = env['NUKLEUS_ENVIRONMENT_VARS']['pcb']['layers']
+        #pcb_object = PCB(get_pcb_name(source[0].abspath))
+        layer_names = env['NUKLEUS_TARGETS']['pcb']['layers']
         layers = []
         for layer in layer_names:
             layers.append(Layer.from_name(pcb_object, layer))
 
-        pcb(pcb_object, target[0].abspath, layers, temp_dir)
+        filename = pcb(pcb_object, target[0].abspath, layers, temp_dir)
+        return filename
+
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
@@ -57,38 +71,39 @@ def _board_name(name: str) -> str:
     return name.split('.')[0]
 
 
-def parse_bom(source, target, env, report):
+def scons_bom(source, target, env):
+    visitor: AbstractParser|None = None
+    bom = Bom(child=visitor)
+    with nukleus.schema(source[0].abspath, bom) as _:
+        pass
 
     _report = {}
     if 'project_name' in env:
-        _report = {env['project_name']: {_board_name(source[0].name): report}}
+        _report = {env['project_name']: {_board_name(source[0].name): bom.bom()}}
     else:
-        _report = {_board_name(source[0].name): report}
+        _report = {_board_name(source[0].name): bom.bom()}
 
-    bom_name = f'{target[0].abspath}-bom.json'
-    with open(bom_name, 'w') as file:
+    with open(target[0].abspath, 'w') as file:
         file.write(json.dumps(_report))
-    return bom_name
-#
-#
-#def scons_drc(target, source, env):
-#    pcb_object = PCB(source[0].abspath)
-#    tmp_file = os.path.join(target[0].dir.abspath, 'drc_tmp.txt')
-#    drc(pcb_object, tmp_file)
-#    res_drc = {}
-#    with open(tmp_file, 'r') as file:
-#        report_parser(file.read(), res_drc)
-#    report = {}
-#    if 'project_name' in env:
-#        report = {env['project_name']: {_board_name(source[0].name): res_drc}}
-#    else:
-#        report = {_board_name(source[0].name): res_drc}
-#
-#    os.remove(tmp_file)
-#    with open(target[0].abspath, 'w') as file:
-#        file.write(json.dumps(report))
-#
-#
+
+
+def scons_drc(target, source, env):
+    pcb_object = PCB(source[0].abspath)
+    tmp_file = os.path.join(target[0].dir.abspath, 'drc_tmp.txt')
+    drc(pcb_object, tmp_file)
+    res_drc = {}
+    with open(tmp_file, 'r') as file:
+        report_parser(file.read(), res_drc)
+    report = {}
+    if 'project_name' in env:
+        report = {env['project_name']: {_board_name(source[0].name): res_drc}}
+    else:
+        report = {_board_name(source[0].name): res_drc}
+
+    os.remove(tmp_file)
+    with open(target[0].abspath, 'w') as file:
+        file.write(json.dumps(report))
+
 #def scons_erc(target, source, env):
 #    schema = Schema()
 #    parser = ParserV6()
@@ -106,22 +121,22 @@ def parse_bom(source, target, env, report):
 #        file.write(json.dumps(report))
 #
 #
-#def scons_reports(target, source, env):
-#    source_files = []
-#    for path in source:
-#        source_files.append(path.abspath)
-#
-#    with open(target[0].abspath, 'w') as file:
-#        json.dump(combine_reports(source_files), file)
+def scons_reports(target, source, env):
+    source_files = []
+    for path in source:
+        source_files.append(path.abspath)
 
-def get_schema_name(filename):
-    if not filename.endswith('.kicad_pro'):
-        raise ValueError(f'not a kicad project file: {filename}')
-    return f'{filename.rstrip(".kicad_pro")}.kicad_sch'
+    with open(target[0].abspath, 'w') as file:
+        json.dump(combine_reports(source_files), file)
 
+def scons_schema(target, source, env):
+    visitor = SchemaPlot(target[0].abspath, 297, 210, 600, child=None) #TODO make filename configurable
+    with nukleus.schema(source[0].abspath, visitor) as _:
+        pass
 
 def scons_nukleus(target, source, env):
     files = []
+    reports = []
     visitor: AbstractParser|None = None
     bom: Bom|None = None
     for build_target in env['NUKLEUS_TARGETS']:
@@ -139,8 +154,35 @@ def scons_nukleus(target, source, env):
         pass
 
     if bom:
-        target.append(parse_bom(source, target, env, bom.bom()))
+        bom_file = parse_bom(source, target, env, bom.bom())
+        target.append(bom_file)
+        reports.append(bom_file)
 
+#    if 'drc' in env['NUKLEUS_TARGETS']:
+#        _drc = scons_drc(target, source, env)
+#        reports.append(_drc)
+
+#    if 'gerbers' in env['NUKLEUS_TARGETS']:
+#        _drc = gerbers(target, source, env)
+#        target.append(_drc)
+
+    if 'reports' in env['NUKLEUS_TARGETS']:
+        _reports = scons_reports(target, reports, env)
+        target.append(_reports)
+
+
+    #return target, source
+#def modify_targets(target, source, env):
+#
+#    for (dirpath, dirnames, filenames) in walk(mypath):
+#        f.extend(filenames)
+#
+#    with open("GeneratedFileList.txt") as f:
+#        content = f.readlines()
+#        content = [x.strip('\n') for x in content]
+#        for newTarget in content:
+#            target.append(newTarget)
+#    return target, source
 
 def generate(env):
 
@@ -153,11 +195,11 @@ def generate(env):
     env.SetDefault(NUKLEUS_TEMPLATE_SEARCHPATH=[])
 
 #    kiscan = SCons.Script.Scanner(function = kicad_scan, skeys = ['.pro'])
-    env['BUILDERS']['nukleus'] = SCons.Builder.Builder(action=scons_nukleus)
+    env['BUILDERS']['schema'] = SCons.Builder.Builder(action=scons_schema)
 #    env['BUILDERS']['pcb'] = SCons.Builder.Builder(action=scons_pcb)
-#    env['BUILDERS']['gerbers'] = SCons.Builder.Builder(action=scons_gerbers)
-#    env['BUILDERS']['drc'] = SCons.Builder.Builder(action=scons_drc)
+    env['BUILDERS']['gerbers'] = SCons.Builder.Builder(action=scons_gerbers)
+    env['BUILDERS']['drc'] = SCons.Builder.Builder(action=scons_drc)
 #    env['BUILDERS']['erc'] = SCons.Builder.Builder(action=scons_erc)
-#    env['BUILDERS']['bom'] = SCons.Builder.Builder(action=scons_bom)
-#    env['BUILDERS']['reports'] = SCons.Builder.Builder(action=scons_reports)
+    env['BUILDERS']['bom'] = SCons.Builder.Builder(action=scons_bom)
+    env['BUILDERS']['reports'] = SCons.Builder.Builder(action=scons_reports)
 #    env['BUILDERS']['report2xunit'] = SCons.Builder.Builder(action=xunit)

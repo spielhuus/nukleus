@@ -26,9 +26,11 @@ env = Environment(ENV=os.environ,
                             'Edge.Cuts',
                         ],
                       },
+                      'drc': {},
                       'schema': {},
                       'bom': {},
                       'gerbers': {},
+                      'reports': {},
                       },
                   NBCONVERT_ENVIRONMENT_VARS={'flags': ['execute', 'no-input'],
                                               'to': 'html',
@@ -43,12 +45,12 @@ env = Environment(ENV=os.environ,
 
 REPORTS = NodeList()
 
-env.nukleus('target/main', 'main.kicad_pro')
-#env.schema('main_schema.pdf', 'main.kicad_sch')
-#REPORTS += env.bom('main.bom', 'main.kicad_sch', project_name="summe")
-#REPORTS += env.drc('main_drc.json', 'main.kicad_pcb', project_name="summe")
+#env.nukleus('target/main', 'main.kicad_pro')
+env.schema('main_schema.svg', 'main.kicad_sch')
+REPORTS += env.bom('main.bom', 'main.kicad_sch', project_name="summe")
+REPORTS += env.drc('main_drc.json', 'main.kicad_pcb', project_name="summe")
 #REPORTS += env.erc('main_erc.json', 'main.kicad_sch', project_name="summe")
-#env.gerbers('main_pcb.zip', 'main.kicad_pcb')
+env.gerbers('main_pcb.zip', 'main.kicad_pro')
 #env.pcb('main_pcb.pdf', 'main.kicad_pcb')
-#env.reports('report.json', REPORTS)
+env.reports('summe_report.json', REPORTS)
 #env.report2xunit('content/report.xml', 'content/report.json')

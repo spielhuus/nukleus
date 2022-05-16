@@ -32,6 +32,7 @@ def pcb(pcb: PCB, target, layers, temp_dir):
     with zipfile.ZipFile(zip_file_name, 'w') as zfile:
         for file in output_files:
             zfile.write(file, os.path.relpath(file, temp_dir))
+    return zip_file_name
 
 def pdf(pcb: PCB, target, layers, temp_dir):
     merger = PdfFileMerger()
