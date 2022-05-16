@@ -27,3 +27,4 @@ rich
 Pillow
 matplotlib-backend-kitty
 opencv-python
+networkx
