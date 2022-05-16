@@ -175,10 +175,12 @@ class SchemaPlot(AbstractParser):
                 pin.name[0] != '~'):
             self.drawText(name_pos, pin.name[0], 0, name_effects)
 
-    def drawProperty(self, _: Symbol, prop: Property):
-        effects = _merge_text_effects(prop.text_effects, cast(TextEffects,
-                                                              self.theme['text_effects']))
-        self.plotter.text(prop.pos, prop.value, effects.font_height,
+    def drawProperty(self, symbol: Symbol, prop: Property):
+        effects = _merge_text_effects(
+                prop.text_effects, cast(TextEffects, self.theme['text_effects']))
+        text = symbol.reference() if prop.key == "Reference" else prop.value
+        print(f'value for {prop.key} : {text}')
+        self.plotter.text(prop.pos, text, effects.font_height,
                           effects.font_width, effects.face, 0,
                           " ".join(effects.font_style), effects.font_thickness,
                           rgb(0, 0, 0, 1), effects.justify)

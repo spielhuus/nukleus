@@ -2,6 +2,7 @@ from __future__ import annotations
 from abc import ABC
 from typing import Any, Dict, List, Tuple, cast
 from dataclasses import dataclass, field
+import string
 
 from copy import deepcopy
 from enum import Enum
@@ -474,6 +475,14 @@ class LibrarySymbol(SchemaElement):
     """The optional UNITS can be one or more child symbol tokens
     embedded in a parent symbol."""
 
+    def units_count(self) -> int:
+        """return the number of units for the symbol."""
+        _count = []
+        for unit in self.units:
+            *_, lib_unit, _ = unit.identifier.split('_')
+            if lib_unit not in _count:
+                _count.append(lib_unit)
+        return len(_count)-1
 
 @dataclass(kw_only=True)
 class LocalLabel(PositionalElement):
@@ -535,6 +544,15 @@ class Symbol(PositionalElement):
             if prop.key == name:
                 return True
         return False
+
+    def reference(self):
+        """Get the reference of the symbol with the unit as letter."""
+        assert self.library_symbol, "library symbol is not set"
+        if self.library_symbol.extends == 'power':
+            return self.library_identifier.split(":")[1]
+        if self.library_symbol.units_count() > 1:
+            return f'{self.property("Reference").value}{string.ascii_lowercase[self.unit-1]}'
+        return self.property('Reference').value
 
     @classmethod
     def new(cls, ref: str, lib_name: str, library_symbol: LibrarySymbol, unit: int = 1) -> Symbol:
