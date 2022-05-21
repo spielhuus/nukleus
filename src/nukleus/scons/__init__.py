@@ -15,8 +15,6 @@ from ..PcbUtils import PCB, Layer
 from ..SchemaPlot import SchemaPlot
 from ..PlotPcb import drc, pcb, pdf
 from ..Reports import combine_reports, report_parser
-from ..Schema import Schema
-from ..Netlist import Netlist
 from ..AbstractParser import AbstractParser
 
 def get_schema_name(filename):
@@ -32,20 +30,20 @@ def get_pcb_name(filename):
 
 # The Scons bindings
 
-#def scons_pcb(target, source, env):
-#    temp_dir = os.path.join(target[0].dir.abspath, 'temp')
-#    shutil.rmtree(temp_dir, ignore_errors=True)
-#    try:
-#        os.makedirs(temp_dir)
-#        pcb_object = PCB(source[0].abspath)
-#        layer_names = env['NUKLEUS_ENVIRONMENT_VARS']['pcb']['layers']
-#        layers = []
-#        for layer in layer_names:
-#            layers.append(Layer.from_name(pcb_object, layer))
-#
-#        pdf(pcb_object, target[0].abspath, layers, temp_dir)
-#    finally:
-#        shutil.rmtree(temp_dir, ignore_errors=True)
+def scons_pcb(target, source, env):
+    temp_dir = os.path.join(target[0].dir.abspath, 'temp')
+    shutil.rmtree(temp_dir, ignore_errors=True)
+    #try:
+    os.makedirs(temp_dir)
+    pcb_object = PCB(source[0].abspath)
+    layer_names = env['NUKLEUS_TARGETS']['pcb']['layers']
+    layers = []
+    for layer in layer_names:
+        layers.append(Layer.from_name(pcb_object, layer))
+
+    pdf(pcb_object, target[0].abspath, layers, temp_dir)
+    #finally:
+    shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 def scons_gerbers(target, source, env):
@@ -54,18 +52,15 @@ def scons_gerbers(target, source, env):
     try:
         os.makedirs(temp_dir)
         pcb_object = PCB(source[0].abspath)
-        #pcb_object = PCB(get_pcb_name(source[0].abspath))
         layer_names = env['NUKLEUS_TARGETS']['pcb']['layers']
         layers = []
         for layer in layer_names:
             layers.append(Layer.from_name(pcb_object, layer))
 
-        filename = pcb(pcb_object, target[0].abspath, layers, temp_dir)
-        return filename
+        pcb(pcb_object, target[0].abspath, layers, temp_dir)
 
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
-
 
 def _board_name(name: str) -> str:
     return name.split('.')[0]
@@ -104,23 +99,24 @@ def scons_drc(target, source, env):
     with open(target[0].abspath, 'w') as file:
         file.write(json.dumps(report))
 
-#def scons_erc(target, source, env):
+def scons_erc(target, source, env):
 #    schema = Schema()
 #    parser = ParserV6()
 #    parser.schema(schema, source[0].abspath)
 #    netlist = Netlist(schema)
 #
 #    res_erc = netlist.erc()
-#    report = {}
-#    if 'project_name' in env:
-#        report = {env['project_name']: {_board_name(source[0].name): res_erc}}
-#    else:
-#        report = {_board_name(source[0].name): res_erc}
-#
-#    with open(target[0].abspath, 'w') as file:
-#        file.write(json.dumps(report))
-#
-#
+    res_erc = {}
+    report = {}
+    if 'project_name' in env:
+        report = {env['project_name']: {_board_name(source[0].name): res_erc}}
+    else:
+        report = {_board_name(source[0].name): res_erc}
+
+    with open(target[0].abspath, 'w') as file:
+        file.write(json.dumps(report))
+
+
 def scons_reports(target, source, env):
     source_files = []
     for path in source:
@@ -196,10 +192,10 @@ def generate(env):
 
 #    kiscan = SCons.Script.Scanner(function = kicad_scan, skeys = ['.pro'])
     env['BUILDERS']['schema'] = SCons.Builder.Builder(action=scons_schema)
-#    env['BUILDERS']['pcb'] = SCons.Builder.Builder(action=scons_pcb)
+    env['BUILDERS']['pcb'] = SCons.Builder.Builder(action=scons_pcb)
     env['BUILDERS']['gerbers'] = SCons.Builder.Builder(action=scons_gerbers)
     env['BUILDERS']['drc'] = SCons.Builder.Builder(action=scons_drc)
-#    env['BUILDERS']['erc'] = SCons.Builder.Builder(action=scons_erc)
+    env['BUILDERS']['erc'] = SCons.Builder.Builder(action=scons_erc)
     env['BUILDERS']['bom'] = SCons.Builder.Builder(action=scons_bom)
     env['BUILDERS']['reports'] = SCons.Builder.Builder(action=scons_reports)
 #    env['BUILDERS']['report2xunit'] = SCons.Builder.Builder(action=xunit)
