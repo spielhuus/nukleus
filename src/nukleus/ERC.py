@@ -35,85 +35,24 @@ class ERC(AbstractNetlist):
     def end(self):
         super().end()
 
+        symbols = nx.get_node_attributes(self.graph, 'symbol')
+        for ref, symbols in self.references.items():
+            #check if all units are on the schema
+            # TODO
+            for symbol in symbols:
+                #check if symbol has Reference Number
+                symbol_ref = symbol.property("Reference").value
+                if symbol_ref.endswith("?"):
+                    print(f'!!! no reference set in {symbol_ref}')
 
+                #check if symbol a correct value
+                if symbol.library_identifier == "Device:R":
+                    print("check resistor")
+                if symbol.library_identifier == "Device:C":
+                    print("check capacitor")
 
+                #check if all pins are connected
+                #TODO
 
-
-
-#        symbols = nx.get_node_attributes(self.graph, 'symbol')
-#        #for symbol in symbols:
-#        for _, symbols in self.references.items():
-#            edge_list = []
-#            for _symbol in symbols:
-#                edge_list.extend(self.graph.edges(_symbol.reference(), keys=True, data=True))
-#
-#            element: Symbol = symbols[0] #self.graph.nodes[symbol]['symbol']
-#            sym = element.library_symbol
-#            assert sym, 'Library Symbol not set.'
-#            if sym.extends == "power":
-#                pass
-#
-#            elif (not element.has_property("Spice_Netlist_Enabled")
-#                  or element.property("Spice_Netlist_Enabled").value == "Y"):
-#
-#                #get the pin order
-#                seq = Circuit._get_pinlist(symbols)
-#                if element.has_property("Spice_Node_Sequence"):
-#                    seq_field = element.property(
-#                        "Spice_Node_Sequence").value
-#                    seq = seq_field.split()
-#
-#                #align the netnames with the pins
-#                nodes: List[str] = []
-#                for nlitem in seq:
-#                    for symbol in symbols:
-#                        for edges in edge_list:
-#                            if edges[2] == f'{symbol.identifier}:{nlitem}':
-#                                nodes.append(edges[3]['net'])
-#
-#                if self._spice_primitive(element, "X"):
-#                    model = element.property("Spice_Model").value
-#                    self.X(element.property(
-#                        "Reference").value, nodes, model)
-#
-#                elif self._spice_primitive(element, "R"):
-#                    res_value: str = element.property("Value").value
-#                    if res_value.lower().endswith("ohm"):
-#                        res_value = res_value[:-3]
-#                    # value = unit.parse_unit(value)
-#                    self.R(
-#                        element.property(
-#                            "Reference").value, nodes[0], nodes[1], res_value
-#                    )
-#
-#                elif self._spice_primitive(element, "C"):
-#                    c_value = element.property("Value").value
-#                    # if value.lower().endswith('ohm'):
-#                    #    value = value[:-3]
-#                    # value = unit.parse_unit(value)
-#                    self.C(
-#                        element.property(
-#                            "Reference").value, nodes[0], nodes[1], c_value
-#                    )
-#
-##TODO
-##                elif self._spice_primitive(element, "L"):
-##                    if value.endswith("H"):
-##                        value = value[:-1]
-##                    # value = unit.parse_unit(value)
-##                    self.L(element.reference, nets["1"], nets["2"], value)
-#
-#                elif self._spice_primitive(element, "Q"):
-#                    model = element.property("Spice_Model").value
-#                    self.Q(
-#                        element.property(
-#                            "Reference").value, nodes[0], nodes[1], nodes[2], model
-#                    )
-#
-#                elif self._spice_primitive(element, "D"):
-#                    model = element.property("Spice_Model").value
-#                    self.D(element.property("Reference").value, nodes[0], nodes[1], model)
-#
-#                elif element.has_property("Spice_Primitive"):
-#                    print(
-#                        f'unknown spice primitive "{element.property("Spice_Primitive").value}"')
+                #check connected types
+                #TODO

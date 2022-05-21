@@ -4,6 +4,8 @@ from os import wait
 import sys
 import matplotlib.pyplot as plt
 import matplotlib
+
+from nukleus.ERC import ERC
 matplotlib.use('module://matplotlib-backend-kitty')
 
 from rich import print, inspect
@@ -26,6 +28,8 @@ def main() -> int:
                         help='Plot the Schema')
     parser.add_argument('--dump', dest='action', action='append_const', const='dump',
                         help='Dump the Schema content.')
+    parser.add_argument('--erc', dest='action', action='append_const', const='erc',
+                        help='Run ERC test on schema.')
     parser.add_argument('--pcb', dest='action', action='append_const', const='pcb',
                         help='Plot the Board')
     parser.add_argument('--input', dest='input', required=True,
@@ -48,6 +52,9 @@ def main() -> int:
 
     if 'bom' in args.action:
         bom = action = Bom(True, action)
+
+    if 'erc' in args.action:
+        erc = action = ERC(action)
 
     if 'plot' in args.action:
         if args.plotter == 'PlotSvgWrite':
@@ -83,6 +90,9 @@ def main() -> int:
 
     if 'bom' in args.action:
         print(bom.bom())
+
+    if 'erc' in args.action:
+        print(str(erc))
 
     if 'plot' in args.action and args.plotter == 'PlotMatplotlib':
         plt.show()
