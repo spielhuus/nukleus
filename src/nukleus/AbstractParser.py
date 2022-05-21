@@ -13,27 +13,36 @@ class AbstractParser():
     """
     Abstract class for parsing data.
     """
-
     def __init__(self, child: AbstractParser | None) -> None:
         self._next = child
 
-    def start(self, version: str, identifier: str, generator: str,
-              paper: str, title_block: TitleBlock | None):
+    def start(self, version: str, generator: str):
         """
         Start diagram parsing
 
         :param version str: The version token attribute defines the
                             schematic version using the YYYYMMDD date
                             format.
-        :param identifier str: The unique identifer of the diagram.
         :param generator str: The generator token attribute defines the
                               program used to write the file.
-        :param paper str: The size of the diagram paper.
-        :param title_block TitleBlock: [TODO:description]
         """
         if self._next:
-            self._next.start(version, identifier,
-                             generator, paper, title_block)
+            self._next.start(version, generator)
+
+    def visitIdentifier(self, identifier: str):
+        """The schema identifier"""
+        if self._next:
+            self._next.visitIdentifier(identifer)
+
+    def visitPaper(self, paper: str):
+        """The schema paper size."""
+        if self._next:
+            self._next.visitPaper(paper)
+
+    def visitTitleBlock(self, title_block: TitleBlock):
+        """The schema title block."""
+        if self._next:
+            self._next.visitTitleBlock(title_block)
 
     def end(self):
         """End diagram parsing"""

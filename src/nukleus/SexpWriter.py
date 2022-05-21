@@ -1,7 +1,4 @@
-from os import wait
 from typing import List
-
-import sys
 
 from .AbstractParser import AbstractParser
 from .ModelBase import *
@@ -80,6 +77,14 @@ class SexpWriter(AbstractParser):
             else:
                 self.content[-1] += ')'
 
+    def _hierarchical_sheet_pin(self, pin: HierarchicalSheetPin|None, indent: int):
+        assert pin, "HierarchicalSheetPin is not set"
+        self.content.append(f'{"  " * indent}(pin "{pin.name}" '
+                       f'{pin.pin_type} (at {ffmt(pin.pos[0])} {ffmt(pin.pos[1])} {ffmt(pin.angle)})')
+        self.content.append(self._text_effects(pin.text_effects, indent=indent+1))
+        self.content.append(f'{"  " * (indent + 1)}(uuid {pin.identifier})')
+        self.content.append(f'{"  " * indent})')
+
     def _pin(self, pin: Pin|None, indent: int):
         if pin:
             string = f'{"  " * indent}(pin {pin.type} {pin.style} (at {pin.pos[0]:g} '
@@ -137,7 +142,8 @@ class SexpWriter(AbstractParser):
 
         elif isinstance(graph, Text):
             self.content.append(f'{"  " * indent}(text "{graph.text} '
-                                f' (at {ffmt(graph.pos[0])} {ffmt(graph.pos[1])} {ffmt(graph.angle)})')
+                                f' (at {ffmt(graph.pos[0])} {ffmt(graph.pos[1])} '
+                                f'{ffmt(graph.angle)})')
             self.content.append(self._text_effects(graph.text_effects, indent=indent+1))
             self.content.append(f'{"  " * indent})')
 
@@ -168,27 +174,62 @@ class SexpWriter(AbstractParser):
         self.content.append(f'{"  " * self.indent})')
         super().endSymbolInstances()
 
-    def start(self, version: str, identifier: str, generator: str,
-              paper: str, title_block: TitleBlock):
+    def start(self, version: str, generator: str):
         self.content.append(
             f"(kicad_sch (version {version}) (generator {generator})")
         self.content.append('')
+        self.version = version
+        self.generator = generator
+        super().start(version, generator)
+
+    def visitIdentifier(self, identifier: str):
+        """The schema identifier"""
         self.content.append(f"  (uuid {identifier})")
         self.content.append('')
+        super().visitIdentifier(identifier)
+
+    def visitPaper(self, paper: str):
+        """The schema paper size."""
         self.content.append(f"  (paper \"{paper}\")")
         self.content.append('')
-        if title_block:
-            self.content.append("  (title_block")
-            self.content.append(f"    (title \"{title_block.title}\")")
-            self.content.append(f"    (date \"{title_block.date}\")")
-            self.content.append(f"    (rev \"{title_block.rev}\")")
-            if title_block.company != '':
-                self.content.append(f"    (company \"{title_block.company}\")")
-            for com in sorted(title_block.comment.keys()):
-                self.content.append(f"    (comment {com} \"{title_block.comment[com]}\")")
-            self.content.append("  )")
+        super().visitPaper(paper)
+
+    def visitTitleBlock(self, title_block: TitleBlock):
+        """The schema title block."""
+        self.content.append("  (title_block")
+        self.content.append(f"    (title \"{title_block.title}\")")
+        self.content.append(f"    (date \"{title_block.date}\")")
+        self.content.append(f"    (rev \"{title_block.rev}\")")
+        if title_block.company != '':
+            self.content.append(f"    (company \"{title_block.company}\")")
+        for com in sorted(title_block.comment.keys()):
+            self.content.append(f"    (comment {com} \"{title_block.comment[com]}\")")
+        self.content.append("  )")
         self.content.append("")
-        super().start(version, identifier, generator, paper, title_block)
+        super().visitTitleBlock(title_block)
+
+    def visitBus(self, bus: Bus):
+        string = ''
+        string += f'{"  " * self.indent}(bus (pts'
+        for _pt in bus.pts:
+            string += f' (xy {_pt[0]:g} {_pt[1]:g})'
+        string += ')'
+        self.content.append(string)
+        self.content.append(self._stroke_definition(bus.stroke_definition, indent=self.indent+1))
+        self.content.append(f'{"  " * (self.indent+1)}(uuid {bus.identifier})')
+        self.content.append(f'{"  " * self.indent})')
+        super().visitBus(bus)
+
+    def visitBusEntry(self, bus_entry: BusEntry):
+        self.content.append(f'{"  " * self.indent}(bus_entry (at {bus_entry.pos[0]} '
+                       f'{bus_entry.pos[1]}) '
+                       f'(size {bus_entry.size[0]} '
+                       f'{bus_entry.size[1]})')
+        self.content.append(self._stroke_definition(bus_entry.stroke_definition,
+                            indent=self.indent+1))
+        self.content.append(f'{"  " * (self.indent+1)}(uuid {bus_entry.identifier})')
+        self.content.append(f'{"  " * self.indent})')
+        super().visitBusEntry(bus_entry)
 
     def visitWire(self, wire: Wire):
         string = ''
@@ -243,6 +284,18 @@ class SexpWriter(AbstractParser):
         self.content.append(f'{"  " * self.indent})')
         super().visitGlobalLabel(global_label)
 
+    def visitHierarchicalLabel(self, hierarchical_label: HierarchicalLabel):
+        self.content.append(
+            f'{"  " * self.indent}(hierarchical_label "{hierarchical_label.text}" '
+            f'(shape {HierarchicalLabelShape.string(hierarchical_label.shape)}) '
+            f'(at {ffmt(hierarchical_label.pos[0])} {ffmt(hierarchical_label.pos[1])} '
+            f'{ffmt(hierarchical_label.angle)})')
+        self.content.append(self._text_effects(hierarchical_label.text_effects,
+                            indent=self.indent+1))
+        self.content.append(f'{"  " * (self.indent + 1)}(uuid {hierarchical_label.identifier})')
+        self.content.append(f'{"  " * self.indent})')
+        super().visitHierarchicalLabel(hierarchical_label)
+
     def visitGraphicalLine(self, graphical_line: GraphicalLine):
         string = ''
         string += f'{"  " * self.indent}(polyline (pts'
@@ -269,7 +322,8 @@ class SexpWriter(AbstractParser):
         self.content.append(f'{"  " * self.indent}(sheet (at {hierarchical_sheet.pos[0]} '
                        f'{hierarchical_sheet.pos[1]}) '
                        f'(size {hierarchical_sheet.size[0]} '
-                       f'{hierarchical_sheet.size[1]})')
+                       f'{hierarchical_sheet.size[1]})'
+                       f' {"(fields_autoplaced)" if hierarchical_sheet.autoplaced else ""}')
         self.content.append(self._stroke_definition(
             hierarchical_sheet.stroke_definition, indent=self.indent+1))
         self.content.append(f'{"  " * (self.indent + 1)}'
@@ -281,7 +335,7 @@ class SexpWriter(AbstractParser):
         for prop in hierarchical_sheet.properties:
             self._property(prop, indent=self.indent+1)
         for pin in hierarchical_sheet.pins:
-            self._pin(pin, indent=self.indent+1)
+            self._hierarchical_sheet_pin(pin, indent=self.indent+1)
         self.content.append(f'{"  " * self.indent})')
         super().visitHierarchicalSheet(hierarchical_sheet)
 
@@ -360,7 +414,8 @@ class SexpWriter(AbstractParser):
         super().visitLibrarySymbol(symbol)
 
     def visitSheetInstance(self, sheet: HierarchicalSheetInstance):
-        self.content.append(f'{"  " * self.indent}(path "{sheet.path}" (page "{sheet.page}"))')
+        self.content.append(f'{"  " * self.indent}(path "{sheet.path}" '
+            f'(page "{sheet.page}"))')
         super().visitSheetInstance(sheet)
 
     def visitSymbolInstance(self, symbol: SymbolInstance):
@@ -380,7 +435,6 @@ class SexpWriter(AbstractParser):
             self.content.append(f'{"  " * (self.indent+1)}({key} {value})')
         self.content.append(f'{"  " * self.indent})')
         super().visitPcbGeneral(general)
-
 
     def _stackup_layer_settings(self, stackup_layer_settings: StackUpLayerSettings):
         pass # TODO

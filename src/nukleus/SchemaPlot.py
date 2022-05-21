@@ -179,7 +179,6 @@ class SchemaPlot(AbstractParser):
         effects = _merge_text_effects(
                 prop.text_effects, cast(TextEffects, self.theme['text_effects']))
         text = symbol.reference() if prop.key == "Reference" else prop.value
-        print(f'value for {prop.key} : {text}')
         self.plotter.text(prop.pos, text, effects.font_height,
                           effects.font_width, effects.face, 0,
                           " ".join(effects.font_style), effects.font_thickness,

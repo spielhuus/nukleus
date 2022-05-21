@@ -142,12 +142,26 @@ class PinImpl(Pin):
                          length=pin.length, hidden=pin.hidden, name=pin.name, number=pin.number)
         self.parent = parent
 
-    def __eq__(self, __o: object) -> bool:
-        if not isinstance(__o, PinImpl):
+#    def __eq__(self, __o: object) -> bool:
+#        if not isinstance(__o, PinImpl):
+#            return False
+#        other_pin = cast(PinImpl, __o)
+#        return(self.parent.identifier == other_pin.parent.identifier and
+#               self.number == other_pin.number)
+
+    def __str__(self) -> str:
+        return f'PinImpl {self.parent.reference()}:{self.number[0]}'
+
+    def __repr__(self) -> str:
+        return f'PinImpl {self.parent.reference()}:{self.number[0]}'
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, PinImpl):
             return False
-        other_pin = cast(PinImpl, __o)
-        return(self.parent.identifier == other_pin.parent.identifier and
-               self.number == other_pin.number)
+
+        return(super().__eq__(other) and
+               self.parent.__eq__(other.parent))
+
 
 class PinList():
     def __init__(self):
@@ -211,7 +225,7 @@ class BusEntry(PositionalElement):
     entries in the schematic.
     """
 
-    size: PTS_T = field(default_factory=list)
+    size: POS_T = (0, 0)
     """The size token attributes define the X and Y distance of
     the end point from the position of the bus entry."""
     stroke_definition: StrokeDefinition = StrokeDefinition()
@@ -299,14 +313,18 @@ class HierarchicalLabelShape(Enum):
         :param shape HierarchicalLabelShape: The Shape.
         :rtype str: Shape as string.
         """
-        mappings = {
-            HierarchicalLabelShape.INPUT: 'input',
-            HierarchicalLabelShape.OUTPUT: 'output',
-            HierarchicalLabelShape.BIDIRECTIONAL: 'bidirectional',
-            HierarchicalLabelShape.TRI_STATE: 'tri_state',
-            HierarchicalLabelShape.PASSIVE: 'passive',
-            }
-        return mappings[shape]
+        if shape == HierarchicalLabelShape.INPUT:
+            return 'input'
+        if shape == HierarchicalLabelShape.OUTPUT:
+            return 'output'
+        if shape == HierarchicalLabelShape.BIDIRECTIONAL:
+            return 'bidirectional'
+        if shape == HierarchicalLabelShape.TRI_STATE:
+            return 'tri_state'
+        if shape == HierarchicalLabelShape.PASSIVE:
+            return 'PASSIVE'
+
+        raise ValueError(f'HierarchicalLabelShape type {shape} not found.')
 
     @classmethod
     def shape(cls, shape: str) -> HierarchicalLabelShape:
@@ -381,7 +399,7 @@ class HierarchicalSheet(PositionalElement):
     """
     The sheet token defines a hierarchical sheet of the schematic.
     """
-    size: PTS_T = field(default_factory=list)
+    size: POS_T = (0, 0)
     """The size token attributes define the WIDTH and HEIGHT of the sheet."""
     stroke_definition: StrokeDefinition = StrokeDefinition()
     """The STROKE_DEFINITION defines how the sheet outline is drawn."""
@@ -393,6 +411,9 @@ class HierarchicalSheet(PositionalElement):
     that map a hierarchical label defined in the associated schematic file."""
     fill: rgb = rgb(0, 0, 0, 0)
     """The FILL_DEFINITION defines how the sheet is filled."""
+    autoplaced: bool = False
+    """The optional fields_autoplaced token indicates if the properties
+       have been automatically placed."""
 
 
 @dataclass(kw_only=True)

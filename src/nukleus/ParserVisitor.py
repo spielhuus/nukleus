@@ -285,12 +285,17 @@ class ParserVisitor(SexpVisitor):
 
         elif name == 'generator':
             self.generator = sexp.get(1, '')
+            self.consumer.start(self.version, self.generator)
+
+        elif name == 'generator':
+            self.generator = sexp.get(1, '')
+            self.consumer.start(self.version, self.generator)
 
         elif name == 'paper':
-            self.paper = sexp.get(1, '')
+            self.consumer.visitPaper(sexp.get(1, ''))
 
         elif name == 'uuid':
-            self.uuid = sexp.get(1, '')
+            self.consumer.visitIdentifier(sexp.get(1, ''))
 
         elif name == 'title_block':
             values: Dict[str, Any] = {}
@@ -305,8 +310,7 @@ class ParserVisitor(SexpVisitor):
             for com in sexp['comment']:
                 comment[com.get(1, 0)] = com.get(2, '')
             values['comment'] = comment
-            self.consumer.start(self.version, self.uuid, self.generator,
-                                self.paper, TitleBlock(**values))
+            self.consumer.visitTitleBlock(TitleBlock(**values))
 
         elif name == 'bus':
             self.consumer.visitBus(Bus(
@@ -319,7 +323,7 @@ class ParserVisitor(SexpVisitor):
             self.consumer.visitBusEntry(BusEntry(
                 identifier=sexp['uuid'][0].get(1, ''),
                 pos=sexp['at'][0].pos(),
-                size=[(sexp['size'][0].get(1, 0.0), sexp['size'][0].get(2, 0.0))],
+                size=(sexp['size'][0].get(1, 0.0), sexp['size'][0].get(2, 0.0)),
                 stroke_definition=ParserVisitor._get_stroke_definition(
                     sexp['stroke'][0])))
 
@@ -443,7 +447,8 @@ class ParserVisitor(SexpVisitor):
                 pos=sexp['at'][0].pos(),
                 angle=sexp['at'][0].get(3, 0.0),
                 identifier=sexp['uuid'][0].get(1, ''),
-                size=[(sexp['size'][0].get(1, 0.0), sexp['size'][0].get(2, 0.0))],
+                size=(sexp['size'][0].get(1, 0.0), sexp['size'][0].get(2, 0.0)),
+                autoplaced='fields_autoplaced' in sexp,
                 stroke_definition=ParserVisitor._get_stroke_definition(
                     sexp['stroke'][0]),
                 fill=ParserVisitor._rgb(sexp['fill'][0]),

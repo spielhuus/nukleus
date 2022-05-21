@@ -51,6 +51,39 @@ class TestSexpWriter(unittest.TestCase):
                 result += "\n"
                 self.assertEqual(text, result)
 
+    def test_parse_all_elements(self):
+        with open('samples/files/all_elements/all_elements.kicad_sch', 'r') as infile:
+            schema_tree = load_tree(infile.read())
+            writer = SexpWriter()
+            visitor = ParserVisitor(writer)
+            visitor.visit(schema_tree)
+            with open('samples/files/all_elements/all_elements.kicad_sch', 'r') as file:
+                orig = file.read()
+                text = "".join([s for s in orig.splitlines(True) if s.strip("\r\n")])
+                result = "".join([s for s in str(writer).splitlines(True) if s.strip("\r\n")])
+                result += "\n"
+                self.maxDiff = None
+                self.assertEqual(text, result)
+
+    def test_parse_all_elements_schema(self):
+        with open('samples/files/all_elements/all_elements.kicad_sch', 'r') as infile:
+            schema_tree = load_tree(infile.read())
+            schema = Schema()
+            visitor = ParserVisitor(schema)
+            visitor.visit(schema_tree)
+            writer = SexpWriter()
+            schema.produce(writer)
+            with open('samples/files/all_elements/all_elements.kicad_sch', 'r') as file:
+                orig = file.read()
+                text = "".join([s for s in orig.splitlines(True) if s.strip("\r\n")])
+                result = "".join([s for s in str(writer).splitlines(True) if s.strip("\r\n")])
+                result += "\n"
+                self.maxDiff = None
+                self.assertEqual(text, result)
+
+
+
+
     def test_parse_produkt_pcb(self):
         with open('samples/files/produkt/main.kicad_pcb', 'r') as infile:
             schema_tree = load_tree(infile.read())
