@@ -97,21 +97,10 @@ class SchemaPlot(AbstractParser):
         self.plotter = Registry().PLOTTER(file, width, height, dpi, scale)  # type: ignore
         self.theme = themes[theme]
         self.library_symbols: Dict[str,  LibrarySymbol] = {}
-
-#    @staticmethod
-#    def _transform(symbol: Symbol, path):
-#        mirror = "".join(list(symbol.mirror))
-#        theta = np.deg2rad(-symbol.angle)
-#        trans = np.reshape(MIRROR[mirror], (2, 2)).T
-#        rot = np.array([[np.cos(theta), -np.sin(theta)],
-#                        [np.sin(theta), np.cos(theta)]])
-#
-#        verts = np.matmul(np.array(path), rot)
-#        verts = np.matmul(verts, trans)
-#        verts = (symbol.pos + verts)
-#        verts = np.round(verts, 3)
-#        return verts
-
+        self.identifier = ''
+        self.version = ''
+        self.generator = ''
+        self.paper = ''
     @staticmethod
     def _scale(pts: PTS_T, scale: float) -> PTS_T:
         return pts * np.array([scale, scale])
@@ -194,9 +183,20 @@ class SchemaPlot(AbstractParser):
                                   _effects.font_style), _effects.font_thickness,
                               rgb(0, 0, 0, 1), _effects.justify)
 
-    def start(self, version: str, identifier: str, generator: str,
-              paper: str, title_block: TitleBlock):
+    def start(self, version: str, generator: str):
+        self.version = version
+        self.generator = generator
+        super().start(version, generator)
 
+    def visitIdentifier(self, identifier: str):
+        self.identifier = identifier
+        super().visitIdentifier(identifier)
+
+    def visitPaper(self, paper: str):
+        self.paper = paper
+        super().visitPaper(paper)
+
+    def visitTitleBlock(self, title_block: TitleBlock):
         self.plotter.start()
         stroke = _merge_stroke(None, cast(StrokeDefinition,
                                           cast(Dict, self.theme['border'])['line']))
@@ -244,8 +244,7 @@ class SchemaPlot(AbstractParser):
                               " ".join(
                                   effects.font_style), effects.font_thickness,
                               rgb(0, 0, 0, 1), effects.justify)
-
-        super().start(version, identifier, generator, paper, title_block)
+        super().visitTitleBlock(title_block)
 
     def end(self):
         self.plotter.end()
