@@ -11,7 +11,7 @@ from .ParserVisitor import ParserVisitor
 from .SchemaPlot import SchemaPlot
 from .plot.PlotSvgWrite import PlotSvgWrite
 from .Circuit import Circuit
-from .Netlist import Netlist
+from .AbstractNetlist import AbstractNetlist #TODO remove
 from .spice import *
 from .SpiceModel import load_spice_models
 from .SchemaDraw import SchemaDraw
@@ -48,17 +48,17 @@ class schema():
     def __exit__(self, exc_type, exc_value, exc_tb):
         pass
 
-class circuit():
-    def __init__(self, netlist: Netlist) -> None:
-        self.netlist = netlist
-        self._circuit = Circuit()
-
-    def __enter__(self):
-        self.netlist.spice(self._circuit)
-        return self._circuit
-
-    def __exit__(self, exc_type, exc_value, exc_tb):
-        pass
+#class circuit():
+#    def __init__(self, schema: Netlist) -> None:
+#        self.netlist = netlist
+#        self._circuit = Circuit()
+#
+#    def __enter__(self):
+#        self.netlist.spice(self._circuit)
+#        return self._circuit
+#
+#    def __exit__(self, exc_type, exc_value, exc_tb):
+#        pass
 
 class spice():
     def __init__(self, cir: Circuit) -> None:

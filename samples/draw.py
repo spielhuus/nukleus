@@ -25,10 +25,10 @@ nl.Registry().PLOTTER = PlotMatplotlib
 
 vectors = []
 writer = nl.SexpWriter()
-netlist = nl.Netlist(writer)
+circuit = nl.Circuit(writer)
 schem_fig, schem_ax = plt.subplots(figsize=(8, 6))
 
-plot = nl.SchemaPlot(schem_ax, 297, 210, 600, child=netlist)
+plot = nl.SchemaPlot(schem_ax, 297, 210, 600, child=circuit)
 with nl.draw(plot) as draw:
     draw.add(Label("INPUT").rotate(180))
     draw.add(Line())
@@ -81,18 +81,17 @@ with nl.draw(plot) as draw:
     draw.add(Element("-15V", "power:-15V", on_schema=False)
             .at(nl.pins(draw.U1[2])['4']).rotate(180))
 
-with nl.circuit(netlist) as circuit:
-    pot = Potentiometer("Potentiometer", 100000, 0.3)
-    circuit.subcircuit(pot)
-    circuit.V("1", "+15V", "GND", "DC 15V")
-    circuit.V("2", "-15V", "GND", "DC -15V")
-    circuit.V("3", "INPUT", "GND", "DC 5V AC 5 SIN(0 5V 1k)")
-    print(circuit)
+pot = Potentiometer("Potentiometer", 100000, 0.3)
+circuit.subcircuit(pot)
+circuit.V("1", "+15V", "GND", "DC 15V")
+circuit.V("2", "-15V", "GND", "DC -15V")
+circuit.V("3", "INPUT", "GND", "DC 5V AC 5 SIN(0 5V 1k)")
+print(circuit)
 
-    with nl.spice(circuit) as spice:
-        #for s in np.arange( 1, 0, -0.01 ):
-        pot.wiper(0.2)
-        vectors = spice.transient('10u', '10m', '0m')
+with nl.spice(circuit) as spice:
+    #for s in np.arange( 1, 0, -0.01 ):
+    pot.wiper(0.2)
+    vectors = spice.transient('10u', '10m', '0m')
 
 plt.show()
 

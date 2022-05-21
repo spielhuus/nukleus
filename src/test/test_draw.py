@@ -14,4 +14,4 @@ class TestDraw(unittest.TestCase):
         draw = SchemaDraw()
         draw.add(Line())
 
-        self.assertEqual(1, len(draw.content[Wire]))
+        self.assertEqual(1, len(draw.elements))
