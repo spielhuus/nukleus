@@ -1,5 +1,8 @@
+from os import wait
 import sys
 import unittest
+
+from nukleus.AbstractNetlist import AbstractNetlist
 
 sys.path.append("src")
 sys.path.append("../src")
@@ -10,7 +13,6 @@ from nukleus.ModelSchema import *
 from nukleus.Schema import Schema
 from nukleus.Circuit import Circuit
 from nukleus.SpiceModel import load_spice_models
-from nukleus.Netlist import Netlist
 from nukleus.draw.Draw import Draw
 from nukleus.draw.Element import Element
 from nukleus.draw.Label import Label
@@ -24,7 +26,7 @@ class TestNetlist(unittest.TestCase):
         draw.add(Line())
         draw.add(Line().up())
         draw.add(Line().left())
-        netlist = Netlist()
+        netlist = AbstractNetlist()
         draw.produce(netlist)
         self.assertEqual(4, len(netlist.nets))
         #test that all nets are the same
@@ -43,7 +45,7 @@ class TestNetlist(unittest.TestCase):
         draw.add(Line().down())
         draw.add(Line().left())
 
-        netlist = Netlist()
+        netlist = AbstractNetlist()
         draw.produce(netlist)
         self.assertEqual(5, len(netlist.nets))
         net = netlist.nets[(17.46, 20.0)]
@@ -60,7 +62,7 @@ class TestNetlist(unittest.TestCase):
         draw.add(Line().down())
         draw.add(Line().left())
 
-        netlist = Netlist()
+        netlist = AbstractNetlist()
         draw.produce(netlist)
         self.assertEqual(5, len(netlist.nets))
         net = netlist.nets[(20.0, 17.46)]
@@ -76,7 +78,7 @@ class TestNetlist(unittest.TestCase):
         draw.add(Line().down())
         draw.add(Line().left())
 
-        netlist = Netlist()
+        netlist = AbstractNetlist()
         draw.produce(netlist)
 
         self.assertEqual(5, len(netlist.nets))
@@ -93,7 +95,7 @@ class TestNetlist(unittest.TestCase):
         draw.add(Line().down())
         draw.add(Line().left())
 
-        netlist = Netlist()
+        netlist = AbstractNetlist()
         draw.produce(netlist)
         self.assertEqual(5, len(netlist.nets))
         net = netlist.nets[(17.46, 20.0)]
@@ -106,7 +108,7 @@ class TestNetlist(unittest.TestCase):
             parser = ParserVisitor(schema)
             parser.visit(tree)
 
-            netlist = Netlist()
+            netlist = AbstractNetlist()
             schema.produce(netlist)
 
             self.assertEqual(28, len(netlist.nets))
@@ -126,7 +128,7 @@ class TestNetlist(unittest.TestCase):
             parser = ParserVisitor(schema)
             parser.visit(tree)
 
-            netlist = Netlist()
+            netlist = AbstractNetlist()
             schema.produce(netlist)
             self.assertEqual(3, len(netlist.no_connect))
 
@@ -137,14 +139,10 @@ class TestNetlist(unittest.TestCase):
             parser = ParserVisitor(schema)
             parser.visit(tree)
 
-            netlist = Netlist()
-            schema.produce(netlist)
-
-            models = load_spice_models(['samples/files/spice'])
+            nukleus.set_spice_path(['samples/files/spice'])
             circuit = Circuit()
-            circuit.models(models)
-            netlist.spice(circuit)
-            self.assertEqual(3, len(netlist.no_connect))
+            schema.produce(circuit)
+            self.assertEqual(3, len(circuit.no_connect))
 
     def test_load_spice(self):
         with open('samples/files/summe_v6/main.kicad_sch') as f:
@@ -153,12 +151,10 @@ class TestNetlist(unittest.TestCase):
             parser = ParserVisitor(schema)
             parser.visit(tree)
 
-            netlist = Netlist()
-            schema.produce(netlist)
+            circuit = Circuit()
+            schema.produce(circuit)
 
             nukleus.set_spice_path(['samples/files/spice'])
-            circuit = Circuit()
-            netlist.spice(circuit)
             self.assertEqual(4, len(circuit.netlist))
             self.assertEqual('R3 1 INPUT 100k', circuit.netlist[1].__str__())
             self.assertEqual('R4 IN_1 1 100k', circuit.netlist[2].__str__())

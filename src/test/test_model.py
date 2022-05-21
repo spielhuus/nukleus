@@ -247,7 +247,7 @@ class TestKicadModel(unittest.TestCase):
             visitor.node('sheet', sexp_str)
             mock_method.assert_called_once_with(
                 HierarchicalSheet(
-                    size=[(39.37, 30.48)],
+                    size=(39.37, 30.48),
                     fill=rgb(0, 0, 0, 0),
                     stroke_definition=StrokeDefinition(
                         width=0, stroke_type='solid', color=rgb(0, 0, 0, 0)),
@@ -486,7 +486,7 @@ class TestKicadModel(unittest.TestCase):
             visitor.node('bus_entry', sexp_str)
             mock_method.assert_called_once_with(BusEntry(
                 identifier='ca2cc51e-1efa-48be-969c-d8fb55c8b635',
-                pos=(140.97, 161.29), angle=0.0, size=[(2.54, -2.54)],
+                pos=(140.97, 161.29), angle=0.0, size=(2.54, -2.54),
                 stroke_definition=StrokeDefinition(
                     width=0.1524, stroke_type='solid', color=rgb(0, 0, 0, 0))))
 
