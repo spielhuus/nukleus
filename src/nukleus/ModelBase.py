@@ -170,7 +170,8 @@ class TextEffects():
     """The font justify."""
     hidden: bool = True
     """True if the text is hidden."""
-
+    color: rgb = rgb(0, 0, 0, 0)
+    """Text color."""
 
 @dataclass(kw_only=True)
 class StrokeDefinition():
@@ -180,7 +181,7 @@ class StrokeDefinition():
 
     width: float = 0
     """The width token attribute defines the line width of the graphic object."""
-    stroke_type: str = ''
+    stroke_type: str = 'default'
     """The type token attribute defines the line style of the graphic object.
     Valid stroke line styles are:
     -dash

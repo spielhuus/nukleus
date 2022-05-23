@@ -1,4 +1,5 @@
 from typing import List, cast
+import uuid
 
 from .AbstractParser import AbstractParser
 from .ModelBase import TitleBlock
@@ -17,10 +18,10 @@ class Schema(AbstractParser):
         super().__init__(child)
         self._next = child
         self.library = Library(library_path)
-        self.version: str = ""
-        self.generator: str = ""
-        self.uuid: str = ""
-        self.paper: str = ""
+        self.version: str = "20211123"
+        self.generator: str = "nukleus"
+        self.uuid: str = str(uuid.uuid4())
+        self.paper: str = "A4"
         self.title_block: TitleBlock|None = None
         self.elements: List[SchemaElement] = []
         self.libraries: List[LibrarySymbol] = []
@@ -53,6 +54,9 @@ class Schema(AbstractParser):
         """
         if isinstance(element, LibrarySymbol):
             self.libraries.append(element)
+        elif isinstance(element, Symbol):
+            self.symbol_instance.append(SymbolInstance(path=f'/{element.identifier}', reference=element.reference(), unit=element.unit, value=element.property('Value').value))
+            self.elements.append(element)
         else:
             self.elements.append(element)
 

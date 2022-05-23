@@ -409,7 +409,7 @@ class ParserVisitor(SexpVisitor):
                 mirror='' if 'mirror' not in sexp else sexp['mirror'][0].get(
                     1, ''),
                 library_identifier=sexp['lib_id'][0].get(1, ''),
-                unit=sexp['unit'][0].get(1, 0),
+                unit=sexp['unit'][0].get(1, 1) if 'unit' in sexp else 1,
                 in_bom='in_bom' in sexp and sexp['in_bom'][0].get(
                     1, '') == "yes",
                 on_board='on_board' in sexp and sexp['on_board'][0].get(

@@ -2,6 +2,7 @@ import math
 import re
 from collections import deque
 from typing import Dict, List, cast
+import glob
 
 import numpy as np
 from nptyping import Float, NDArray, Shape  # type: ignore
@@ -11,6 +12,12 @@ from .ModelSchema import (Arc, Circle, GlobalLabel, Pin, PinList, Polyline,
                           Rectangle, Symbol, isUnit)
 from .Typing import POS_T, PTS_T
 
+
+def search_font(name: str):
+    paths: List[str] = ['/usr/share/fonts', '/usr/local/share/fonts', '~/.local/share/fonts']
+    for path in paths:
+        for file in glob.glob(f'{path}/**/{name}.ttf'):
+            return file
 
 def f_coord(arr) -> PTS_T:
     arr = np.array(arr)

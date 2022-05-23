@@ -32,7 +32,7 @@ class AbstractParser():
     def visitIdentifier(self, identifier: str):
         """The schema identifier"""
         if self._next:
-            self._next.visitIdentifier(identifer)
+            self._next.visitIdentifier(identifier)
 
     def visitPaper(self, paper: str):
         """The schema paper size."""

@@ -8,7 +8,7 @@ RUN pacman -Syu --noconfirm &&\
                            zsh neovim sudo curl \
                            hugo kicad kicad-library
 RUN python3 -m pip install git+https://github.com/spielhuus/nukleus.git
-RUN python3 -m pip install sconstool-nbconvert jupyterlab schemdraw sympy
+RUN python3 -m pip install sconstool-nbconvert jupyterlab schemdraw sympy svgwrite
 RUN mkdir -p /usr/local/share/fonts/TT/ &&\
     curl -L "https://github.com/hikikomori82/osifont/blob/master/osifont-lgpl3fe.ttf?raw=true" -o /usr/local/share/fonts/TT/osifont.ttf
 

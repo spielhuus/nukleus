@@ -56,7 +56,8 @@ class SexpWriter(AbstractParser):
             for style in text_effects.font_style:
                 string += f' {style}'
             string += ')'
-            if len(text_effects.justify) > 0:
+            if len(text_effects.justify) > 0 and not Justify.CENTER in text_effects.justify:
+                print(f' (justify {Justify.string(text_effects.justify)})')
                 string += f' (justify {Justify.string(text_effects.justify)})'
             if text_effects.hidden:
                 string += ' hide'

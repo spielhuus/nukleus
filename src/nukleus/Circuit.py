@@ -347,5 +347,5 @@ class SubCircuit(Circuit):
         #strings.append(super().__str__())
         for netlist in self.netlist:
             strings.append(str(netlist))
-        strings.append(f".ends {self.name}")
+        strings.append(".ends")
         return "\n".join(strings)

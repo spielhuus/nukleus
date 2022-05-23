@@ -2,6 +2,7 @@ from typing import IO, Tuple
 
 import numpy as np
 import svgwrite
+from svgwrite.container import SVG
 from svgwrite.mixins import Transform
 from svgwrite.utils import split_angle
 
@@ -9,6 +10,7 @@ from ..ModelBase import Justify, rgb
 
 from ..AbstractPlot import AbstractPlot
 from ..Typing import *
+from ..transform import search_font
 
 
 def _color(color: rgb) -> List[int]:
@@ -36,8 +38,11 @@ class PlotSvgWrite(AbstractPlot):
         self.width = width
         self.height = height
         self.dpi = dpi
+        font = search_font('osifont')
+        print(font)
         self.dwg = svgwrite.Drawing(filename=file, size=('297mm', '210mm'),
                                     profile="full", debug=True)
+        self.dwg.embed_font('osifont', font)
         self.scale = scale
 
     def polyline(self, pts: PTS_T, width: float, color: rgb, fill: rgb|None = None)-> None:
@@ -56,11 +61,11 @@ class PlotSvgWrite(AbstractPlot):
             _end = (_tmp, _end[1])
         if start[1] > end[1]:
             _tmp = _start[1]
-            _start = (start[0], _end[1])
-            _end = (end[0], _tmp)
+            _start = (_start[0], _end[1])
+            _end = (_end[0], _tmp)
 
         rect = self.dwg.rect(
-            start, np.array(_end) - np.array(_start), stroke=svgwrite.rgb(*_color(color)),
+            _start, np.array(_end) - np.array(_start), stroke=svgwrite.rgb(*_color(color)),
             fill='none' if fill is None else svgwrite.rgb(*_color(fill)),
             stroke_width=width)
         rect.scale(self.scale, self.scale)
@@ -99,6 +104,7 @@ class PlotSvgWrite(AbstractPlot):
             font_size=font_height, font_family=face, #font_style=style,
             text_anchor=_align(align), alignment_baseline=_baseline(align),
             rotate=split_angle(rotate))
+            #style = f"font-size:{font_height}; font-family:osifont monospace;")
         line.scale(self.scale, self.scale)
         #line.rotate(angle)
         self.dwg.add(line)

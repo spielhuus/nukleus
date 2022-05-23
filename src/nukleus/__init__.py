@@ -16,6 +16,7 @@ from .spice import *
 from .SpiceModel import load_spice_models
 from .SchemaDraw import SchemaDraw
 from .Registry import Registry
+from .Notebook import Notebook
 from .transform import get_pins as pins
 
 def get_spice_path():

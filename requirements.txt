@@ -28,3 +28,5 @@ Pillow
 matplotlib-backend-kitty
 opencv-python
 networkx
+fonttools
+svgcheck
