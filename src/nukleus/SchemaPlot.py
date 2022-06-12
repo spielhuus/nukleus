@@ -94,7 +94,18 @@ def _merge_stroke(stroke: StrokeDefinition | None, theme: StrokeDefinition) -> D
 
 
 class SchemaPlot(AbstractParser):
-    """Plot the schema and write events to plotter base"""
+    """Plot the schema and write events to plotter base
+
+    The plotter backend can be set in the registry.
+
+    ---
+    ---
+
+    arguments:
+        file: the output filename
+        width: with of the
+
+    """
 
     def __init__(self, file: IO, width: float, height: float, dpi: int, border: bool = True,
                  scale:  float = 3.543307, theme: str = 'kicad2000',
@@ -180,8 +191,8 @@ class SchemaPlot(AbstractParser):
                              (pin_pos, (pin_pos[0] + (np.cos(math.radians(pin.angle)) * pin.length),
                                         pin_pos[1] + (np.sin(math.radians(pin.angle)) * pin.length))))
         number_pos = transform(symbol,
-                               (pin_pos[0] + (np.cos(math.radians(pin.angle)) * pin.length / 2),
-                                pin_pos[1] + (np.sin(math.radians(pin.angle)) * pin.length / 2)))
+                               (pin_pos[0] + (np.cos(math.radians(pin.angle)) * pin.length / 3),
+                                pin_pos[1] + (np.sin(math.radians(pin.angle)) * pin.length / 3)))
 
         name_pos = transform(symbol,
                              (pin_pos[0] + (np.cos(math.radians(pin.angle)) * (pin.length + 1)),
@@ -254,7 +265,7 @@ class SchemaPlot(AbstractParser):
         self.title_block = title_block
         super().visitTitleBlock(title_block)
 
-    def _drawTitleBlock(self, plotter, title_block: TitleBlock):
+    def _drawTitleBlock(self, plotter, title_block: TitleBlock|None):
         stroke = _merge_stroke(None, cast(StrokeDefinition,
                                           cast(Dict, self.theme['border'])['line']))
         plotter.rectangle((.0, .0), self._scale((297.0, 210.0), self.scale),
@@ -264,44 +275,45 @@ class SchemaPlot(AbstractParser):
         plotter.rectangle(
             self._scale((200.0, 180.0), self.scale), self._scale((292.0, 205.0), self.scale), stroke['width'], stroke['color'])
 
-        effects = _merge_text_effects(None, cast(TextEffects,
-                                                 cast(Dict, self.theme['border'])['comment_1']))
-        plotter.text(self._scale((201, 194), self.scale), title_block.title, effects.font_height*self.scale,
-                          effects.font_width*self.scale, effects.face, 0,
-                          " ".join(effects.font_style), effects.font_thickness,
-                          rgb(0, 0, 0, 1), effects.justify)
-        plotter.text(self._scale((201, 194), self.scale), title_block.title, effects.font_height*self.scale,
-                          effects.font_width*self.scale, effects.face, 0,
-                          " ".join(effects.font_style), effects.font_thickness,
-                          rgb(0, 0, 0, 1), effects.justify)
+        if title_block:
+            effects = _merge_text_effects(None, cast(TextEffects,
+                                                     cast(Dict, self.theme['border'])['comment_1']))
+            plotter.text(self._scale((201, 194), self.scale), title_block.title, effects.font_height*self.scale,
+                              effects.font_width*self.scale, effects.face, 0,
+                              " ".join(effects.font_style), effects.font_thickness,
+                              rgb(0, 0, 0, 1), effects.justify)
+            plotter.text(self._scale((201, 194), self.scale), title_block.title, effects.font_height*self.scale,
+                              effects.font_width*self.scale, effects.face, 0,
+                              " ".join(effects.font_style), effects.font_thickness,
+                              rgb(0, 0, 0, 1), effects.justify)
 
-        effects = _merge_text_effects(None, cast(TextEffects,
-                 cast(Dict, self.theme['border'])['comment_3']))
+            effects = _merge_text_effects(None, cast(TextEffects,
+                     cast(Dict, self.theme['border'])['comment_3']))
 
-        if 4 in title_block.comment:
-            plotter.text(self._scale((201, 182), self.scale), title_block.comment[4], effects.font_height*self.scale,
-                              effects.font_width*self.scale, effects.face, 0,
-                              " ".join(
-                                  effects.font_style), effects.font_thickness,
-                              rgb(0, 0, 0, 1), effects.justify)
-        if 3 in title_block.comment:
-            plotter.text(self._scale((201, 185), self.scale), title_block.comment[3], effects.font_height*self.scale,
-                              effects.font_width*self.scale, effects.face, 0,
-                              " ".join(
-                                  effects.font_style), effects.font_thickness,
-                              rgb(0, 0, 0, 1), effects.justify)
-        if 2 in title_block.comment:
-            plotter.text(self._scale((201, 188), self.scale), title_block.comment[2], effects.font_height*self.scale,
-                              effects.font_width*self.scale, effects.face, 0,
-                              " ".join(
-                                  effects.font_style), effects.font_thickness,
-                              rgb(0, 0, 0, 1), effects.justify)
-        if 1 in title_block.comment:
-            plotter.text(self._scale((201, 191), self.scale), title_block.comment[1], effects.font_height*self.scale,
-                              effects.font_width*self.scale, effects.face, 0,
-                              " ".join(
-                                  effects.font_style), effects.font_thickness,
-                              rgb(0, 0, 0, 1), effects.justify)
+            if 4 in title_block.comment:
+                plotter.text(self._scale((201, 182), self.scale), title_block.comment[4], effects.font_height*self.scale,
+                                  effects.font_width*self.scale, effects.face, 0,
+                                  " ".join(
+                                      effects.font_style), effects.font_thickness,
+                                  rgb(0, 0, 0, 1), effects.justify)
+            if 3 in title_block.comment:
+                plotter.text(self._scale((201, 185), self.scale), title_block.comment[3], effects.font_height*self.scale,
+                                  effects.font_width*self.scale, effects.face, 0,
+                                  " ".join(
+                                      effects.font_style), effects.font_thickness,
+                                  rgb(0, 0, 0, 1), effects.justify)
+            if 2 in title_block.comment:
+                plotter.text(self._scale((201, 188), self.scale), title_block.comment[2], effects.font_height*self.scale,
+                                  effects.font_width*self.scale, effects.face, 0,
+                                  " ".join(
+                                      effects.font_style), effects.font_thickness,
+                                  rgb(0, 0, 0, 1), effects.justify)
+            if 1 in title_block.comment:
+                plotter.text(self._scale((201, 191), self.scale), title_block.comment[1], effects.font_height*self.scale,
+                                  effects.font_width*self.scale, effects.face, 0,
+                                  " ".join(
+                                      effects.font_style), effects.font_thickness,
+                                  rgb(0, 0, 0, 1), effects.justify)
 
     def end(self):
 

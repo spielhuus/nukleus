@@ -272,4 +272,4 @@ dielectric_constraints='', edge_connector='', castellated_pads='', edge_plating=
         visitor = ParserVisitor(pcb)
         with patch.object(PCB, 'visitFootprint', return_value=None) as mock_method:
             text_effects = visitor.node('footprint', sexp_str)
-            mock_method.assert_called_once_with(Footprint())
+            mock_method.assert_called_once_with(Footprint(tedit=123))

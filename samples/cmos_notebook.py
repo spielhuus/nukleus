@@ -76,7 +76,7 @@ class CmosBufferNotebook(Notebook):
         #draw the cmos buffer
         writer = nl.SexpWriter()
         circuit = nl.Circuit(writer)
-        plot = nl.SchemaPlot('cmos_buffer.svg', 297, 210, 600, theme='console', scale=10, child=circuit)
+        plot = nl.SchemaPlot('cmos_buffer.svg', 297, 210, 600, theme='console', scale=10, child=circuit, border=False)
         get_buffer(plot)
         self.append(Markdown('![CMOS Buffer](cmos_buffer.svg)'))
 
